@@ -1,0 +1,4 @@
+{
+  "ModulePaths": ["modules/main/libmain_module.so"],
+  "ModuleDirs": []
+}
