@@ -37,8 +37,8 @@ QAction *MainModule::AppendMenuAction(const std::string & path) {
   return nullptr;
 }
 
-bool MainModule::CreateMenuBranch(const std::string & path) {
-  boost::trim_if(path, boost::is_any_of("/"));
+bool MainModule::CreateMenuBranch(std::string  path) {
+  boost::trim_if(path, boost::is_any_of("/ "));
   std::vector<std::string> split;
   boost::algorithm::split(split,path, boost::algorithm::is_from_range('/','/'));
   QMenuBar *menu_bar = main_window_.menuBar();

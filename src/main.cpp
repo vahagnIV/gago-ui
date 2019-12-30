@@ -38,8 +38,8 @@ int main(int argc, char *argv[]) {
 
    */
   gago::gui::modules::MainModule *main_module =
-      dynamic_cast<gago::gui::modules::MainModule * >( gago::gui::modules::ModuleManager::Instance().GetModule("main"));
-  main_module->CreateMenuBranch("/File/New/G");
+      static_cast<gago::gui::modules::MainModule * >( gago::gui::modules::ModuleManager::Instance().GetModule("main"));
+  main_module->CreateMenuBranch("/File/New/G/");
   main_module->CreateMenuBranch("/File/Close");
 
   main_module->Show();

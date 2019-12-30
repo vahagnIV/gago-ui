@@ -21,7 +21,7 @@ class MainModule : public IModule {
   // Main Module
   virtual void Show();
   virtual QAction *AppendMenuAction(const std::string &path);
-  virtual bool CreateMenuBranch(const std::string& path);
+  virtual bool CreateMenuBranch(std::string path);
  private:
   MainWindow main_window_;
 };

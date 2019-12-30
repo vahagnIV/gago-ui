@@ -103,12 +103,10 @@ modules::IModule *ModuleManager::GetModule(const std::string & system_name) cons
 }
 
 ModuleManager::~ModuleManager() {
-  /*for (auto &module : modules_) {
-    if (module.first == "Main")
-      continue;
+  for (auto &module : modules_) {
     module.second.delete_function(module.second.module_ptr);
     dlclose(module.second.handle);
-  }*/
+  }
 }
 
 }
