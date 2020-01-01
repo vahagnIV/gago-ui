@@ -15,8 +15,10 @@ namespace configuration {
 class IConfigurator {
  public:
   virtual void DrawConfigurationPage(QWidget * widget) = 0;
-  virtual void ApplyConfigurationAndGet(nlohmann::json & out_json) = 0;
-  virtual void Configure(const nlohmann::json & json) = 0;
+  virtual void Apply() = 0;
+  virtual void GetConfiguration(nlohmann::json & out_json) = 0;
+  virtual void SetConfiguration(const nlohmann::json & json) = 0;
+  virtual const std::string &ConfigWindowName() const = 0;
   virtual ~IConfigurator()= default;
 };
 

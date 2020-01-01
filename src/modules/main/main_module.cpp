@@ -7,7 +7,8 @@ namespace gago {
 namespace gui {
 namespace modules {
 
-MainModule::MainModule() : IModule("Main", "main") {
+MainModule::MainModule() : IModule("Main", "main"), main_window_(new gago::gui::modules::MainWindow) {
+
 }
 
 ModuleInitializationResult MainModule::Initalize() {

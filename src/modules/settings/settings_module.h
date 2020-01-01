@@ -4,7 +4,7 @@
 #include <QtWidgets/QMainWindow>
 #include "../../imodule.h"
 #include "iconfigurable.h"
-
+#include "settings_window.h"
 
 namespace gago {
 namespace gui {
@@ -24,7 +24,9 @@ public:
 
     //Settings
     void RegisterConfigurable(configuration::IConfigurable *);
+    virtual ~SettingsModule() = default;
  private:
+  void Save (std::vector<configuration::IConfigurator *> &configurators);
   QMainWindow *main_window_;
   std::vector<configuration::IConfigurable *> configurables_;
 

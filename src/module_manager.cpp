@@ -9,9 +9,9 @@ namespace gago {
 namespace gui {
 namespace modules {
 
-ModuleManager::ModuleManager() =default;
+ModuleManager::ModuleManager() = default;
 
-bool ModuleManager::LoadModule(const std::string & path) {
+bool ModuleManager::LoadModule(const std::string &path) {
   internal::_ModuleContainer container;
   container.handle = dlopen(path.c_str(), RTLD_NOW);
   if (!container.handle) {
@@ -98,13 +98,14 @@ bool ModuleManager::QLoaded(const std::string &module_name) {
   return modules_.find(module_name) != modules_.end();
 }
 
-modules::IModule *ModuleManager::GetModule(const std::string & system_name) const {
+modules::IModule *ModuleManager::GetModule(const std::string &system_name) const {
   return modules_.at(system_name).module_ptr;
 }
 
 ModuleManager::~ModuleManager() {
   for (auto &module : modules_) {
-    module.second.delete_function(module.second.module_ptr);
+    if (module.second.module_ptr->SystemName() != "main")
+      module.second.delete_function(module.second.module_ptr);
     dlclose(module.second.handle);
   }
 }

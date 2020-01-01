@@ -15,7 +15,6 @@ class IConfigurable {
  public:
   virtual IConfigurator *GetConfigurator() = 0;
   virtual void DisposeConfigurator(IConfigurator *) = 0;
-  virtual const std::string &ConfigWindowName() const = 0;
   virtual ~IConfigurable() = default;
 };
 

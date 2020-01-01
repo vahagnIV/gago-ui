@@ -3,6 +3,9 @@
 #include "settings_module.h"
 #include "../main/main_module.h"
 #include "settings_window.h"
+#include <fstream>
+#include <QtWidgets/QDialogButtonBox>
+#include <iostream>
 
 namespace gago {
 namespace gui {
@@ -37,19 +40,35 @@ void SettingsModule::SetRequiredModules(const std::vector<IModule *> &modules) {
   QObject::connect(action,
                    &QAction::triggered,
                    [&]() {
-                     SettingsWindow *window = new SettingsWindow(main_window_);
-                     window->setAttribute(Qt::WA_DeleteOnClose);
+                     std::vector<configuration::IConfigurator *> configurators(configurables_.size());
                      for (configuration::IConfigurable *configurable: configurables_) {
-                       window->AddConfigurator(configurable->GetConfigurator(), configurable->ConfigWindowName());
+                      configurators.push_back(configurable->GetConfigurator());
                      }
-                     window->show();
+                     SettingsWindow *window = new SettingsWindow(configurators, main_window_);
+                     window->setAttribute(Qt::WA_DeleteOnClose);
+                     window->exec();
+                     Save(configurators);
+                     for (int i = 0; i < configurators.size(); ++i) {
+                       configurables_[i]->DisposeConfigurator(configurators[i]);
+                     }
                    });
 
 }
 
+
 void SettingsModule::RegisterConfigurable(configuration::IConfigurable *configurable) {
   configurables_.push_back(configurable);
 
+}
+
+void SettingsModule::Save(std::vector<configuration::IConfigurator *> &configurators) {
+  nlohmann::json json;
+  for (configuration::IConfigurator * configurator: configurators) {
+    configurator->GetConfiguration(json[configurator->ConfigWindowName()]);
+  }
+  std::ofstream of("settings.json");
+  of << json;
+  of.close();
 }
 
 }

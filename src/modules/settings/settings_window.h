@@ -4,31 +4,37 @@
 
 #ifndef GAGO_UI_SRC_MODULES_SETTINGS_SETTINGS_WINDOW_H_
 #define GAGO_UI_SRC_MODULES_SETTINGS_SETTINGS_WINDOW_H_
+
 #include <QDialog>
+#include <QAbstractButton>
 #include "iconfigurator.h"
+
 namespace Ui {
 class SettingsWindow;
 }
 
 namespace gago {
 namespace gui {
+
+namespace modules {
+class SettingsModule;
+}
+
 namespace modules {
 
+
 class SettingsWindow: public QDialog{
+  friend class modules::SettingsModule;
   Q_OBJECT
  public:
-  explicit SettingsWindow( QWidget *parent = 0);
+  explicit SettingsWindow( std::vector<configuration::IConfigurator *> &configurators, QWidget *parent = 0);
   virtual ~SettingsWindow() ;
-  virtual void AddConfigurator(configuration::IConfigurator * configurator, std::string name);
  public slots:
-  void accepted();
+  void clicked(QAbstractButton * btn);
  private:
+  void apply();
   Ui::SettingsWindow *ui;
   std::vector<configuration::IConfigurator *> configurators_;
-
-
-
-
 };
 
 }
