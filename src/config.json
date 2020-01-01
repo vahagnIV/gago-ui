@@ -1,4 +1,4 @@
 {
-  "ModulePaths": ["modules/main/libmain_module.so"],
+  "ModulePaths": ["modules/main/libmain_module.so", "modules/settings/libsettings_module.so"],
   "ModuleDirs": []
 }

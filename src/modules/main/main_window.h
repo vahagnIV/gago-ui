@@ -12,17 +12,21 @@ namespace Ui {
 class MainWindow;
 }
 
-class MainWindow : public QMainWindow
-{
+namespace gago {
+namespace gui {
+namespace modules {
+
+class MainWindow : public QMainWindow {
 
  Q_OBJECT
 
  public:
   explicit MainWindow(QWidget *parent = nullptr);
-  ~MainWindow();
-  Ui::MainWindow *ui;
+  virtual ~MainWindow();
  private:
+  Ui::MainWindow *ui;
 
 };
 
+}}}
 #endif //GAGO_UI_SRC_MODULES_MAIN_MAIN_WINDOW_H_

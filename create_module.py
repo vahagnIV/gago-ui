@@ -11,7 +11,7 @@ def convert(name):
 def create_module(name: str, system_name: str, class_name: str = None):
     base_dir = os.path.join('src/modules', system_name)
     if os.path.exists(base_dir):
-        print('Module {} already exist. Remove before proceeding.')
+        print('Module {} already exist. Remove before proceeding.'.format(name))
         return
 
     os.mkdir(base_dir)
@@ -34,11 +34,15 @@ class {1}: public IModule{{
 
 public:
     {1}();
-    virtual ModuleInitializationResult Initalize () override;
-    virtual unsigned int MajorVersion () const override;
-    virtual unsigned int MinorVersion () const override;
-    virtual void QRequiredModules(std::vector<RequiredModuleParams> & out_required_modules) override;
-    virtual void SetRequiredModules(const std::vector<IModule *> & modules) override;        
+    
+    // IModule
+    ModuleInitializationResult Initalize () override;
+    unsigned int MajorVersion () const override;
+    unsigned int MinorVersion () const override;
+    void QRequiredModules(std::vector<RequiredModuleParams> & out_required_modules) override;
+    void SetRequiredModules(const std::vector<IModule *> & modules) override; 
+    
+    // {1}       
 }};
 
 }}
@@ -111,7 +115,7 @@ void dispose_module(gago::gui::modules::{0} * module_ptr)
     delete module_ptr;
 }}""".format(module_class_name))
 
-    cmake_file_path = os.path.join(base_dir, 'CopyIfNewer.txt')
+    cmake_file_path = os.path.join(base_dir, 'CMakeLists.txt')
     with open(cmake_file_path, 'w') as cmake_file:
         cmake_file.write("""cmake_minimum_required(VERSION 3.10)
 find_package(Qt5Core REQUIRED)
@@ -129,4 +133,4 @@ target_link_libraries({0}_module ${{QT_LIBRARIES}} Qt5::Widgets pthread)""".form
 
 
 if __name__ == '__main__':
-    create_module('Main', 'main')
+    create_module('Settings', 'settings')

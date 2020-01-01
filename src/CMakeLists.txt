@@ -8,7 +8,7 @@ qt5_wrap_ui(GagoUI)
 
 qt5_wrap_cpp(GagoCPP)
 
-INCLUDE_DIRECTORIES(include ${STERIO_INCLUDE_PATH} ${Qt5Widgets_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS} external/concurrentqueue)
+INCLUDE_DIRECTORIES(include ${STERIO_INCLUDE_PATH} ${Qt5Widgets_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS} external)
 
 add_executable(Gago ${SOURCES} ${GagoUI} ${GagoCPP} module_manager.cpp module_manager.h imodule.h config/configuration.cpp config/configuration.h)
 

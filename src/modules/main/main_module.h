@@ -3,6 +3,8 @@
 
 #include "../../imodule.h"
 #include "main_window.h"
+
+
 namespace gago {
 namespace gui {
 namespace modules {
@@ -20,10 +22,11 @@ class MainModule : public IModule {
 
   // Main Module
   virtual void Show();
-  virtual QAction *AppendMenuAction(const std::string &path);
-  virtual bool CreateMenuBranch(std::string path);
+  virtual QAction *CreateMenuBranch(std::string path);
+  virtual QMainWindow *MainWindow() ;
+  virtual ~MainModule() = default;
  private:
-  MainWindow main_window_;
+  gago::gui::modules::MainWindow main_window_;
 };
 
 }

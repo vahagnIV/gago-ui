@@ -26,6 +26,9 @@ int main(int argc, char *argv[]) {
       gago::gui::modules::ModuleManager::Instance().LoadModule(entry.path().string());
     }
   }
+  gago::gui::modules::MainModule *main_module =
+      static_cast<gago::gui::modules::MainModule * >( gago::gui::modules::ModuleManager::Instance().GetModule("main"));
+//  main_module->CreateMenuBranch("/File/New/G/");
 
 
   gago::gui::modules::ModuleManager::Instance().SatisfyRequirements();
@@ -37,10 +40,7 @@ int main(int argc, char *argv[]) {
   std::cout << "Configuring done" << std::endl;
 
    */
-  gago::gui::modules::MainModule *main_module =
-      static_cast<gago::gui::modules::MainModule * >( gago::gui::modules::ModuleManager::Instance().GetModule("main"));
-  main_module->CreateMenuBranch("/File/New/G/");
-  main_module->CreateMenuBranch("/File/Close");
+//  main_module->CreateMenuBranch("/File/Close");
 
   main_module->Show();
   std::cout << "Main module shown " << std::endl;
