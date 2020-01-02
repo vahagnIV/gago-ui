@@ -28,6 +28,7 @@ SettingsWindow::~SettingsWindow() {
 }
 
 void SettingsWindow::apply() {
+  applied();
   for (configuration::IConfigurator *configurator: configurators_)
     configurator->Apply();
 }

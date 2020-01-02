@@ -31,6 +31,8 @@ class SettingsWindow: public QDialog{
   virtual ~SettingsWindow() ;
  public slots:
   void clicked(QAbstractButton * btn);
+ signals:
+  void applied();
  private:
   void apply();
   Ui::SettingsWindow *ui;

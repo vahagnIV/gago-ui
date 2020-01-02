@@ -15,6 +15,7 @@ class IConfigurable {
  public:
   virtual IConfigurator *GetConfigurator() = 0;
   virtual void DisposeConfigurator(IConfigurator *) = 0;
+  virtual void ApplyConfiguration(IConfigurator *) = 0;
   virtual ~IConfigurable() = default;
 };
 

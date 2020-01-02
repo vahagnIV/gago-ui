@@ -12,6 +12,7 @@ MainModule::MainModule() : IModule("Main", "main"), main_window_(new gago::gui::
 }
 
 ModuleInitializationResult MainModule::Initalize() {
+  QObject::connect(CreateMenuBranch("/File/Quit"), &QAction::triggered, [&]() { main_window_.close(); });
   return ModuleInitializationResult::OK;
 }
 
@@ -63,7 +64,7 @@ QAction *MainModule::CreateMenuBranch(std::string path) {
 
 }
 
-QMainWindow *MainModule::MainWindow()  {
+QMainWindow *MainModule::MainWindow() {
   return &main_window_;
 }
 

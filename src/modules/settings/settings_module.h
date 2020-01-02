@@ -23,7 +23,7 @@ public:
     void SetRequiredModules(const std::vector<IModule *> & modules) override;
 
     //Settings
-    void RegisterConfigurable(configuration::IConfigurable *);
+    virtual void RegisterConfigurable(configuration::IConfigurable *);
     virtual ~SettingsModule() = default;
  private:
   void Save (std::vector<configuration::IConfigurator *> &configurators);

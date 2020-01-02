@@ -14,6 +14,7 @@ namespace configuration {
 
 class IConfigurator {
  public:
+  IConfigurator() = default;
   virtual void DrawConfigurationPage(QWidget * widget) = 0;
   virtual void Apply() = 0;
   virtual void GetConfiguration(nlohmann::json & out_json) = 0;

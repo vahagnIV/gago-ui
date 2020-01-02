@@ -133,4 +133,4 @@ target_link_libraries({0}_module ${{QT_LIBRARIES}} Qt5::Widgets pthread)""".form
 
 
 if __name__ == '__main__':
-    create_module('Settings', 'settings')
+    create_module('Camera', 'camera')
