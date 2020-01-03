@@ -23,8 +23,11 @@ class CameraSettingsQModel : public QAbstractListModel {
   int rowCount(const QModelIndex & parent = QModelIndex()) const override;
   QVariant data(const QModelIndex & index, int role = Qt::DisplayRole) const override;
   virtual bool insertRow(CameraProps setting) ;
+
+  QList<CameraProps> & GetList();
  private:
   QList<CameraProps> list_;
+
 
 };
 

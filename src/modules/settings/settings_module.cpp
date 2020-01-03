@@ -69,7 +69,9 @@ void SettingsModule::RegisterConfigurable(configuration::IConfigurable *configur
 void SettingsModule::Save(std::vector<configuration::IConfigurator *> &configurators) {
   nlohmann::json json;
   for (configuration::IConfigurator * configurator: configurators) {
-    configurator->GetConfiguration(json[configurator->ConfigWindowName()]);
+    nlohmann::json module_json;
+    configurator->GetConfiguration(module_json);
+    json[configurator->ConfigWindowName()] = module_json;
   }
   std::ofstream of("settings.json");
   of << json;

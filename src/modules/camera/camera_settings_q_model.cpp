@@ -34,7 +34,9 @@ bool CameraSettingsQModel::insertRow(CameraProps setting) {
   endInsertRows();
   return true;
 }
-
+QList<CameraProps> &CameraSettingsQModel::GetList() {
+  return list_;
+}
 
 }
 }
