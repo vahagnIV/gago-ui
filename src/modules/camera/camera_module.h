@@ -3,7 +3,7 @@
 
 #include "../../imodule.h"
 #include <modules/settings/iconfigurable.h>
-#include "io/video/v4l_driver.h"
+#include "io/video/linux/v4l_driver.h"
 namespace gago {
 namespace gui {
 namespace modules {
