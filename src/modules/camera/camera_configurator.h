@@ -27,6 +27,8 @@ struct CameraLayout {
   QLineEdit *name_edit;
   QComboBox *cam_format_combo;
   QComboBox *cam_resolution_combo;
+  QLabel *cam_dev_name_label;
+  QLabel *path_name_label;
 };
 }
 
@@ -47,6 +49,8 @@ class CameraConfigurator : public IConfigurator {
     return current_settings_;
   }
  private:
+  void InitControlElements();
+  void DrawOnWidget(QWidget * widget);
   std::string window_name = "Camera";
   const std::vector<io::video::CameraDeviceInfo> devices_;
   std::vector<io::video::CameraSettings> current_settings_;
