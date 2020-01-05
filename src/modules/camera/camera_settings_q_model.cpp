@@ -22,7 +22,7 @@ QVariant CameraSettingsQModel::data(const QModelIndex &index, int role) const {
   int ind = index.row();
   if (ind < 0 || ind > list_.size())
     return QVariant();
-  QString cam_name = QString::fromStdString(list_.at(ind).info->device_path);
+  QString cam_name = QString::fromStdString(list_.at(ind).settings->camera_name);
   if (list_.at(ind).settings->status == io::video::CameraStatus::Disabled)
     cam_name += " (Disabled)";
   return cam_name;

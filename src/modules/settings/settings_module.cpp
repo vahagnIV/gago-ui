@@ -6,6 +6,7 @@
 #include <fstream>
 #include <QtWidgets/QDialogButtonBox>
 #include <iostream>
+#include <boost/filesystem.hpp>
 
 namespace gago {
 namespace gui {
@@ -42,10 +43,10 @@ void SettingsModule::SetRequiredModules(const std::vector<IModule *> &modules) {
                    [&]() {
                      std::vector<configuration::IConfigurator *> configurators;
                      for (configuration::IConfigurable *configurable: configurables_) {
-                      configurators.push_back(configurable->GetConfigurator());
+                       configurators.push_back(configurable->GetConfigurator());
                      }
                      SettingsWindow *window = new SettingsWindow(configurators, main_window_);
-                     QObject::connect(window, &SettingsWindow::applied ,[&](){
+                     QObject::connect(window, &SettingsWindow::applied, [&]() {
                        for (int i = 0; i < configurators.size(); ++i) {
                          configurables_[i]->ApplyConfiguration(configurators[i]);
                        }
@@ -60,15 +61,13 @@ void SettingsModule::SetRequiredModules(const std::vector<IModule *> &modules) {
 
 }
 
-
 void SettingsModule::RegisterConfigurable(configuration::IConfigurable *configurable) {
   configurables_.push_back(configurable);
-
 }
 
 void SettingsModule::Save(std::vector<configuration::IConfigurator *> &configurators) {
   nlohmann::json json;
-  for (configuration::IConfigurator * configurator: configurators) {
+  for (configuration::IConfigurator *configurator: configurators) {
     nlohmann::json module_json;
     configurator->GetConfiguration(module_json);
     json[configurator->ConfigWindowName()] = module_json;
@@ -76,6 +75,23 @@ void SettingsModule::Save(std::vector<configuration::IConfigurator *> &configura
   std::ofstream of("settings.json");
   of << json;
   of.close();
+}
+
+void SettingsModule::Configure() {
+  if (!boost::filesystem::exists("settings.json"))
+    return;
+
+  std::ifstream istream("settings.json");
+  nlohmann::json json;
+  istream >> json;
+  for (configuration::IConfigurable *configurable: configurables_) {
+    configuration::IConfigurator *configurator = configurable->GetConfigurator();
+    if (json.find(configurator->ConfigWindowName()) != json.end())
+      configurator->SetConfiguration(json[configurator->ConfigWindowName()]);
+    configurable->ApplyConfiguration(configurator);
+    configurable->DisposeConfigurator(configurator);
+  }
+  istream.close();
 }
 
 }

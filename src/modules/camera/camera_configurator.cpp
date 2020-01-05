@@ -39,14 +39,31 @@ void CameraConfigurator::GetConfiguration(nlohmann::json &out_json) {
     conf["name"] = current_settings_[i].camera_name;
     conf["format"] = current_settings_[i].format_index;
     conf["resolution"] = current_settings_[i].resolution_index;
-    conf["status"] = current_settings_[i].status == io::video::Disabled ? "Disabled" : "Enabled";
+    conf["status"] = io::video::to_string(current_settings_[i].status);
     out_json[devices_[i].device_path] = conf;
   }
 
 }
 
 void CameraConfigurator::SetConfiguration(const nlohmann::json &json) {
+  for (int i = 0; i < devices_.size(); ++i) {
+    if(json.find(devices_[i].device_path)!=json.end())
+    {
+      const nlohmann::json & json_settings = json[devices_[i].device_path];
+      if(json_settings.find("name")!= json_settings.end())
+        current_settings_[i].camera_name = json_settings["name"];
 
+      if(json_settings.find("format")!= json_settings.end())
+        current_settings_[i].format_index = json_settings["format"];
+
+      if(json_settings.find("resolution")!= json_settings.end())
+        current_settings_[i].resolution_index = json_settings["resolution"];
+
+      std::string mmm = json_settings["status"];
+      if(json_settings.find("status")!= json_settings.end())
+        io::video::try_parse(json_settings["status"], current_settings_[i].status);
+    }
+  }
 }
 
 const std::string &CameraConfigurator::ConfigWindowName() const {
@@ -106,7 +123,9 @@ void CameraConfigurator::InitControlElements() {
       layout.cam_resolution_combo->setEnabled(state);
 
     });
+
     layout.enabled_checkbx->setChecked(io::video::Enabled == cam_settings.status);
+    layout.enabled_checkbx->stateChanged(io::video::Enabled == cam_settings.status);
 
     camera_layouts_.push_back(layout);
   }

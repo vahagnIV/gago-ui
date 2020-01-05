@@ -5,6 +5,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/range.hpp>
 #include "modules/main/main_module.h"
+#include "modules/settings/settings_module.h"
 
 int main(int argc, char *argv[]) {
 
@@ -32,6 +33,12 @@ int main(int argc, char *argv[]) {
 
 
   gago::gui::modules::ModuleManager::Instance().SatisfyRequirements();
+
+  gago::gui::modules::SettingsModule *settings_module =
+      static_cast<gago::gui::modules::SettingsModule * >( gago::gui::modules::ModuleManager::Instance().GetModule("settings"));
+
+  settings_module->Configure();
+
 
   /*sterio::gui::settings::SettingsModule *settings_module =
       static_cast<sterio::gui::settings::SettingsModule * >( sterio::gui::ModuleManager::Instance().GetModule("Settings"));

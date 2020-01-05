@@ -24,6 +24,7 @@ public:
 
     //Settings
     virtual void RegisterConfigurable(configuration::IConfigurable *);
+    virtual void Configure();
     virtual ~SettingsModule() = default;
  private:
   void Save (std::vector<configuration::IConfigurator *> &configurators);
