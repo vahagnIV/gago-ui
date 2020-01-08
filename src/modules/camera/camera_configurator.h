@@ -14,6 +14,7 @@
 #include <QLineEdit>
 #include <QComboBox>
 #include <QWidget>
+#include <QListView>
 
 namespace gago {
 namespace gui {
@@ -55,6 +56,7 @@ class CameraConfigurator : public IConfigurator {
   const std::vector<io::video::CameraDeviceInfo> devices_;
   std::vector<io::video::CameraSettings> current_settings_;
   std::vector<internal::CameraLayout> camera_layouts_;
+  QListView * camera_list_view;
   QHBoxLayout *main_layout_;
 
 };

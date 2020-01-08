@@ -31,6 +31,7 @@ void CameraConfigurator::Apply() {
     current_settings_[i].status =
         camera_layouts_[i].enabled_checkbx->checkState() == 0 ? io::video::Disabled : io::video::Enabled;
   }
+  camera_list_view->setFocus();
 }
 
 void CameraConfigurator::GetConfiguration(nlohmann::json &out_json) {
@@ -140,7 +141,7 @@ void CameraConfigurator::DrawOnWidget(QWidget *widget) {
   QVBoxLayout *camera_list_layout = new QVBoxLayout();
   main_layout_->addLayout(camera_list_layout);
 
-  QListView *camera_list_view = new QListView();
+  camera_list_view = new QListView();
   camera_list_layout->addWidget(camera_list_view);
   camera_list_view->setMaximumWidth(200);
   CameraSettingsQModel *model = new CameraSettingsQModel();
