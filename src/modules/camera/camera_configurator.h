@@ -35,8 +35,7 @@ struct CameraLayout {
 
 class CameraConfigurator : public IConfigurator {
  public:
-  CameraConfigurator(const std::vector<io::video::CameraDeviceInfo> &devices,
-                     const std::vector<io::video::CameraSettings> &current_settings);
+  CameraConfigurator(const std::vector<gago::io::video::CameraSettings> &devices);
 
   //IConfigurator
   void DrawConfigurationPage(QWidget *widget) override;
@@ -53,7 +52,7 @@ class CameraConfigurator : public IConfigurator {
   void InitControlElements();
   void DrawOnWidget(QWidget * widget);
   std::string window_name = "Camera";
-  const std::vector<io::video::CameraDeviceInfo> devices_;
+  const std::vector<gago::io::video::CameraSettings> devices_;
   std::vector<io::video::CameraSettings> current_settings_;
   std::vector<internal::CameraLayout> camera_layouts_;
   QListView * camera_list_view;

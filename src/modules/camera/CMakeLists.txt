@@ -15,4 +15,4 @@ add_library(camera_module SHARED ${MODULE_SOURCES} )
 target_link_libraries(camera_module ${QT_LIBRARIES} Qt5::Widgets pthread ${Gago_LIBRARIES} ${Boost_LIBRARIES})
 
 add_executable(test_cam ${MODULE_SOURCES} test.cpp)
-target_link_libraries(test_cam ${QT_LIBRARIES} Qt5::Widgets pthread ${Gago_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(test_cam ${Gago_LIBRARIES} ${QT_LIBRARIES} Qt5::Widgets pthread  ${Boost_LIBRARIES})

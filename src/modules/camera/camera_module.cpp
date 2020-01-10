@@ -22,29 +22,31 @@ unsigned int CameraModule::MinorVersion() const {
   return 0;
 }
 
-void CameraModule::QRequiredModules(std::vector<RequiredModuleParams> &out_required_modules) {
+void CameraModule::QRequiredModules(std::vector<RequiredModuleParams> & out_required_modules) {
   out_required_modules.resize(1);
   out_required_modules[0].Name = "settings";
   out_required_modules[0].MinMajorVersion = 1;
   out_required_modules[0].MinMinorVersion = 0;
 }
 
-void CameraModule::SetRequiredModules(const std::vector<IModule *> &modules) {
+void CameraModule::SetRequiredModules(const std::vector<IModule *> & modules) {
   ((SettingsModule *) modules[0])->RegisterConfigurable(this);
 }
 
 configuration::IConfigurator *CameraModule::GetConfigurator() {
-  return new configuration::CameraConfigurator(driver_.GetDevices(), driver_.GetSettings());
+  std::vector<io::video::CameraSettings> settings;
+  driver_.GetSettings(settings);
+  return new configuration::CameraConfigurator(settings);
 }
 
 void CameraModule::DisposeConfigurator(configuration::IConfigurator *configurator) {
-  configuration::CameraConfigurator * cfr = (configuration::CameraConfigurator *) configurator;
+  configuration::CameraConfigurator *cfr = (configuration::CameraConfigurator *) configurator;
   delete cfr;
 }
 
 void CameraModule::ApplyConfiguration(configuration::IConfigurator *configurator) {
-  configuration::CameraConfigurator * cfr = (configuration::CameraConfigurator *) configurator;
-  const std::vector<io::video::CameraSettings>  settings = cfr->GetSettings();
+  configuration::CameraConfigurator *cfr = (configuration::CameraConfigurator *) configurator;
+  const std::vector<io::video::CameraSettings> settings = cfr->GetSettings();
   driver_.SetSettings(settings);
 
 }

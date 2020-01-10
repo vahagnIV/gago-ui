@@ -22,19 +22,19 @@ QVariant CameraSettingsQModel::data(const QModelIndex &index, int role) const {
   int ind = index.row();
   if (ind < 0 || ind > list_.size())
     return QVariant();
-  QString cam_name = QString::fromStdString(list_.at(ind).settings->camera_name);
-  if (list_.at(ind).settings->status == io::video::CameraStatus::Disabled)
+  QString cam_name = QString::fromStdString(list_.at(ind)->camera->GetName());
+  if (list_.at(ind)->config.status == io::video::CameraStatus::Disabled)
     cam_name += " (Disabled)";
   return cam_name;
 }
 
-bool CameraSettingsQModel::insertRow(CameraProps setting) {
+bool CameraSettingsQModel::insertRow(io::video::CameraSettings * setting) {
   beginInsertRows(QModelIndex(), list_.size(), list_.size() + 1);
   list_.append(setting);
   endInsertRows();
   return true;
 }
-QList<CameraProps> &CameraSettingsQModel::GetList() {
+QList<io::video::CameraSettings *> &CameraSettingsQModel::GetList() {
   return list_;
 }
 

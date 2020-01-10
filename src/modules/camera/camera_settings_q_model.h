@@ -13,20 +13,16 @@ namespace gago {
 namespace gui {
 namespace configuration  {
 
-struct CameraProps {
-  const io::video::CameraDeviceInfo *info;
-  io::video::CameraSettings *settings;
-};
 class CameraSettingsQModel : public QAbstractListModel {
  public:
   CameraSettingsQModel();
   int rowCount(const QModelIndex & parent = QModelIndex()) const override;
   QVariant data(const QModelIndex & index, int role = Qt::DisplayRole) const override;
-  virtual bool insertRow(CameraProps setting) ;
+  virtual bool insertRow(io::video::CameraSettings *  setting) ;
 
-  QList<CameraProps> & GetList();
+  QList< io::video::CameraSettings*> & GetList();
  private:
-  QList<CameraProps> list_;
+  QList< io::video::CameraSettings*> list_;
 
 
 };

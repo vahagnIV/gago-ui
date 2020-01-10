@@ -13,9 +13,8 @@ namespace gago {
 namespace gui {
 namespace configuration {
 
-CameraConfigurator::CameraConfigurator(const std::vector<gago::io::video::CameraDeviceInfo> &devices,
-                                       const std::vector<gago::io::video::CameraSettings> &current_settings) : devices_(
-    devices), current_settings_(current_settings) {
+CameraConfigurator::CameraConfigurator(const std::vector<gago::io::video::CameraSettings> & devices)
+    : devices_(devices), current_settings_(devices) {
 }
 
 void CameraConfigurator::DrawConfigurationPage(QWidget *widget) {
@@ -25,56 +24,55 @@ void CameraConfigurator::DrawConfigurationPage(QWidget *widget) {
 
 void CameraConfigurator::Apply() {
   for (int i = 0; i < devices_.size(); ++i) {
-    current_settings_[i].resolution_index = camera_layouts_[i].cam_resolution_combo->currentIndex();
-    current_settings_[i].format_index = camera_layouts_[i].cam_format_combo->currentIndex();
-    current_settings_[i].camera_name = camera_layouts_[i].name_edit->text().toStdString();
-    current_settings_[i].status =
+    current_settings_[i].config.resolution_index = camera_layouts_[i].cam_resolution_combo->currentIndex();
+    current_settings_[i].config.format_index = camera_layouts_[i].cam_format_combo->currentIndex();
+    current_settings_[i].config.name = camera_layouts_[i].name_edit->text().toStdString();
+    current_settings_[i].config.status =
         camera_layouts_[i].enabled_checkbx->checkState() == 0 ? io::video::Disabled : io::video::Enabled;
   }
   camera_list_view->setFocus();
 }
 
-void CameraConfigurator::GetConfiguration(nlohmann::json &out_json) {
+void CameraConfigurator::GetConfiguration(nlohmann::json & out_json) {
   for (int i = 0; i < current_settings_.size(); ++i) {
     nlohmann::json conf;
-    conf["name"] = current_settings_[i].camera_name;
-    conf["format"] = current_settings_[i].format_index;
-    conf["resolution"] = current_settings_[i].resolution_index;
-    conf["status"] = io::video::to_string(current_settings_[i].status);
-    out_json[devices_[i].device_path] = conf;
+    conf["name"] = current_settings_[i].config.name;
+    conf["format"] = current_settings_[i].config.format_index;
+    conf["resolution"] = current_settings_[i].config.resolution_index;
+    conf["status"] = io::video::to_string(current_settings_[i].config.status);
+    out_json[devices_[i].camera->GetUniqueId()] = conf;
   }
-
 }
 
-void CameraConfigurator::SetConfiguration(const nlohmann::json &json) {
+void CameraConfigurator::SetConfiguration(const nlohmann::json & json) {
   for (int i = 0; i < devices_.size(); ++i) {
-    if(json.find(devices_[i].device_path)!=json.end())
+    if(json.find(devices_[i].camera->GetUniqueId())!=json.end())
     {
-      const nlohmann::json & json_settings = json[devices_[i].device_path];
+      const nlohmann::json & json_settings = json[devices_[i].camera->GetUniqueId()];
       if(json_settings.find("name")!= json_settings.end())
-        current_settings_[i].camera_name = json_settings["name"];
+        current_settings_[i].config.name = json_settings["name"];
 
       if(json_settings.find("format")!= json_settings.end())
-        current_settings_[i].format_index = json_settings["format"];
+        current_settings_[i].config.format_index = json_settings["format"];
 
       if(json_settings.find("resolution")!= json_settings.end())
-        current_settings_[i].resolution_index = json_settings["resolution"];
+        current_settings_[i].config.resolution_index = json_settings["resolution"];
 
       std::string mmm = json_settings["status"];
       if(json_settings.find("status")!= json_settings.end())
-        io::video::try_parse(json_settings["status"], current_settings_[i].status);
+        io::video::try_parse(json_settings["status"], current_settings_[i].config.status);
     }
   }
 }
 
-const std::string &CameraConfigurator::ConfigWindowName() const {
+const std::string & CameraConfigurator::ConfigWindowName() const {
   return window_name;
 }
 
 void CameraConfigurator::InitControlElements() {
   for (int i = 0; i < devices_.size(); ++i) {
-    const io::video::CameraDeviceInfo &device_info = devices_[i];
-    io::video::CameraSettings &cam_settings = current_settings_[i];
+    const io::video::CameraSettings & device_info = devices_[i];
+
     internal::CameraLayout layout;
 
     layout.main_widget = new QWidget();
@@ -84,37 +82,37 @@ void CameraConfigurator::InitControlElements() {
     layout.name_edit = new QLineEdit();
     layout.cam_format_combo = new QComboBox();
     layout.cam_resolution_combo = new QComboBox();
-    layout.cam_dev_name_label = new QLabel(device_info.manufacturer.c_str());
-    layout.path_name_label = new QLabel(device_info.device_path.c_str());
+    layout.cam_dev_name_label = new QLabel(device_info.camera->GetHardwareDetails().c_str());
+    layout.path_name_label = new QLabel(device_info.camera->GetUniqueId().c_str());
 
 
     // ====== Set up initial values and bindings ====
 
     // Name
-    layout.name_edit->setText(cam_settings.camera_name.c_str());
+    layout.name_edit->setText(device_info.camera->GetName().c_str());
 
     //Format
-    for (int i = 0; i < device_info.formats.size(); ++i) {
-      layout.cam_format_combo->insertItem(i, (char *) (device_info.formats[i].description));
+    for (int i = 0; i < device_info.camera->GetFormats().size(); ++i) {
+      layout.cam_format_combo->insertItem(i, (char *) (device_info.camera->GetFormats()[i].c_str()));
     }
-    layout.cam_format_combo->setCurrentIndex(cam_settings.format_index);
+    layout.cam_format_combo->setCurrentIndex(device_info.config.format_index);
 
     // Resolution
     QObject::connect(layout.cam_format_combo, QOverload<int>::of(&QComboBox::activated), [=](int index) {
       layout.cam_resolution_combo->clear();
-      for (int i = 0; i < device_info.resolutions[index].size(); ++i) {
+      for (int i = 0; i < device_info.camera->GetResolutions()[index].size(); ++i) {
         layout.cam_resolution_combo->insertItem(i,
-                                                QString::number(device_info.resolutions[index][i].discrete.width)
+                                                QString::number(device_info.camera->GetResolutions()[index][i].width)
                                                     + "x"
-                                                    + QString::number(device_info.resolutions[index][i].discrete.height));
+                                                    + QString::number(device_info.camera->GetResolutions()[index][i].height));
       }
       layout.cam_resolution_combo->setCurrentIndex(
-          cam_settings.resolution_index < device_info.resolutions.size() ? cam_settings.resolution_index : 0);
+          device_info.config.resolution_index < device_info.camera->GetResolutions().size() ? device_info.config.resolution_index : 0);
 
     });
 
-    layout.cam_format_combo->setCurrentIndex(cam_settings.format_index);
-    layout.cam_format_combo->activated(cam_settings.format_index);
+    layout.cam_format_combo->setCurrentIndex(device_info.config.format_index);
+    layout.cam_format_combo->activated(device_info.config.format_index);
     // Manufacturer
     //Path
 
@@ -125,8 +123,8 @@ void CameraConfigurator::InitControlElements() {
 
     });
 
-    layout.enabled_checkbx->setChecked(io::video::Enabled == cam_settings.status);
-    layout.enabled_checkbx->stateChanged(io::video::Enabled == cam_settings.status);
+    layout.enabled_checkbx->setChecked(io::video::Enabled == device_info.config.status);
+    layout.enabled_checkbx->stateChanged(io::video::Enabled == device_info.config.status);
 
     camera_layouts_.push_back(layout);
   }
@@ -148,19 +146,19 @@ void CameraConfigurator::DrawOnWidget(QWidget *widget) {
 
   camera_list_view->setModel(model);
   for (int i = 0; i < devices_.size(); ++i) {
-    model->insertRow(CameraProps{&devices_[i], &current_settings_[i]});
+    model->insertRow(&current_settings_[i]);
   }
   camera_list_view->selectionModel()->select(camera_list_view->model()->index(0, 0), QItemSelectionModel::Select);
   camera_list_view->setCurrentIndex(camera_list_view->model()->index(0, 0));
 
   QObject::connect(camera_list_view->selectionModel(),
                    &QItemSelectionModel::selectionChanged,
-                   [=](const QItemSelection &selected, const QItemSelection &deselected) {
+                   [=](const QItemSelection & selected, const QItemSelection & deselected) {
                      camera_layouts_[deselected.indexes().at(0).row()].main_widget->hide();
                      camera_layouts_[selected.indexes().at(0).row()].main_widget->show();
                    });
 
-  for (internal::CameraLayout &layout: camera_layouts_) {
+  for (internal::CameraLayout & layout: camera_layouts_) {
 
     // Right details and settings
     QHBoxLayout *details_and_settings_layout = new QHBoxLayout();
