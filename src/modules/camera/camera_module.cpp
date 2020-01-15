@@ -48,7 +48,14 @@ void CameraModule::ApplyConfiguration(configuration::IConfigurator *configurator
   configuration::CameraConfigurator *cfr = (configuration::CameraConfigurator *) configurator;
   const std::vector<io::video::CameraSettings> settings = cfr->GetSettings();
   driver_.SetSettings(settings);
+  driver_.Start();
+}
+void CameraModule::RegisterWatcher(CameraWatcher *watcher) {
+  driver_.RegisterWatcher(watcher);
+}
 
+void CameraModule::UnRegisterWatcher(CameraWatcher *watcher) {
+  driver_.UnRegister(watcher);
 }
 
 }

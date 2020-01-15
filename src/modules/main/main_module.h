@@ -3,7 +3,7 @@
 
 #include "../../imodule.h"
 #include "main_window.h"
-
+#include "view.h"
 
 namespace gago {
 namespace gui {
@@ -25,8 +25,13 @@ class MainModule : public IModule {
   virtual QAction *CreateMenuBranch(std::string path);
   virtual QMainWindow *MainWindow() ;
   virtual ~MainModule() = default;
+
+  virtual void RegisterView(View * view);
  private:
+  void SetCurrentView(int idx, QAction * action);
   gago::gui::modules::MainWindow main_window_;
+  std::vector<View *> views_;
+  int current_view_index_;
 };
 
 }

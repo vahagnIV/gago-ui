@@ -5,7 +5,7 @@ find_package(OpenCV CONFIG REQUIRED)
 find_package(LibGago REQUIRED)
 find_package(Boost COMPONENTS system filesystem REQUIRED)
 
-file(GLOB SOURCES *.h *.cpp config/*.h config/*.cpp)
+file(GLOB SOURCES *.h *.cpp config/*.h)
 
 
 set(CMAKE_AUTOUIC ON)
@@ -39,5 +39,6 @@ add_custom_command(
 add_custom_target(gago_config DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/config.json)
 
 add_dependencies(Gago gago_config)
+add_subdirectory(common)
 add_subdirectory(modules)
 

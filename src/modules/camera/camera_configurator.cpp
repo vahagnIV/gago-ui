@@ -107,7 +107,7 @@ void CameraConfigurator::InitControlElements() {
                                                     + QString::number(device_info.camera->GetResolutions()[index][i].height));
       }
       layout.cam_resolution_combo->setCurrentIndex(
-          device_info.config.resolution_index < device_info.camera->GetResolutions().size() ? device_info.config.resolution_index : 0);
+          device_info.config.resolution_index < device_info.camera->GetResolutions()[device_info.config.format_index].size() ? device_info.config.resolution_index : 0);
 
     });
 
