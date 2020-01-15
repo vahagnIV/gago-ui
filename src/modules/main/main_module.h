@@ -28,7 +28,7 @@ class MainModule : public IModule {
 
   virtual void RegisterView(View * view);
  private:
-  void SetCurrentView(int idx, QAction * action);
+  void SetCurrentView(int idx);
   gago::gui::modules::MainWindow main_window_;
   std::vector<View *> views_;
   int current_view_index_;

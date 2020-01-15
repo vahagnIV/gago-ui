@@ -23,7 +23,6 @@ MainModule::MainModule() : IModule("Main", "main"),
 }
 
 ModuleInitializationResult MainModule::Initalize() {
-  QObject::connect(CreateMenuBranch("/File/Quit"), &QAction::triggered, [&]() { main_window_.close(); });
   return ModuleInitializationResult::OK;
 }
 
@@ -43,6 +42,11 @@ void MainModule::SetRequiredModules(const std::vector<IModule *> & modules) {
 }
 
 void MainModule::Show() {
+  SetCurrentView(0);
+
+  QMenuBar *menu_bar = main_window_.menuBar();
+  menu_bar->findChild<QMenu *>("File")->addSeparator();
+  QObject::connect(CreateMenuBranch("/File/Quit"), &QAction::triggered, [&]() { main_window_.close(); });
   main_window_.show();
 }
 
@@ -90,19 +94,23 @@ void MainModule::RegisterView(View *view) {
   int idx = views_.size() - 1;
 
   QObject::connect(start_view, &QAction::triggered, [this, idx, start_view]() {
-    SetCurrentView(idx, start_view);
+    SetCurrentView(idx);
   });
 }
 
-void MainModule::SetCurrentView(int idx, QAction * start_action) {
+void MainModule::SetCurrentView(int idx) {
+  View * view = this->views_[idx];
+  QAction * new_action = main_window_.menuBar()->findChild<QAction *>(QString::fromStdString("View/" + view->GetName()));
+  new_action->setChecked(true);
   if(idx == this->current_view_index_)
     return;
-  if (this->current_view_index_ >= 0)
+  if (this->current_view_index_ >= 0) {
+    QAction *old_action = main_window_.menuBar()->findChild<QAction *>(QString::fromStdString(
+        "View/" + views_[current_view_index_]->GetName()));
     views_[current_view_index_]->StopDrawing();
-  View * view = this->views_[idx];
-  QAction * action = main_window_.menuBar()->findChild<QAction *>(QString::fromStdString("View/" + view->GetName()));
-  action->setChecked(false);
-  start_action->setChecked(true);
+    old_action->setChecked(false);
+  }
+
   this->current_view_index_ = idx;
   this->views_[idx]->StartDrawing(this->main_window_.centralWidget());
 }
