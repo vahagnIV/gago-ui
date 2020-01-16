@@ -22,15 +22,14 @@ class SettingsModule;
 
 namespace modules {
 
-
-class SettingsWindow: public QDialog{
+class SettingsWindow : public QDialog {
   friend class modules::SettingsModule;
-  Q_OBJECT
+ Q_OBJECT
  public:
-  explicit SettingsWindow( std::vector<configuration::IConfigurator *> &configurators, QWidget *parent = 0);
-  virtual ~SettingsWindow() ;
+  explicit SettingsWindow(std::vector<configuration::IConfigurator *> & configurators, QWidget *parent = 0);
+  virtual ~SettingsWindow();
  public slots:
-  void clicked(QAbstractButton * btn);
+  void clicked(QAbstractButton *btn);
  signals:
   void applied();
  private:

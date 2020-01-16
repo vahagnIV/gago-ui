@@ -27,14 +27,14 @@ unsigned int SettingsModule::MinorVersion() const {
   return 0;
 }
 
-void SettingsModule::QRequiredModules(std::vector<RequiredModuleParams> &out_required_modules) {
+void SettingsModule::QRequiredModules(std::vector<RequiredModuleParams> & out_required_modules) {
   out_required_modules.resize(1);
   out_required_modules[0].MinMinorVersion = 0;
   out_required_modules[0].MinMajorVersion = 1;
   out_required_modules[0].Name = "main";
 }
 
-void SettingsModule::SetRequiredModules(const std::vector<IModule *> &modules) {
+void SettingsModule::SetRequiredModules(const std::vector<IModule *> & modules) {
   MainModule *main_module = (MainModule *) modules[0];
   main_window_ = main_module->MainWindow();
   QAction *action = main_module->CreateMenuBranch("/Edit/Settings");
@@ -50,10 +50,10 @@ void SettingsModule::SetRequiredModules(const std::vector<IModule *> &modules) {
                        for (int i = 0; i < configurators.size(); ++i) {
                          configurables_[i]->ApplyConfiguration(configurators[i]);
                        }
+                       Save(configurators);
                      });
                      window->setAttribute(Qt::WA_DeleteOnClose);
                      window->exec();
-                     Save(configurators);
                      for (int i = 0; i < configurators.size(); ++i) {
                        configurables_[i]->DisposeConfigurator(configurators[i]);
                      }
@@ -65,7 +65,7 @@ void SettingsModule::RegisterConfigurable(configuration::IConfigurable *configur
   configurables_.push_back(configurable);
 }
 
-void SettingsModule::Save(std::vector<configuration::IConfigurator *> &configurators) {
+void SettingsModule::Save(std::vector<configuration::IConfigurator *> & configurators) {
   nlohmann::json json;
   for (configuration::IConfigurator *configurator: configurators) {
     nlohmann::json module_json;

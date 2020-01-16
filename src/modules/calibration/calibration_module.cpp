@@ -35,29 +35,29 @@ void CalibrationModule::QRequiredModules(std::vector<RequiredModuleParams> & out
 }
 
 void CalibrationModule::SetRequiredModules(const std::vector<IModule *> & modules) {
-  for(IModule * module: modules)
-  {
-    if(module->SystemName() == "main") {
-      QAction * action = ((MainModule *) module)->CreateMenuBranch("/File/Calibration/Calibrate");
-    }
-    else if(module->SystemName() == "settings")
-    {
-      ((SettingsModule *)module)->RegisterConfigurable(this);
+  for (IModule *module: modules) {
+    if (module->SystemName() == "main") {
+      QAction *action = ((MainModule *) module)->CreateMenuBranch("/File/Calibration/Calibrate");
+    } else if (module->SystemName() == "settings") {
+      ((SettingsModule *) module)->RegisterConfigurable(this);
     }
   }
 }
 
 configuration::IConfigurator *CalibrationModule::GetConfigurator() {
-  return new configuration::CalibrationConfigurator();
+  configuration::IConfigurator *cnf = new configuration::CalibrationConfigurator();
+  if (!settings_.empty())
+    cnf->SetConfiguration(settings_);
+  return cnf;
 }
 
 void CalibrationModule::DisposeConfigurator(configuration::IConfigurator *configurator) {
-  configuration::CalibrationConfigurator *cnf = (configuration::CalibrationConfigurator *)configurator;
+  configuration::CalibrationConfigurator *cnf = (configuration::CalibrationConfigurator *) configurator;
   delete cnf;
 }
 
 void CalibrationModule::ApplyConfiguration(configuration::IConfigurator *configurator) {
-
+  configurator->GetConfiguration(settings_);
 }
 
 }

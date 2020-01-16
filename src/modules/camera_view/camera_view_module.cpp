@@ -64,7 +64,10 @@ void Camera_viewModule::Notify(const std::shared_ptr<std::vector<io::video::Capt
 
 void Camera_viewModule::SetCameras(const std::vector<const io::video::CameraMeta *> & vector) {
   ClearPlayers();
+
+
   QHBoxLayout *layout = new QHBoxLayout();
+
 
   for (const io::video::CameraMeta *camera : vector) {
     players_[camera->GetUniqueId()] = new common::VideoPlayer();
@@ -78,6 +81,7 @@ void Camera_viewModule::ClearPlayers() {
     delete player_name_player.second;
   }
   players_.clear();
+  delete draw_widget_->layout();
 }
 
 Camera_viewModule::~Camera_viewModule() {

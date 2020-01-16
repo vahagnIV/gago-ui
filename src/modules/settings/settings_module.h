@@ -1,7 +1,7 @@
 #ifndef SETTINGS_MODULE_H
 #define SETTINGS_MODULE_H
 
-#include <QtWidgets/QMainWindow>
+#include <QMainWindow>
 #include "../../imodule.h"
 #include "iconfigurable.h"
 #include "settings_window.h"

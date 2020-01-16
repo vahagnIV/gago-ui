@@ -42,7 +42,7 @@ void MainModule::SetRequiredModules(const std::vector<IModule *> & modules) {
 }
 
 void MainModule::Show() {
-  SetCurrentView(0);
+  //SetCurrentView(0);
 
   QMenuBar *menu_bar = main_window_.menuBar();
   menu_bar->findChild<QMenu *>("File")->addSeparator();
