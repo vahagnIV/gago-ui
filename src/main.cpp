@@ -39,16 +39,6 @@ int main(int argc, char *argv[]) {
 
   settings_module->Configure();
 
-
-  /*sterio::gui::settings::SettingsModule *settings_module =
-      static_cast<sterio::gui::settings::SettingsModule * >( sterio::gui::ModuleManager::Instance().GetModule("Settings"));
-
-  settings_module->Configure();
-  std::cout << "Configuring done" << std::endl;
-
-   */
-//  main_module->CreateMenuBranch("/File/Close");
-
   main_module->Show();
   std::cout << "Main module shown " << std::endl;
 

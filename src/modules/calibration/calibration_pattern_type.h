@@ -18,7 +18,7 @@ std::string to_string(CalibrationPatternType type);
 
 bool try_parse(const std::string & type_str, CalibrationPatternType & out_type);
 
-const CalibrationPatternType SupportedPatterns[1] = {Checkerboard};
+
 
 }
 }

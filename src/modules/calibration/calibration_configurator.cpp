@@ -7,6 +7,8 @@
 #include <QGroupBox>
 #include <QComboBox>
 #include "calibration_configurator.h"
+#include "consts.h"
+#include "calibrator_configurator_factory.h"
 
 namespace gago {
 namespace gui {
@@ -14,7 +16,10 @@ namespace configuration {
 
 CalibrationConfigurator::CalibrationConfigurator(QObject *parent) : QObject(parent) {
   for (int i = 0; i < sizeof(SupportedPatterns) / sizeof(CalibrationPatternType); ++i) {
-    calib_pattern_configurators_.push_back(calib_pattern_configurator_factory_.CreateConfigurator(SupportedPatterns[i]));
+    calib_pattern_configurators_.push_back(CalibPatternConfiguratorFactory::CreateConfigurator(SupportedPatterns[i]));
+  }
+  for (int i = 0; i < sizeof(SupportedCalibrators) / sizeof(CalibratorType); ++i) {
+    calibrator_configurators_.push_back(CalibratorConfiguratorFactory::Create(SupportedCalibrators[i]));
   }
 }
 
@@ -43,9 +48,29 @@ void CalibrationConfigurator::DrawConfigurationPage(QWidget *widget) {
 }
 
 void CalibrationConfigurator::DrawCalibratorSide()  {
-  QComboBox * calibrator = new QComboBox();
   calibrator_group_box_->setLayout(new QVBoxLayout());
-  calibrator_group_box_->layout()->addWidget(calibrator);
+  calibrator_combo_ = new QComboBox();
+  calibrator_group_box_->layout()->addWidget(calibrator_combo_);
+
+
+
+  for (int i = 0; i < sizeof(SupportedCalibrators) / sizeof(CalibratorType); ++i) {
+    calibrator_combo_->insertItem(i, calibrator_configurators_[i]->ConfigWindowName().c_str());
+    calibrator_configurator_frames_.push_back(new QFrame());
+    calibrator_configurator_frames_[i]->hide();
+    calibrator_group_box_->layout()->addWidget(calibrator_configurator_frames_[i]);
+    calibrator_configurators_[i]->DrawConfigurationPage(calibrator_configurator_frames_[i]);
+  }
+
+
+  QObject::connect(calibrator_combo_,
+                   QOverload<int>::of(&QComboBox::activated),
+                   this,
+                   &CalibrationConfigurator::CalibratorChanged);
+
+  calibrator_combo_->setCurrentIndex(0);
+  calibrator_combo_->activated(0);
+
 }
 
 void CalibrationConfigurator::DrawPatternSide() {
@@ -72,12 +97,16 @@ void CalibrationConfigurator::DrawPatternSide() {
 void CalibrationConfigurator::Apply() {
   for (IConfigurator *configurator: calib_pattern_configurators_)
     configurator->Apply();
+  for (IConfigurator *configurator: calibrator_configurators_)
+    configurator->Apply();
   current_calibration_settings_.calib_pattern_type = SupportedPatterns[patterns_combo->currentIndex()];
 }
 
 void CalibrationConfigurator::GetConfiguration(nlohmann::json & out_json) {
   for (IConfigurator *configurator: calib_pattern_configurators_)
     configurator->GetConfiguration(out_json["Pattern"][configurator->ConfigWindowName()]);
+  for (IConfigurator *configurator: calibrator_configurators_)
+    configurator->GetConfiguration(out_json["Calibrator"][configurator->ConfigWindowName()]);
 }
 
 void CalibrationConfigurator::SetConfiguration(const nlohmann::json & json) {
@@ -85,6 +114,13 @@ void CalibrationConfigurator::SetConfiguration(const nlohmann::json & json) {
     for (IConfigurator *configurator: calib_pattern_configurators_) {
       if (json["Pattern"].find(configurator->ConfigWindowName()) != json["Pattern"].end()) {
         configurator->SetConfiguration(json["Pattern"][configurator->ConfigWindowName()]);
+      }
+    }
+
+  if (json.find("Calibrator") != json.end())
+    for (IConfigurator *configurator: calibrator_configurators_) {
+      if (json["Calibrator"].find(configurator->ConfigWindowName()) != json["Calibrator"].end()) {
+        configurator->SetConfiguration(json["Calibrator"][configurator->ConfigWindowName()]);
       }
     }
 }
@@ -98,6 +134,11 @@ void CalibrationConfigurator::CalibrationPatternChanged(int idx) {
     idx == i ? calib_pattern_configurator_frames_[i]->show() : calib_pattern_configurator_frames_[i]->hide();
 }
 
+void CalibrationConfigurator::CalibratorChanged(int idx) {
+  for (int i = 0; i < calibrator_configurator_frames_.size(); ++i)
+    idx == i ? calibrator_configurator_frames_[i]->show() : calibrator_configurator_frames_[i]->hide();
+}
+
 IConfigurator *CalibrationConfigurator::GetActivePatternConfigurator() {
   for (int i = 0; i < calib_pattern_configurators_.size(); ++i) {
     if (current_calibration_settings_.calib_pattern_type == SupportedPatterns[i])
@@ -107,7 +148,10 @@ IConfigurator *CalibrationConfigurator::GetActivePatternConfigurator() {
 
 CalibrationConfigurator::~CalibrationConfigurator() {
   for (int i = 0; i < calib_pattern_configurators_.size(); ++i) {
-    calib_pattern_configurator_factory_.DisposeConfigurator(calib_pattern_configurators_[i]);
+    CalibPatternConfiguratorFactory::DisposeConfigurator(calib_pattern_configurators_[i]);
+  }
+  for (int i = 0; i < calibrator_configurators_.size(); ++i) {
+    CalibratorConfiguratorFactory::DisposeConfigurator(calibrator_configurators_[i]);
   }
 }
 
