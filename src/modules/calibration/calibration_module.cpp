@@ -2,12 +2,16 @@
 #include "calibration_module.h"
 #include "modules/main/main_module.h"
 #include "calibration_configurator.h"
+#include "pattern/calibration_pattern_factory.h"
+#include <QAction>
+#include "calibrator/mle_calibrator.h"
 
 namespace gago {
 namespace gui {
+
 namespace modules {
 
-CalibrationModule::CalibrationModule() : IModule("Calibration", "calibration") {
+CalibrationModule::CalibrationModule() : QObject(nullptr), IModule("Calibration", "calibration") {
 }
 
 ModuleInitializationResult CalibrationModule::Initalize() {
@@ -22,8 +26,25 @@ unsigned int CalibrationModule::MinorVersion() const {
   return 0;
 }
 
-void CalibrationModule::QRequiredModules(std::vector<RequiredModuleParams> & out_required_modules) {
-  out_required_modules.resize(2);
+void CalibrationModule::Calibrate() {
+  configuration::CalibrationConfigurator *cnf = new configuration::CalibrationConfigurator();
+  if (!settings_.empty())
+    cnf->SetConfiguration(settings_);
+
+  std::shared_ptr<gago::calibration::pattern::IPattern> calibration_pattern_ =
+      gago::calibration::pattern::CalibrationPatternFactory::Create(cnf->GetActivePatternConfigurator());
+
+
+  // Create calibrator
+  calibration::ICalibrator *window = new calibration::MLECalibrator(main_window_, calibration_pattern_);
+  camera_module_->RegisterWatcher(window);
+  window->Calibrate();
+  camera_module_->UnRegisterWatcher(window);
+  delete (calibration::MLECalibrator *) window;
+}
+
+void CalibrationModule::QRequiredModules(std::vector<RequiredModuleParams> &out_required_modules) {
+  out_required_modules.resize(3);
 
   out_required_modules[0].Name = "main";
   out_required_modules[0].MinMajorVersion = 1;
@@ -32,15 +53,22 @@ void CalibrationModule::QRequiredModules(std::vector<RequiredModuleParams> & out
   out_required_modules[1].Name = "settings";
   out_required_modules[1].MinMajorVersion = 1;
   out_required_modules[1].MinMinorVersion = 0;
+
+  out_required_modules[2].Name = "camera";
+  out_required_modules[2].MinMajorVersion = 1;
+  out_required_modules[2].MinMinorVersion = 0;
 }
 
-void CalibrationModule::SetRequiredModules(const std::vector<IModule *> & modules) {
+void CalibrationModule::SetRequiredModules(const std::vector<IModule *> &modules) {
   for (IModule *module: modules) {
     if (module->SystemName() == "main") {
+      main_window_ = ((MainModule *) module)->MainWindow();
       QAction *action = ((MainModule *) module)->CreateMenuBranch("/File/Calibration/Calibrate");
+      connect(action, &QAction::triggered, this, &CalibrationModule::Calibrate);
     } else if (module->SystemName() == "settings") {
       ((SettingsModule *) module)->RegisterConfigurable(this);
-    }
+    } else if (module->SystemName() == "camera")
+      camera_module_ = (CameraModule *) module;
   }
 }
 
@@ -58,6 +86,8 @@ void CalibrationModule::DisposeConfigurator(configuration::IConfigurator *config
 
 void CalibrationModule::ApplyConfiguration(configuration::IConfigurator *configurator) {
   configurator->GetConfiguration(settings_);
+  configuration::CalibrationConfigurator *cnf = (configuration::CalibrationConfigurator *) configurator;
+
 }
 
 }

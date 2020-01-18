@@ -47,12 +47,10 @@ void CalibrationConfigurator::DrawConfigurationPage(QWidget *widget) {
   right_layout->addStretch(1);
 }
 
-void CalibrationConfigurator::DrawCalibratorSide()  {
+void CalibrationConfigurator::DrawCalibratorSide() {
   calibrator_group_box_->setLayout(new QVBoxLayout());
   calibrator_combo_ = new QComboBox();
   calibrator_group_box_->layout()->addWidget(calibrator_combo_);
-
-
 
   for (int i = 0; i < sizeof(SupportedCalibrators) / sizeof(CalibratorType); ++i) {
     calibrator_combo_->insertItem(i, calibrator_configurators_[i]->ConfigWindowName().c_str());
@@ -61,7 +59,6 @@ void CalibrationConfigurator::DrawCalibratorSide()  {
     calibrator_group_box_->layout()->addWidget(calibrator_configurator_frames_[i]);
     calibrator_configurators_[i]->DrawConfigurationPage(calibrator_configurator_frames_[i]);
   }
-
 
   QObject::connect(calibrator_combo_,
                    QOverload<int>::of(&QComboBox::activated),
@@ -102,14 +99,14 @@ void CalibrationConfigurator::Apply() {
   current_calibration_settings_.calib_pattern_type = SupportedPatterns[patterns_combo->currentIndex()];
 }
 
-void CalibrationConfigurator::GetConfiguration(nlohmann::json & out_json) {
+void CalibrationConfigurator::GetConfiguration(nlohmann::json &out_json) {
   for (IConfigurator *configurator: calib_pattern_configurators_)
     configurator->GetConfiguration(out_json["Pattern"][configurator->ConfigWindowName()]);
   for (IConfigurator *configurator: calibrator_configurators_)
     configurator->GetConfiguration(out_json["Calibrator"][configurator->ConfigWindowName()]);
 }
 
-void CalibrationConfigurator::SetConfiguration(const nlohmann::json & json) {
+void CalibrationConfigurator::SetConfiguration(const nlohmann::json &json) {
   if (json.find("Pattern") != json.end())
     for (IConfigurator *configurator: calib_pattern_configurators_) {
       if (json["Pattern"].find(configurator->ConfigWindowName()) != json["Pattern"].end()) {
@@ -123,9 +120,13 @@ void CalibrationConfigurator::SetConfiguration(const nlohmann::json & json) {
         configurator->SetConfiguration(json["Calibrator"][configurator->ConfigWindowName()]);
       }
     }
+  if (!(json.find("SelectedPatterntype") != json.end()
+      && try_parse(json["SelectedPatternType"], current_calibration_settings_.calib_pattern_type)))
+    current_calibration_settings_.calib_pattern_type = SupportedPatterns[0];
+
 }
 
-const std::string & CalibrationConfigurator::ConfigWindowName() const {
+const std::string &CalibrationConfigurator::ConfigWindowName() const {
   return window_name;
 }
 
