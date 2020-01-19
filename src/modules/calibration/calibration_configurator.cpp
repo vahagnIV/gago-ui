@@ -120,9 +120,13 @@ void CalibrationConfigurator::SetConfiguration(const nlohmann::json &json) {
         configurator->SetConfiguration(json["Calibrator"][configurator->ConfigWindowName()]);
       }
     }
-  if (!(json.find("SelectedPatterntype") != json.end()
+  if (!(json.find("SelectedPatternType") != json.end()
       && try_parse(json["SelectedPatternType"], current_calibration_settings_.calib_pattern_type)))
     current_calibration_settings_.calib_pattern_type = SupportedPatterns[0];
+
+  if (!(json.find("SelectedCalibratorType") != json.end()
+      && try_parse(json["SelectedCalibratorType"], current_calibration_settings_.calibrator_type)))
+    current_calibration_settings_.calibrator_type = SupportedCalibrators[0];
 
 }
 
@@ -144,6 +148,13 @@ IConfigurator *CalibrationConfigurator::GetActivePatternConfigurator() {
   for (int i = 0; i < calib_pattern_configurators_.size(); ++i) {
     if (current_calibration_settings_.calib_pattern_type == SupportedPatterns[i])
       return calib_pattern_configurators_[i];
+  }
+}
+
+IConfigurator *CalibrationConfigurator::GetActiveCalibratorConfigurator() {
+  for (int i = 0; i < calibrator_configurators_.size(); ++i) {
+    if (current_calibration_settings_.calibrator_type == SupportedCalibrators[i])
+      return calibrator_configurators_[i];
   }
 }
 

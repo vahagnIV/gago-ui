@@ -1,8 +1,11 @@
 //
 // Created by vahagn on 1/16/20.
 //
-#include "calibration_configurator.h"
+#include "calibrator/mle_calibrator.h"
+#include <QApplication>
+int main(int argc, char *argv[]) {
+  QApplication application(argc,argv);
+  gago::gui::calibration::MLEConfigurationSettings settings;
+  gago::gui::calibration::MLECalibrator c(nullptr, nullptr, settings);
 
-int main(){
-  gago::gui::configuration::CalibrationConfigurator con;
 }

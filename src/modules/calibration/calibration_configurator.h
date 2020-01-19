@@ -34,6 +34,7 @@ class CalibrationConfigurator : public QObject, public IConfigurator {
   virtual ~CalibrationConfigurator();
 
   IConfigurator *GetActivePatternConfigurator();
+  IConfigurator *GetActiveCalibratorConfigurator();
  private slots:
   void CalibrationPatternChanged(int idx);
   void CalibratorChanged(int idx);

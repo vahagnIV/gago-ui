@@ -8,6 +8,7 @@
 #include "icalibrator.h"
 #include "../pattern/ipattern.h"
 #include "common/video_player.h"
+#include "mle_configuration_settings.h"
 
 namespace Ui {
 class MLECalibrationWindow;
@@ -20,8 +21,8 @@ namespace calibration {
 class MLECalibrator : public QDialog, public ICalibrator {
  Q_OBJECT
  public:
-  MLECalibrator(QWidget *parent = nullptr,
-                const std::shared_ptr<gago::calibration::pattern::IPattern> &pattern = nullptr);
+  MLECalibrator(QWidget *parent ,
+                const std::shared_ptr<gago::calibration::pattern::IPattern> &pattern, const MLEConfigurationSettings & settings);
   ~MLECalibrator();
   void Calibrate() override;
   void Notify(const std::shared_ptr<std::vector<io::video::Capture>> &ptr) override;
@@ -31,6 +32,7 @@ class MLECalibrator : public QDialog, public ICalibrator {
  private:
   std::vector<common::VideoPlayer *> players_;
   std::shared_ptr<gago::calibration::pattern::IPattern> pattern_;
+  MLEConfigurationSettings settings_;
   Ui::MLECalibrationWindow *ui_;
 
 };

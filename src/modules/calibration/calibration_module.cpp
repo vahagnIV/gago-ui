@@ -4,7 +4,7 @@
 #include "calibration_configurator.h"
 #include "pattern/calibration_pattern_factory.h"
 #include <QAction>
-#include "calibrator/mle_calibrator.h"
+#include "calibrator/calibrator_factory.h"
 
 namespace gago {
 namespace gui {
@@ -31,16 +31,14 @@ void CalibrationModule::Calibrate() {
   if (!settings_.empty())
     cnf->SetConfiguration(settings_);
 
-  std::shared_ptr<gago::calibration::pattern::IPattern> calibration_pattern_ =
-      gago::calibration::pattern::CalibrationPatternFactory::Create(cnf->GetActivePatternConfigurator());
 
 
   // Create calibrator
-  calibration::ICalibrator *window = new calibration::MLECalibrator(main_window_, calibration_pattern_);
-  camera_module_->RegisterWatcher(window);
+  std::shared_ptr<calibration::ICalibrator> window = calibration::CalibratorFactory::Create(cnf, main_window_);
+  camera_module_->RegisterWatcher(window.get());
   window->Calibrate();
-  camera_module_->UnRegisterWatcher(window);
-  delete (calibration::MLECalibrator *) window;
+  camera_module_->UnRegisterWatcher(window.get());
+
 }
 
 void CalibrationModule::QRequiredModules(std::vector<RequiredModuleParams> &out_required_modules) {

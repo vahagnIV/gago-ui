@@ -6,15 +6,15 @@
 #define GAGO_UI_MLE_CALIBRATOR_CONFIGURATOR_H
 
 #include "modules/settings/iconfigurator.h"
+#include "calibrator/mle_configuration_settings.h"
 #include <QCheckBox>
+#include <QLineEdit>
 
 namespace gago {
 namespace gui {
 namespace configuration {
 
-struct MLEConfigurationSettings{
-  bool calibrate_camera_first;
-};
+
 
 class MLECalibratorConfigurator : public IConfigurator {
  public:
@@ -24,10 +24,13 @@ class MLECalibratorConfigurator : public IConfigurator {
   void GetConfiguration(nlohmann::json & out_json) override;
   void SetConfiguration(const nlohmann::json & json) override;
   const std::string & ConfigWindowName() const override;
+  const calibration::MLEConfigurationSettings & GetSettings(){ return current_settings_;}
  protected:
-  MLEConfigurationSettings current_settings_;
+  calibration::MLEConfigurationSettings current_settings_;
 
   QCheckBox * camera_first_chkbx_;
+  QLineEdit *folder_line_edit_;
+
 
   const std::string window_name_;
 

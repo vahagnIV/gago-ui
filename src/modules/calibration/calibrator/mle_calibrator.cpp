@@ -5,18 +5,20 @@
 #include "mle_calibrator.h"
 #include "ui_mle_calibration_window.h"
 #include "common/video_player.h"
-#include <QVBoxLayout>
+#include <QHBoxLayout>
 
 namespace gago {
 namespace gui {
 namespace calibration {
 
 MLECalibrator::MLECalibrator(QWidget *parent,
-                             const std::shared_ptr<gago::calibration::pattern::IPattern> &pattern) : QDialog(parent),
-                                                                                                     pattern_(pattern),
-                                                                                                     ui_(new Ui::MLECalibrationWindow()) {
+                             const std::shared_ptr<gago::calibration::pattern::IPattern> &pattern,
+                             const MLEConfigurationSettings &settings) : QDialog(parent),
+                                                                         ui_(new Ui::MLECalibrationWindow()),
+                                                                         pattern_(pattern),
+                                                                         settings_(settings) {
   ui_->setupUi(this);
-  this->setLayout(new QVBoxLayout());
+  //this->setLayout(new QHBoxLayout());
 
 }
 
@@ -30,8 +32,8 @@ void MLECalibrator::Close() {
 
 void MLECalibrator::Calibrate() {
   exec();
-
 }
+
 void MLECalibrator::Notify(const std::shared_ptr<std::vector<io::video::Capture>> &ptr) {
   std::vector<cv::Mat> images;
   for (int j = 0; j < ptr->size(); ++j) {
@@ -47,9 +49,10 @@ void MLECalibrator::Notify(const std::shared_ptr<std::vector<io::video::Capture>
 }
 
 void MLECalibrator::SetCameras(const std::vector<const io::video::CameraMeta *> &vector) {
+
   for (int i = 0; i < vector.size(); ++i) {
     players_.push_back(new common::VideoPlayer());
-    layout()->addWidget(players_[i]);
+    this->ui_->verticalLayout->addWidget(players_[i]);
   }
 }
 }
