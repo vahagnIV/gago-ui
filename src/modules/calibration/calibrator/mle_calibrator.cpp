@@ -52,7 +52,7 @@ void MLECalibrator::SetCameras(const std::vector<const io::video::CameraMeta *> 
 
   for (int i = 0; i < vector.size(); ++i) {
     players_.push_back(new common::VideoPlayer());
-    this->ui_->verticalLayout->addWidget(players_[i]);
+    this->ui_->horizontalLayout_3->addWidget(players_[i]);
   }
 }
 }
