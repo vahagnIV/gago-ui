@@ -39,29 +39,38 @@ void MLECalibratorConfigurator::DrawConfigurationPage(QWidget *widget) {
     delete dialog;
   });
   layout->addWidget(pick_folder_btn, 1, 3, 1, 1);
+  layout->addWidget(new QLabel("Wait time:"), 2, 0, 1, 2);
+  wait_time_spinbox_ = new QSpinBox();
+  wait_time_spinbox_->setValue(current_settings_.wait_time);
+  layout->addWidget(wait_time_spinbox_, 2, 1, 1, 3);
 
 }
 
 void MLECalibratorConfigurator::Apply() {
   current_settings_.calibrate_camera_first = camera_first_chkbx_->isChecked();
   current_settings_.image_save_folder = folder_line_edit_->text();
+  current_settings_.wait_time = wait_time_spinbox_->value();
 
 }
 
-void MLECalibratorConfigurator::GetConfiguration(nlohmann::json &out_json) {
+void MLECalibratorConfigurator::GetConfiguration(nlohmann::json & out_json) {
   out_json["CalibrateSeparately"] = current_settings_.calibrate_camera_first;
   out_json["ImageSaveFolder"] = current_settings_.image_save_folder.toStdString();
+  out_json["WaitTime"] = current_settings_.wait_time;
 }
 
-void MLECalibratorConfigurator::SetConfiguration(const nlohmann::json &json) {
+void MLECalibratorConfigurator::SetConfiguration(const nlohmann::json & json) {
   if (json.find("CalibrateSeparately") != json.end())
     current_settings_.calibrate_camera_first = json["CalibrateSeparately"];
 
   if (json.find("ImageSaveFolder") != json.end())
     current_settings_.image_save_folder = QString::fromStdString(json["ImageSaveFolder"]);
+
+  if (json.find("WaitTime") != json.end())
+    current_settings_.wait_time = json["WaitTime"];
 }
 
-const std::string &MLECalibratorConfigurator::ConfigWindowName() const {
+const std::string & MLECalibratorConfigurator::ConfigWindowName() const {
   return window_name_;
 }
 

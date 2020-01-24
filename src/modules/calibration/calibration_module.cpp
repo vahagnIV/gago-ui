@@ -84,7 +84,7 @@ void CalibrationModule::DisposeConfigurator(configuration::IConfigurator *config
 
 void CalibrationModule::ApplyConfiguration(configuration::IConfigurator *configurator) {
   configurator->GetConfiguration(settings_);
-  configuration::CalibrationConfigurator *cnf = (configuration::CalibrationConfigurator *) configurator;
+  //configuration::CalibrationConfigurator *cnf = (configuration::CalibrationConfigurator *) configurator;
 
 }
 

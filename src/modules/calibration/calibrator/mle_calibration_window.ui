@@ -32,7 +32,7 @@
             </size>
            </property>
            <property name="text">
-            <string>PushButton</string>
+            <string>Capture</string>
            </property>
           </widget>
          </item>
@@ -44,9 +44,15 @@
       <layout class="QVBoxLayout" name="verticalLayout_3">
        <item>
         <widget class="QScrollArea" name="scrollArea">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <horstretch>1</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="maximumSize">
           <size>
-           <width>300</width>
+           <width>170</width>
            <height>16777215</height>
           </size>
          </property>
@@ -58,7 +64,7 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>298</width>
+            <width>168</width>
             <height>456</height>
            </rect>
           </property>
@@ -73,9 +79,12 @@
              </property>
              <property name="maximumSize">
               <size>
-               <width>300</width>
+               <width>167</width>
                <height>16777215</height>
               </size>
+             </property>
+             <property name="viewMode">
+              <enum>QListView::IconMode</enum>
              </property>
             </widget>
            </item>

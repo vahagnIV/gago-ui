@@ -9,6 +9,7 @@
 #include "calibrator/mle_configuration_settings.h"
 #include <QCheckBox>
 #include <QLineEdit>
+#include <QSpinBox>
 
 namespace gago {
 namespace gui {
@@ -30,6 +31,7 @@ class MLECalibratorConfigurator : public IConfigurator {
 
   QCheckBox * camera_first_chkbx_;
   QLineEdit *folder_line_edit_;
+  QSpinBox * wait_time_spinbox_;
 
 
   const std::string window_name_;

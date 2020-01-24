@@ -21,19 +21,24 @@ namespace calibration {
 class MLECalibrator : public QDialog, public ICalibrator {
  Q_OBJECT
  public:
-  MLECalibrator(QWidget *parent ,
-                const std::shared_ptr<gago::calibration::pattern::IPattern> &pattern, const MLEConfigurationSettings & settings);
+  MLECalibrator(QWidget *parent,
+                const std::shared_ptr<gago::calibration::pattern::IPattern> & pattern,
+                const MLEConfigurationSettings & settings);
   ~MLECalibrator();
   void Calibrate() override;
-  void Notify(const std::shared_ptr<std::vector<io::video::Capture>> &ptr) override;
-  void SetCameras(const std::vector<const io::video::CameraMeta *> &vector) override;
+  void Notify(const std::shared_ptr<std::vector<io::video::Capture>> & ptr) override;
+  void SetCameras(const std::vector<const io::video::CameraMeta *> & vector) override;
  private slots:
   void Close();
+ void CaptureRequested();
  private:
   std::vector<common::VideoPlayer *> players_;
   std::shared_ptr<gago::calibration::pattern::IPattern> pattern_;
   MLEConfigurationSettings settings_;
   Ui::MLECalibrationWindow *ui_;
+  long next_capture_time_;
+  int last_image_index;
+  const char format[12] = "%s_%03d.jpg";
 
 };
 
