@@ -32,6 +32,7 @@ class MLECalibratorConfigurator : public IConfigurator {
   QCheckBox * camera_first_chkbx_;
   QLineEdit *folder_line_edit_;
   QSpinBox * wait_time_spinbox_;
+  QCheckBox  * sound_enabled_chkbx_;
 
 
   const std::string window_name_;

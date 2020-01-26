@@ -9,50 +9,6 @@ ThumbShowItemModel::ThumbShowItemModel(const QDir &directory, const QStringList 
     : QAbstractItemModel(parent),
       cameras_(cameras),
       directory_(directory) {
-  directory_.setSorting(QDir::Name);
-
-  /*for (int i = 0; i < cameras.size(); ++i) {
-    cameras_[i] = cameras_[i] + "_*.jpg";
-  }*/
-  QStringList filter = {cameras[0] + "_*.jpg"};
-  QStringList first_camera_files = directory_.entryList(filter, QDir::NoFilter, QDir::Name);
-
-  for (int j = 0; j < first_camera_files.size(); ++j) {
-
-    int index = first_camera_files[j].right(7).left(3).toInt();
-    QStringList filenames = {first_camera_files[j]};
-
-    for (int i = 1; i < cameras.size(); ++i) {
-      QString filename = QString("%1_%2.jpg").arg(cameras[i]).arg(QString::number(index).rightJustified(3, '0'));
-      if (QFile::exists(directory_.filePath(filename))) {
-        filenames.append(filename);
-      }
-    }
-    if (filenames.count() != cameras.size())
-      continue;
-
-    QList<QImage> images;
-    int total_length = 0;
-    int max_height = 0;
-    for (int k = 0; k < filenames.size(); ++k) {
-      QImage image(directory.filePath(filenames[k]));
-      total_length += image.width();
-      max_height = std::max(max_height, image.height());
-      images.append(image);
-    }
-
-    QImage thumbnail(total_length, max_height, QImage::Format_RGB888);
-    QPainter painter;
-    int offset = 0;
-    painter.begin(&thumbnail);
-    for (const QImage &image: images) {
-      painter.drawImage(offset, 0, image);
-      offset += image.width();
-    }
-    painter.end();
-
-    images_.append(thumbnail.scaledToWidth(150, Qt::TransformationMode::SmoothTransformation));
-  }
 }
 
 QVariant ThumbShowItemModel::headerData(int section, Qt::Orientation orientation, int role) const {
@@ -91,12 +47,74 @@ QVariant ThumbShowItemModel::data(const QModelIndex &index, int role) const {
     varinat.setValue(QPixmap::fromImage(images_[index.row()]));
     return varinat;
   }
-
-  /* if(role == Qt::DisplayRole)
-     return QImage()*/
-
-  // FIXME: Implement me!
   return QVariant();
+}
+
+bool ThumbShowItemModel::AppendByIndex(int idx, char *format) {
+  QStringList filenames = GetFilenames(idx, format);
+  return AppendByFilenames(filenames);
+}
+
+QStringList ThumbShowItemModel::GetFilenames(int idx, char *format) {
+  QStringList filenames;
+  for (const QString &cam_forma: cameras_) {
+    QString filename = QString::asprintf(format, cam_forma.toStdString().c_str(), idx);
+    if (!directory_.exists(filename))
+      break;
+    else
+      filenames.append(filename);
+  }
+  return filenames;
+}
+
+QList<QImage> ThumbShowItemModel::GetImages(const QStringList &filenames) {
+  QList<QImage> images;
+  for (const QString &filename: filenames)
+    images.append(QImage(directory_.filePath(filename)));
+  return images;
+}
+
+void ThumbShowItemModel::GetTotalWidthMaxHeight(const QList<QImage> &images,
+                                                int &out_total_width,
+                                                int &out_max_height) {
+  out_max_height = 0;
+  out_total_width = 0;
+  for (const QImage &image: images) {
+    out_max_height = std::max(image.height(), out_max_height);
+    out_total_width += image.width();
+  }
+
+}
+
+QImage ThumbShowItemModel::GetThumbnail(const QList<QImage> &images, int max_width) {
+  int total_width, max_height;
+  GetTotalWidthMaxHeight(images, total_width, max_height);
+
+  QImage thumbnail(total_width, max_height, QImage::Format_RGB888);
+  QPainter painter;
+  int offset = 0;
+  painter.begin(&thumbnail);
+  for (const QImage &image: images) {
+    painter.drawImage(offset, 0, image);
+    offset += image.width();
+  }
+  painter.end();
+  return thumbnail.scaledToWidth(max_width);
+}
+
+bool ThumbShowItemModel::AppendByFilenames(const QStringList &filenames) {
+  if (cameras_.size() != filenames.size())
+    return false;
+  for (const QString &filename: filenames)
+    if (!directory_.exists(filename))
+      return false;
+
+  QList<QImage> images = GetImages(filenames);
+  QImage thumbnail = GetThumbnail(images, 150);
+  beginInsertRows(QModelIndex(), images_.size(), images_.size() + 1);
+  images_.append(thumbnail);
+  endInsertRows();
+  return true;
 }
 
 }

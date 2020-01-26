@@ -12,6 +12,7 @@ struct MLEConfigurationSettings{
   bool calibrate_camera_first;
   int wait_time;
   QString image_save_folder;
+  bool sounds_enabled;
 };
 
 }}}
