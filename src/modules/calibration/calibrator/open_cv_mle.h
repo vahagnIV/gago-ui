@@ -6,16 +6,18 @@
 #define GAGO_UI_SRC_MODULES_CALIBRATION_CALIBRATOR_OPEN_CV_MLE_H_
 
 #include <opencv2/opencv.hpp>
+#include "pattern/ipattern.h"
 using namespace cv;
 using namespace std;
+
 namespace gago {
 namespace calibration {
 
 enum { DETECTION = 0, CAPTURING = 1, CALIBRATED = 2 };
-enum Pattern { CHESSBOARD, CIRCLES_GRID, ASYMMETRIC_CIRCLES_GRID };
+
 
 class OpenCvMLE {
- private:
+ public:
   static void calcChessboardCorners(Size boardSize, float squareSize, vector<Point3f>& corners, Pattern patternType = CHESSBOARD);
   static bool runCalibration( vector<vector<Point2f> > imagePoints,
                               Size imageSize, Size boardSize, Pattern patternType,

@@ -17,6 +17,8 @@ class CheckerboardPattern: public IPattern {
   void Extract(const std::vector<cv::Mat> &image,
                std::vector<std::vector<cv::Point2f>> &out_detected_points) override;
   void DrawPattern(cv::Mat &out_image, const std::vector<cv::Point2f> &points) override;
+  const cv::Size & GetSize() const override ;
+  Pattern GetType() const override;
  private:
   cv::Size pattern_size_;
 
