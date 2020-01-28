@@ -53,12 +53,11 @@ void MLECalibrator::Notify(const std::shared_ptr<std::vector<io::video::Capture>
     images.push_back((*ptr)[j].data);
   }
   std::vector<std::vector<cv::Point2f>> pts;
-  pattern_->Extract(images, pts);
+  bool found = pattern_->Extract(images, pts);
   long now = std::chrono::high_resolution_clock::now().time_since_epoch().count();
   if (next_capture_time_ < now) {
     next_capture_time_ = std::numeric_limits<typeof(next_capture_time_)>::max();
-    if (std::all_of(pts.begin(), pts.end(), [](const std::vector<cv::Point2f> & item) { return item.size(); })) {
-
+    if (found) {
       if (player) {
         player->setMedia(QUrl::fromLocalFile(
             "/home/vahagn/CLionProjects/gago-ui/sounds/Camera Shutter Click-SoundBible.com-228518582.mp3"));
@@ -79,7 +78,7 @@ void MLECalibrator::Notify(const std::shared_ptr<std::vector<io::video::Capture>
         QImageWriter writer(dir.filePath(filename));
         writer.write(image);
         filenames.append(filename);
-        files_.back().push_back(filename.toStdString());
+        files_.back().push_back(dir.filePath(filename).toStdString());
       }
       ((ThumbShowItemModel *) ui_->listView->model())->AppendByFilenames(filenames);
 
@@ -113,7 +112,16 @@ void MLECalibrator::SetCameras(const std::vector<const io::video::CameraMeta *> 
     this->ui_->horizontalLayout_3->addWidget(players_[i]);
   }
 
+  RestoreFilenames(format, cam_names);
+
   ui_->listView->setModel(new ThumbShowItemModel(QDir(settings_.image_save_folder), cam_names));
+  for (std::vector<std::string> & filenames: files_) {
+    QStringList batch_files;
+    for (std::string file_path: filenames)
+      batch_files.push_back(QString::fromStdString(file_path));
+    ((ThumbShowItemModel *) ui_->listView->model())->AppendByFilenames(batch_files);
+
+  }
 }
 
 void MLECalibrator::CaptureRequested() {
@@ -126,41 +134,32 @@ void MLECalibrator::on_pushButton_2_clicked() {
   ui_->pushButton->setEnabled(false);
   ui_->pushButton_2->setEnabled(false);
 
-  gago::calibration::OpenCvMLE mle;
-  std::vector<Point3f> corners;
-  mle.calcChessboardCorners(pattern_->GetSize(), 1, corners, pattern_->GetType());
-
-  std::vector<std::vector<std::vector<Point2f>>> image_points(files_[0].size());
-
-  for (int capture_idx = 0; capture_idx < files_.size(); ++capture_idx) {
-    std::vector<std::string> & image_filenames = files_[capture_idx];
-    image_points[capture_idx].resize(image_filenames.size());
-
-    std::vector<cv::Mat> images(image_filenames.size());
-    for (int i = 0; i < images.size(); ++i) {
-      images[i] = cv::imread(image_filenames[i], cv::IMREAD_GRAYSCALE);
-    }
-    std::vector<std::vector<cv::Point2f>> points;
-    pattern_->Extract(images, points);
-    for (int camera_idx = 0; camera_idx < images.size(); ++camera_idx) {
-      if (gago::calibration::Pattern::CHESSBOARD == pattern_->GetType())
-        cornerSubPix(images[camera_idx], points[camera_idx], cv::Size(11, 11),
-                     Size(-1, -1), TermCriteria(TermCriteria::EPS + TermCriteria::COUNT, 30, 0.0001));
-      image_points[camera_idx].push_back(points[camera_idx]);
-
-    }
-  }
-  for (int camera_idx = 0; camera_idx < image_points.size(); ++camera_idx) {
-    Mat cameraMatrix, distCoeffs;
-    vector<Mat> rvecs, tvecs;
-    vector<float> reprojErrs;
-    vector<Point3f> newObjPoints;
-    double totalAvgErr;
-//    mle.runCalibration(image_points[camera_idx], )
-  }
+  gago::calibration::OpenCvMLE mle(pattern_, settings_);
+  gago::calibration::CalibrationEstimates estimates;
+  mle.Calibrate(files_, estimates);
 
   ui_->pushButton->setEnabled(true);
   ui_->pushButton_2->setEnabled(true);
+}
+
+void MLECalibrator::RestoreFilenames(const char *format, QStringList cameras_) {
+  last_image_index = 0;
+  QDir directory(settings_.image_save_folder);
+  QStringList filters = {QString(format).replace("%s", cameras_[0]).replace("%03d", "*")};
+  for (const QString & filename: directory.entryList(filters)) {
+    int idx = filename.right(7).left(3).toInt();
+    std::vector<std::string> idx_files = {directory.filePath(filename).toStdString()};
+    for (int i = 1; i < cameras_.size(); ++i) {
+      QString cam_filename = QString::asprintf(format, cameras_[i].toStdString().c_str(), idx);
+      if (directory.exists(cam_filename))
+        idx_files.push_back(directory.filePath(cam_filename).toStdString());
+    }
+
+    if (idx_files.size() == cameras_.size()) {
+      files_.push_back(idx_files);
+      last_image_index = std::max(last_image_index, idx);
+    }
+  }
 }
 
 }

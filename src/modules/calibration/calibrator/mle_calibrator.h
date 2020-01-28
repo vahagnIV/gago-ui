@@ -5,6 +5,7 @@
 #ifndef GAGO_UI_SRC_MODULES_CALIBRATION_CALIBRATION_WINDOW_H_
 #define GAGO_UI_SRC_MODULES_CALIBRATION_CALIBRATION_WINDOW_H_
 #include <QDialog>
+#include <QDir>
 #include <QMediaPlayer>
 #include "icalibrator.h"
 #include "../pattern/ipattern.h"
@@ -29,12 +30,14 @@ class MLECalibrator : public QDialog, public ICalibrator {
   void Calibrate() override;
   void Notify(const std::shared_ptr<std::vector<io::video::Capture>> & ptr) override;
   void SetCameras(const std::vector<const io::video::CameraMeta *> & vector) override;
-private slots:
+
+ private slots:
   void on_pushButton_2_clicked();
 
-private slots:
+ private slots:
   void Close();
- void CaptureRequested();
+  void CaptureRequested();
+  void RestoreFilenames(const char *format, QStringList cameras_);
  private:
   Ui::MLECalibrationWindow *ui_;
 
@@ -46,11 +49,10 @@ private slots:
   long next_capture_time_;
   int last_image_index;
   const char format[12] = "%s_%03d.jpg";
-  QMediaPlayer * player;
+  QMediaPlayer *player;
 
   // Calibration
   std::vector<std::vector<std::string>> files_;
-
 
 };
 
