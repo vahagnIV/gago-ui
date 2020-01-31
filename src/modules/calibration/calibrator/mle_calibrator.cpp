@@ -29,6 +29,7 @@ MLECalibrator::MLECalibrator(QWidget *parent,
                                                                           next_capture_time_(std::numeric_limits<typeof(next_capture_time_)>::max()) {
   ui_->setupUi(this);
   connect(ui_->pushButton, &QPushButton::pressed, this, &MLECalibrator::CaptureRequested);
+  connect(ui_->pushButton_2, &QPushButton::pressed, this, &MLECalibrator::OnCalibrateButtonClicked);
   ui_->listView->setAutoFillBackground(true);
 
   ;
@@ -130,7 +131,7 @@ void MLECalibrator::CaptureRequested() {
       + std::chrono::seconds(settings_.wait_time)).count();
 }
 
-void MLECalibrator::on_pushButton_2_clicked() {
+void MLECalibrator::OnCalibrateButtonClicked() {
   ui_->pushButton->setEnabled(false);
   ui_->pushButton_2->setEnabled(false);
 

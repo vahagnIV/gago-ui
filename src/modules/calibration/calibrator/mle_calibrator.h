@@ -32,7 +32,7 @@ class MLECalibrator : public QDialog, public ICalibrator {
   void SetCameras(const std::vector<const io::video::CameraMeta *> & vector) override;
 
  private slots:
-  void on_pushButton_2_clicked();
+  void OnCalibrateButtonClicked();
 
  private slots:
   void Close();
