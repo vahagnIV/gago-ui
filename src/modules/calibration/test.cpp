@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
     files.push_back(batch);
   }
   gago::calibration::CalibrationEstimates out_estimates;
-  mle.Calibrate(files, out_estimates);
+//  mle.Calibrate(files, out_estimates);
 
   // gago::gui::calibration::MLECalibrator c(nullptr, nullptr, settings);
   application.exec();

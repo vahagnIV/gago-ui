@@ -88,8 +88,8 @@
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_2">
-           <item>
-            <widget class="QListView" name="listView">
+           <item>            
+            <widget class="gago::calibration::ImageSetView" name="listView">
              <property name="minimumSize">
               <size>
                <width>150</width>
@@ -117,6 +117,14 @@
    </item>
   </layout>
  </widget>
+<customwidgets>
+  <customwidget>
+   <class>ImageSetView</class>
+   <extends>QListView</extends>
+   <header>image_set_view.h</header>
+   <container>1</container>
+  </customwidget>
+</customwidgets>
  <resources/>
  <connections/>
 </ui>

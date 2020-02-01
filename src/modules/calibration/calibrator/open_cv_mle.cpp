@@ -4,11 +4,12 @@
 
 #include <calibration_estimates.h>
 #include "open_cv_mle.h"
+
 namespace gago {
 namespace calibration {
 
-OpenCvMLE::OpenCvMLE(const std::shared_ptr<pattern::IPattern> & pattern,
-                     const gago::gui::calibration::MLEConfigurationSettings & settings)
+OpenCvMLE::OpenCvMLE(const std::shared_ptr<pattern::IPattern> &pattern,
+                     const gago::gui::calibration::MLEConfigurationSettings &settings)
     : pattern_(pattern), settings_(settings) {
 
 }
@@ -18,7 +19,10 @@ enum CalibrationErrors {
   EmptyList = 2
 };
 
-int OpenCvMLE::Calibrate(const std::vector<std::vector<std::string>> & files, CalibrationEstimates & out_estimates) {
+int OpenCvMLE::Calibrate(const QList<QStringList> &files,
+                         CalibrationEstimates &out_estimates,
+                         QList<PatternEstimationParameters> & pattern_estimation_parameters,
+                         QList<int> &out_batch_idx) {
 
   int result;
 
@@ -28,13 +32,13 @@ int OpenCvMLE::Calibrate(const std::vector<std::vector<std::string>> & files, Ca
   std::vector<cv::Size> image_sizes;
   std::vector<std::vector<std::vector<cv::Point2f>>> image_points;
 
-  result = GetImagePoints(files, image_sizes, image_points);
+  result = GetImagePoints(files, image_sizes, image_points, out_batch_idx);
   if (result != 0)
     return result;
 
   pattern_->GetObjectPoints(object_points, image_points[0].size());
 
-  std::vector<PatternEstimationParameters> pattern_parameters(image_sizes.size());
+  pattern_estimation_parameters.reserve(image_sizes.size());
 
   if (settings_.calibrate_camera_first)
     for (int camera_idx = 0; camera_idx < image_sizes.size(); ++camera_idx) {
@@ -46,7 +50,8 @@ int OpenCvMLE::Calibrate(const std::vector<std::vector<std::string>> & files, Ca
       int flags = 0;
       if (settings_.fix_aspect_ratio)
         flags |= cv::CALIB_FIX_ASPECT_RATIO;
-      result = CalibrateSeparateMatrix(image_points[camera_idx],
+      PatternEstimationParameters pattern_params;
+      result = CalibrateSeparateCamera(image_points[camera_idx],
                                        object_points,
                                        image_sizes[camera_idx],
                                        pattern_->GetSize(),
@@ -54,12 +59,16 @@ int OpenCvMLE::Calibrate(const std::vector<std::vector<std::string>> & files, Ca
                                        false,
                                        flags,
                                        out_estimates.intrinsic_parameters[camera_idx],
-                                       pattern_parameters[camera_idx],
+                                       pattern_params,
                                        new_object_points);
+      pattern_estimation_parameters.append(pattern_params);
       if (0 != result)
         return result;
 
     }
+  if (files[0].size() < 2)
+    return 0;
+
   out_estimates.rms = cv::stereoCalibrate(object_points,
                                           image_points[0],
                                           image_points[1],
@@ -81,21 +90,21 @@ int OpenCvMLE::Calibrate(const std::vector<std::vector<std::string>> & files, Ca
   return 0;
 }
 
-int OpenCvMLE::GetImagePoints(const std::vector<std::vector<std::string>> & files,
-                              std::vector<cv::Size> & out_image_sizes,
-                              std::vector<std::vector<std::vector<cv::Point2f>>> & out_image_points) const {
-  if (files.empty())
+int OpenCvMLE::GetImagePoints(const QList<QStringList> &files,
+                              std::vector<cv::Size> &out_image_sizes,
+                              std::vector<std::vector<std::vector<cv::Point2f>>> &out_image_points,
+                              QList<int> &out_batch_idx) const {
+  if (files.isEmpty())
     return EmptyList;
 
   out_image_points.resize(files[0].size());
-  out_image_sizes.resize(0);
 
   // All images per camera should have the same size in all batches,
   // hence, we keep the sizes of the first batch in order to
   // compare to the others
+  out_image_sizes.resize(0);
 
-  for (const std::vector<std::string> image_batch: files) {
-
+  for (const QStringList &image_batch: files) {
     bool cam_resolutions_initialized = !out_image_sizes.empty();
 
     // Ignore the batch if there is an inconsistent number of images
@@ -105,9 +114,9 @@ int OpenCvMLE::GetImagePoints(const std::vector<std::vector<std::string>> & file
     std::vector<cv::Mat> images;
     std::vector<std::vector<cv::Point2f>> pts;
     for (int cam_idx = 0; cam_idx < image_batch.size(); ++cam_idx) {
-      const std::string & image_path = image_batch[cam_idx];
+      const QString &image_path = image_batch[cam_idx];
 
-      images.push_back(cv::imread(image_path, cv::IMREAD_GRAYSCALE));
+      images.push_back(cv::imread(image_path.toStdString(), cv::IMREAD_GRAYSCALE));
 
       // Check if image sizes are consistent
       if (!cam_resolutions_initialized)
@@ -116,26 +125,29 @@ int OpenCvMLE::GetImagePoints(const std::vector<std::vector<std::string>> & file
         return InconsistenSize;
     }
 
-    if (pattern_->Extract(images, pts, true))
+    if (pattern_->Extract(images, pts, true)) {
       for (int camera_idx = 0; camera_idx < pts.size(); ++camera_idx) {
         out_image_points[camera_idx].push_back(pts[camera_idx]);
       }
+      out_batch_idx.append(out_batch_idx.size());
+    } else
+      out_batch_idx.append(-1);
   }
 
   return 0;
 }
 
-int OpenCvMLE::CalibrateSeparateMatrix(const std::vector<std::vector<cv::Point2f> > & image_points,
-                                       const std::vector<std::vector<cv::Point3f> > & object_points,
+int OpenCvMLE::CalibrateSeparateCamera(const std::vector<std::vector<cv::Point2f> > &image_points,
+                                       const std::vector<std::vector<cv::Point3f> > &object_points,
                                        cv::Size imageSize,
                                        cv::Size boardSize,
                                        float aspectRatio,
     //float grid_width,
                                        bool release_object,
                                        int flags,
-                                       IntrinsicParameters & intrinsic_parameters,
-                                       PatternEstimationParameters & pattern_parameters,
-                                       std::vector<cv::Point3f> & newObjPoints) {
+                                       IntrinsicParameters &intrinsic_parameters,
+                                       PatternEstimationParameters &pattern_parameters,
+                                       std::vector<cv::Point3f> &newObjPoints) {
 
   intrinsic_parameters.camera_matrix = cv::Mat::eye(3, 3, CV_64F);
   intrinsic_parameters.distortion_coefficients = cv::Mat::zeros(8, 1, CV_64F);
@@ -179,12 +191,12 @@ int OpenCvMLE::CalibrateSeparateMatrix(const std::vector<std::vector<cv::Point2f
 
 }
 
-double OpenCvMLE::ComputeReprojectionErrors(const std::vector<std::vector<cv::Point3f> > & object_points,
-                                            const std::vector<std::vector<cv::Point2f> > & image_points,
-                                            const std::vector<cv::Mat> & rvecs,
-                                            const std::vector<cv::Mat> & tvecs,
-                                            IntrinsicParameters & intrinsic_parameters,
-                                            std::vector<float> & perViewErrors) {
+double OpenCvMLE::ComputeReprojectionErrors(const std::vector<std::vector<cv::Point3f> > &object_points,
+                                            const std::vector<std::vector<cv::Point2f> > &image_points,
+                                            const std::vector<cv::Mat> &rvecs,
+                                            const std::vector<cv::Mat> &tvecs,
+                                            IntrinsicParameters &intrinsic_parameters,
+                                            std::vector<float> &perViewErrors) {
 
   std::vector<cv::Point2f> imagePoints2;
   int i, totalPoints = 0;

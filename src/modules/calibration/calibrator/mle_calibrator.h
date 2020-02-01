@@ -24,25 +24,35 @@ class MLECalibrator : public QDialog, public ICalibrator {
  Q_OBJECT
  public:
   MLECalibrator(QWidget *parent,
-                const std::shared_ptr<gago::calibration::pattern::IPattern> & pattern,
-                const MLEConfigurationSettings & settings);
+                const std::shared_ptr<gago::calibration::pattern::IPattern> &pattern,
+                const MLEConfigurationSettings &settings);
   ~MLECalibrator();
   void Calibrate() override;
-  void Notify(const std::shared_ptr<std::vector<io::video::Capture>> & ptr) override;
-  void SetCameras(const std::vector<const io::video::CameraMeta *> & vector) override;
+  void Notify(const std::shared_ptr<std::vector<io::video::Capture>> &ptr) override;
+  void SetCameras(const std::vector<const io::video::CameraMeta *> &vector) override;
 
  private slots:
   void OnCalibrateButtonClicked();
-
- private slots:
   void Close();
   void CaptureRequested();
   void RestoreFilenames(const char *format, QStringList cameras_);
+  void BatchesRemoved(int start_idx, int count);
+  void DisableControlElementsSlot();
+  void EnableControlElementsSlot();
+ signals:
+  void DisableControlElements();
+  void EnableControlElements();
  private:
+  void GetTotalWidthMaxHeight(const QList<QImage> &images, int &out_total_width, int &out_max_height);
+  QImage GetThumbnail(const QList<QImage> &images, int max_width);
+  QList<QImage> GetImages(const QStringList &filenames);
+
+
   Ui::MLECalibrationWindow *ui_;
 
   QList<common::VideoPlayer *> players_;
   std::shared_ptr<gago::calibration::pattern::IPattern> pattern_;
+  int control_disable_bit_mask_;
 
   MLEConfigurationSettings settings_;
 
@@ -52,7 +62,7 @@ class MLECalibrator : public QDialog, public ICalibrator {
   QMediaPlayer *player;
 
   // Calibration
-  std::vector<std::vector<std::string>> files_;
+  QList<QStringList> files_;
 
 };
 

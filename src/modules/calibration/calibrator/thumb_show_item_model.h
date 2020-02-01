@@ -13,10 +13,10 @@ class ThumbShowItemModel : public QAbstractItemModel {
  Q_OBJECT
 
  public:
-  explicit ThumbShowItemModel(const QDir &directory, const QStringList &cameras, QObject *parent = nullptr);
+  explicit ThumbShowItemModel(QObject *parent = nullptr);
 
-  bool AppendByIndex(int idx,  char * format);
-  bool AppendByFilenames(const QStringList &filenames);
+  void AppendThumbnail(const QImage & thumbnail);
+  void ReplaceThumbnail(int idx, const QImage & thumbnail);
   // Header:
   QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
 
@@ -27,19 +27,17 @@ class ThumbShowItemModel : public QAbstractItemModel {
 
   int rowCount(const QModelIndex &parent = QModelIndex()) const override;
   int columnCount(const QModelIndex &parent = QModelIndex()) const override;
-
+  bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex()) override ;
   QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
+
+ signals:
+  void RowsRemoved(int start, int count);
 
  private:
 
-  QStringList GetFilenames(int idx, char * format);
-  QList<QImage> GetImages(const QStringList &filenames);
-  void GetTotalWidthMaxHeight(const QList<QImage> &images, int &out_total_width, int &out_max_height);
-  QImage GetThumbnail(const QList<QImage> &images, int max_width);
+
 
   QList<QImage> images_;
-  QDir directory_;
-  QStringList cameras_;
 };
 
 }

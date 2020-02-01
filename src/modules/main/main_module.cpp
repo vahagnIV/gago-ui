@@ -65,7 +65,7 @@ QAction *MainModule::CreateMenuBranch(std::string path) {
       root_menu->setObjectName(QString::fromStdString(split[0]));
     }
     for (int j = 1; j < split.size() - 1; ++j) {
-      current_menu = root_menu->findChild<QMenu *>(QString::fromStdString(split[0]), Qt::FindDirectChildrenOnly);
+      current_menu = root_menu->findChild<QMenu *>(QString::fromStdString(split[j]), Qt::FindDirectChildrenOnly);
       if (nullptr == current_menu) {
         root_menu = root_menu->addMenu(QString::fromStdString(split[j]));
         root_menu->setObjectName(QString::fromStdString(split[j]));

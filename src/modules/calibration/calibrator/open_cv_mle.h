@@ -11,6 +11,7 @@
 #include "intrinsic_parameters.h"
 #include "pattern/pattern_estimation_parameters.h"
 #include "calibration_estimates.h"
+#include <QList>
 
 namespace gago {
 namespace calibration {
@@ -19,10 +20,12 @@ enum { DETECTION = 0, CAPTURING = 1, CALIBRATED = 2 };
 
 class OpenCvMLE {
  public:
-  OpenCvMLE(const std::shared_ptr<pattern::IPattern> & pattern,
-            const gago::gui::calibration::MLEConfigurationSettings & settings);
+  OpenCvMLE(const std::shared_ptr<pattern::IPattern> &pattern,
+            const gago::gui::calibration::MLEConfigurationSettings &settings);
 
-  int Calibrate(const std::vector<std::vector<std::string>> & files, CalibrationEstimates & out_estimates);
+  int Calibrate(const QList<QStringList> &files, CalibrationEstimates &out_estimates,
+                QList<PatternEstimationParameters> &pattern_estimation_parameters,
+                QList<int> &out_batch_idx);
 
  protected:
   /*!
@@ -32,9 +35,10 @@ class OpenCvMLE {
    * @param out_image_points output vector of image points in the shape [camera_id][batch_id][point_id]
    * @return 0 on success or the error code
    */
-  int GetImagePoints(const std::vector<std::vector<std::string>> & files,
-                     std::vector<cv::Size> & out_image_sizes,
-                     std::vector<std::vector<std::vector<cv::Point2f>>> & out_image_points) const;
+  int GetImagePoints(const QList<QStringList> &files,
+                     std::vector<cv::Size> &out_image_sizes,
+                     std::vector<std::vector<std::vector<cv::Point2f>>> &out_image_points,
+                     QList<int> &out_batch_idx) const;
 
   /*!
    * Finds the intrinsic parameters of a single camera
@@ -52,25 +56,25 @@ class OpenCvMLE {
    * @param totalAvgErr
    * @return 0 if the calibration successfull or an error code
    */
-  int CalibrateSeparateMatrix(const std::vector<std::vector<cv::Point2f> > & image_points,
-                              const std::vector<std::vector<cv::Point3f> > & object_points,
+  int CalibrateSeparateCamera(const std::vector<std::vector<cv::Point2f> > &image_points,
+                              const std::vector<std::vector<cv::Point3f> > &object_points,
                               cv::Size imageSize,
                               cv::Size boardSize,
                               float aspectRatio,
       //float grid_width,
                               bool release_object,
                               int flags,
-                              IntrinsicParameters & intrinsic_parameters,
-                              PatternEstimationParameters & pattern_parameters,
-                              std::vector<cv::Point3f> & newObjPoints);
+                              IntrinsicParameters &intrinsic_parameters,
+                              PatternEstimationParameters &pattern_parameters,
+                              std::vector<cv::Point3f> &newObjPoints);
 
   double ComputeReprojectionErrors(
-      const std::vector<std::vector<cv::Point3f> > & object_points,
-      const std::vector<std::vector<cv::Point2f> > & image_points,
-      const std::vector<cv::Mat> & rvecs,
-      const std::vector<cv::Mat> & tvecs,
-      IntrinsicParameters & intrinsic_parameters,
-      std::vector<float> & perViewErrors);
+      const std::vector<std::vector<cv::Point3f> > &object_points,
+      const std::vector<std::vector<cv::Point2f> > &image_points,
+      const std::vector<cv::Mat> &rvecs,
+      const std::vector<cv::Mat> &tvecs,
+      IntrinsicParameters &intrinsic_parameters,
+      std::vector<float> &perViewErrors);
 
   std::shared_ptr<pattern::IPattern> pattern_;
   gago::gui::calibration::MLEConfigurationSettings settings_;

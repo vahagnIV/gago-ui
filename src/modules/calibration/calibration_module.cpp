@@ -63,6 +63,8 @@ void CalibrationModule::SetRequiredModules(const std::vector<IModule *> &modules
       main_window_ = ((MainModule *) module)->MainWindow();
       QAction *action = ((MainModule *) module)->CreateMenuBranch("/File/Calibration/Calibrate");
       connect(action, &QAction::triggered, this, &CalibrationModule::Calibrate);
+      QAction *saveAction = ((MainModule *) module)->CreateMenuBranch("/File/Calibration/Save As/Opencv.yml");
+      saveAction->setEnabled(false);
     } else if (module->SystemName() == "settings") {
       ((SettingsModule *) module)->RegisterConfigurable(this);
     } else if (module->SystemName() == "camera")
