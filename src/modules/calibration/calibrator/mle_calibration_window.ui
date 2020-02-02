@@ -119,9 +119,9 @@
  </widget>
 <customwidgets>
   <customwidget>
-   <class>ImageSetView</class>
+   <class>gago::calibration::ImageSetView</class>
    <extends>QListView</extends>
-   <header location="local">image_set_view.h</header>
+   <header>image_set_view.h</header>
    <container>1</container>
   </customwidget>
 </customwidgets>
