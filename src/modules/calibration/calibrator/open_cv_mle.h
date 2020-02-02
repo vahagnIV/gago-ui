@@ -23,8 +23,10 @@ class OpenCvMLE {
   OpenCvMLE(const std::shared_ptr<pattern::IPattern> &pattern,
             const gago::gui::calibration::MLEConfigurationSettings &settings);
 
-  int Calibrate(const QList<QStringList> &files, CalibrationEstimates &out_estimates,
-                QList<PatternEstimationParameters> &pattern_estimation_parameters,
+  int Calibrate(const QList<QStringList> &files,
+                CalibrationEstimates &out_estimates,
+                QList<QList<PatternEstimationParameters>> &out_pattern_estimation_parameters,
+                QList<cv::Size> & out_sizes,
                 QList<int> &out_batch_idx);
 
  protected:
@@ -36,7 +38,7 @@ class OpenCvMLE {
    * @return 0 on success or the error code
    */
   int GetImagePoints(const QList<QStringList> &files,
-                     std::vector<cv::Size> &out_image_sizes,
+                     QList<cv::Size> &out_image_sizes,
                      std::vector<std::vector<std::vector<cv::Point2f>>> &out_image_points,
                      QList<int> &out_batch_idx) const;
 
@@ -51,7 +53,7 @@ class OpenCvMLE {
    * @param release_object
    * @param flags
    * @param intrinsic_parameters
-   * @param pattern_parameters
+   * @param pattern_parameters shape [batch_id][camera_id]
    * @param newObjPoints
    * @param totalAvgErr
    * @return 0 if the calibration successfull or an error code
@@ -65,7 +67,7 @@ class OpenCvMLE {
                               bool release_object,
                               int flags,
                               IntrinsicParameters &intrinsic_parameters,
-                              PatternEstimationParameters &pattern_parameters,
+                              QList<PatternEstimationParameters> &out_pattern_parameters,
                               std::vector<cv::Point3f> &newObjPoints);
 
   double ComputeReprojectionErrors(

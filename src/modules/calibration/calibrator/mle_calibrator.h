@@ -7,10 +7,12 @@
 #include <QDialog>
 #include <QDir>
 #include <QMediaPlayer>
+#include <pattern/pattern_estimation_parameters.h>
 #include "icalibrator.h"
 #include "../pattern/ipattern.h"
 #include "common/video_player.h"
 #include "mle_configuration_settings.h"
+#include "calibration_estimates.h"
 
 namespace Ui {
 class MLECalibrationWindow;
@@ -46,7 +48,10 @@ class MLECalibrator : public QDialog, public ICalibrator {
   void GetTotalWidthMaxHeight(const QList<QImage> &images, int &out_total_width, int &out_max_height);
   QImage GetThumbnail(const QList<QImage> &images, int max_width);
   QList<QImage> GetImages(const QStringList &filenames);
-
+  QImage CreateRectifiedImage(const QList<QImage> &images,
+                              const QList<gago::calibration::PatternEstimationParameters> & pattern_parameters,
+                              const gago::calibration::CalibrationEstimates &calibration_estimates,
+                              QImage &out);
 
   Ui::MLECalibrationWindow *ui_;
 

@@ -10,9 +10,11 @@ namespace gago {
 namespace calibration {
 
 struct PatternEstimationParameters {
-  std::vector<cv::Mat> rotation_vectors; // Rodrigues parametrization
-  std::vector<cv::Mat> translation_vectors; //
-  std::vector<float> reprojection_errors;
+  PatternEstimationParameters(const cv::Mat &rvecs, const cv::Mat &tvecs, float rpj_error)
+      : rotation_vectors(rvecs), translation_vectors(tvecs), reprojection_error(rpj_error) {}
+  cv::Mat rotation_vectors; // Rodrigues parametrization
+  cv::Mat translation_vectors; //
+  float reprojection_error;
 };
 
 }

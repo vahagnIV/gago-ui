@@ -121,7 +121,7 @@
   <customwidget>
    <class>ImageSetView</class>
    <extends>QListView</extends>
-   <header>image_set_view.h</header>
+   <header location="local">image_set_view.h</header>
    <container>1</container>
   </customwidget>
 </customwidgets>

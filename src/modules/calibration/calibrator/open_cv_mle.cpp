@@ -4,6 +4,7 @@
 
 #include <calibration_estimates.h>
 #include "open_cv_mle.h"
+#include <QList>
 
 namespace gago {
 namespace calibration {
@@ -21,7 +22,8 @@ enum CalibrationErrors {
 
 int OpenCvMLE::Calibrate(const QList<QStringList> &files,
                          CalibrationEstimates &out_estimates,
-                         QList<PatternEstimationParameters> & pattern_estimation_parameters,
+                         QList<QList<PatternEstimationParameters>> &out_pattern_estimation_parameters,
+                         QList<cv::Size> &out_sizes,
                          QList<int> &out_batch_idx) {
 
   int result;
@@ -29,19 +31,17 @@ int OpenCvMLE::Calibrate(const QList<QStringList> &files,
   // Image points and Object Points
   // [batch_id][point_id]
   std::vector<std::vector<cv::Point3f> > object_points;
-  std::vector<cv::Size> image_sizes;
   std::vector<std::vector<std::vector<cv::Point2f>>> image_points;
 
-  result = GetImagePoints(files, image_sizes, image_points, out_batch_idx);
+  result = GetImagePoints(files, out_sizes, image_points, out_batch_idx);
+
   if (result != 0)
     return result;
 
   pattern_->GetObjectPoints(object_points, image_points[0].size());
 
-  pattern_estimation_parameters.reserve(image_sizes.size());
-
   if (settings_.calibrate_camera_first)
-    for (int camera_idx = 0; camera_idx < image_sizes.size(); ++camera_idx) {
+    for (int camera_idx = 0; camera_idx < out_sizes.size(); ++camera_idx) {
       cv::Mat camera_matrix, dist_coeffs;
       std::vector<cv::Mat> rvecs, tvecs;
       std::vector<float> reproj_errors;
@@ -50,10 +50,10 @@ int OpenCvMLE::Calibrate(const QList<QStringList> &files,
       int flags = 0;
       if (settings_.fix_aspect_ratio)
         flags |= cv::CALIB_FIX_ASPECT_RATIO;
-      PatternEstimationParameters pattern_params;
+      QList<PatternEstimationParameters> pattern_params;
       result = CalibrateSeparateCamera(image_points[camera_idx],
                                        object_points,
-                                       image_sizes[camera_idx],
+                                       out_sizes[camera_idx],
                                        pattern_->GetSize(),
                                        1,
                                        false,
@@ -61,7 +61,14 @@ int OpenCvMLE::Calibrate(const QList<QStringList> &files,
                                        out_estimates.intrinsic_parameters[camera_idx],
                                        pattern_params,
                                        new_object_points);
-      pattern_estimation_parameters.append(pattern_params);
+      for (int batch_idx = 0; batch_idx < files.size(); ++batch_idx) {
+        if (out_batch_idx[batch_idx] == -1)
+          continue;
+        if (out_pattern_estimation_parameters.size() >= batch_idx)
+          out_pattern_estimation_parameters.append(QList<PatternEstimationParameters>());
+        out_pattern_estimation_parameters[batch_idx].append(pattern_params[batch_idx]);
+      }
+
       if (0 != result)
         return result;
 
@@ -76,7 +83,7 @@ int OpenCvMLE::Calibrate(const QList<QStringList> &files,
                                           out_estimates.intrinsic_parameters[0].distortion_coefficients,
                                           out_estimates.intrinsic_parameters[1].camera_matrix,
                                           out_estimates.intrinsic_parameters[1].distortion_coefficients,
-                                          image_sizes[0],
+                                          out_sizes[0],
                                           out_estimates.R,
                                           out_estimates.T,
                                           out_estimates.E,
@@ -91,7 +98,7 @@ int OpenCvMLE::Calibrate(const QList<QStringList> &files,
 }
 
 int OpenCvMLE::GetImagePoints(const QList<QStringList> &files,
-                              std::vector<cv::Size> &out_image_sizes,
+                              QList<cv::Size> &out_image_sizes,
                               std::vector<std::vector<std::vector<cv::Point2f>>> &out_image_points,
                               QList<int> &out_batch_idx) const {
   if (files.isEmpty())
@@ -102,7 +109,7 @@ int OpenCvMLE::GetImagePoints(const QList<QStringList> &files,
   // All images per camera should have the same size in all batches,
   // hence, we keep the sizes of the first batch in order to
   // compare to the others
-  out_image_sizes.resize(0);
+  out_image_sizes.clear();
 
   for (const QStringList &image_batch: files) {
     bool cam_resolutions_initialized = !out_image_sizes.empty();
@@ -146,7 +153,7 @@ int OpenCvMLE::CalibrateSeparateCamera(const std::vector<std::vector<cv::Point2f
                                        bool release_object,
                                        int flags,
                                        IntrinsicParameters &intrinsic_parameters,
-                                       PatternEstimationParameters &pattern_parameters,
+                                       QList<PatternEstimationParameters> &out_pattern_parameters,
                                        std::vector<cv::Point3f> &newObjPoints) {
 
   intrinsic_parameters.camera_matrix = cv::Mat::eye(3, 3, CV_64F);
@@ -160,6 +167,9 @@ int OpenCvMLE::CalibrateSeparateCamera(const std::vector<std::vector<cv::Point2f
     iFixedPoint = boardSize.width - 1;
 
   newObjPoints = object_points[0];
+  std::vector<cv::Mat> rvecs;
+  std::vector<cv::Mat> tvecs;
+  std::vector<float> reprojection_errors;
 
   intrinsic_parameters.rms = calibrateCameraRO(object_points,
                                                image_points,
@@ -167,21 +177,23 @@ int OpenCvMLE::CalibrateSeparateCamera(const std::vector<std::vector<cv::Point2f
                                                iFixedPoint,
                                                intrinsic_parameters.camera_matrix,
                                                intrinsic_parameters.distortion_coefficients,
-                                               pattern_parameters.rotation_vectors,
-                                               pattern_parameters.translation_vectors,
+                                               rvecs,
+                                               tvecs,
                                                newObjPoints,
                                                flags | cv::CALIB_FIX_K3 | cv::CALIB_USE_LU);
   if (!(cv::checkRange(intrinsic_parameters.camera_matrix)
       && cv::checkRange(intrinsic_parameters.distortion_coefficients)))
     return 1;
-
   intrinsic_parameters.total_average_error =
       ComputeReprojectionErrors(object_points,
                                 image_points,
-                                pattern_parameters.rotation_vectors,
-                                pattern_parameters.translation_vectors,
+                                rvecs,
+                                tvecs,
                                 intrinsic_parameters,
-                                pattern_parameters.reprojection_errors);
+                                reprojection_errors);
+
+  for (int i = 0; i < rvecs.size(); ++i)
+    out_pattern_parameters.append(PatternEstimationParameters(rvecs[i], tvecs[i], reprojection_errors[i]));
 
   std::cout << intrinsic_parameters.camera_matrix << std::endl;
   std::cout << intrinsic_parameters.distortion_coefficients << std::endl;

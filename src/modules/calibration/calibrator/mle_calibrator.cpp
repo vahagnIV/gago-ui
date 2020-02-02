@@ -159,20 +159,21 @@ void MLECalibrator::OnCalibrateButtonClicked() {
   gago::calibration::OpenCvMLE mle(pattern_, settings_);
   gago::calibration::CalibrationEstimates estimates;
   QList<int> batch_map;
-  QList<gago::calibration::PatternEstimationParameters> pattern_estimation_parameters;
-  mle.Calibrate(files_, estimates, pattern_estimation_parameters, batch_map);
+  QList<QList<gago::calibration::PatternEstimationParameters>> pattern_estimation_parameters;
+  QList<cv::Size> sizes;
+  mle.Calibrate(files_, estimates, pattern_estimation_parameters, sizes, batch_map);
 
-  for (int i = 0; i < files_.size(); ++i) {
-    int image_idx = batch_map[i];
+  for (int batch_idx = 0; batch_idx < files_.size(); ++batch_idx) {
+    int image_idx = batch_map[batch_idx];
     if (-1 == image_idx)
       continue;
-    QList<QImage> images = GetImages(files_[i]);
-    for (int camera_idx = 0; camera_idx < files_[i].size(); ++camera_idx) {
+    QList<QImage> images = GetImages(files_[batch_idx]);
+    for (int camera_idx = 0; camera_idx < files_[batch_idx].size(); ++camera_idx) {
       QImage &image = images[camera_idx];
       QColor color;
-      if (pattern_estimation_parameters[camera_idx].reprojection_errors[image_idx] < 0.5)
+      if (pattern_estimation_parameters[batch_idx][camera_idx].reprojection_error < 0.5)
         color = QColor(0, 255, 0);
-      else if (pattern_estimation_parameters[camera_idx].reprojection_errors[image_idx] < 1.0)
+      else if (pattern_estimation_parameters[batch_idx][camera_idx].reprojection_error < 1.0)
         color = QColor(0, 0, 255);
       else
         color = QColor(255, 0, 0);
@@ -182,9 +183,87 @@ void MLECalibrator::OnCalibrateButtonClicked() {
       painter.setPen(pen);
       painter.drawRect(0, 0, image.width(), image.height());
     }
-    ui_->listView->Replace(i, GetThumbnail(images, 140));
-
+    ui_->listView->Replace(batch_idx, GetThumbnail(images, 140));
   }
+
+  cv::Mat rmap[2][2];
+  cv::Mat R1, R2, P1, P2, Q;
+  cv::Rect validRoi[2];
+  stereoRectify(estimates.intrinsic_parameters[0].camera_matrix,
+                estimates.intrinsic_parameters[0].distortion_coefficients,
+                estimates.intrinsic_parameters[1].camera_matrix,
+                estimates.intrinsic_parameters[1].distortion_coefficients,
+                sizes[0],
+                estimates.R,
+                estimates.T,
+                R1,
+                R2,
+                P1,
+                P2,
+                Q,
+                cv::CALIB_ZERO_DISPARITY,
+                1,
+                sizes[0],
+                &validRoi[0],
+                &validRoi[1]);
+
+  std::cout << R1 << std::endl;
+  std::cout << R2 << std::endl;
+  std::cout << P1 << std::endl;
+  std::cout << P2 << std::endl;
+
+  initUndistortRectifyMap(estimates.intrinsic_parameters[0].camera_matrix,
+                          estimates.intrinsic_parameters[0].distortion_coefficients,
+                          R1,
+                          P1,
+                          sizes[0],
+                          CV_16SC2,
+                          rmap[0][0],
+                          rmap[0][1]);
+  initUndistortRectifyMap(estimates.intrinsic_parameters[1].camera_matrix,
+                          estimates.intrinsic_parameters[1].distortion_coefficients,
+                          R2,
+                          P2,
+                          sizes[0],
+                          CV_16SC2,
+                          rmap[1][0],
+                          rmap[1][1]);
+
+  cv::Mat canvas;
+  double sf;
+  int w, h;
+  sf = 600. / MAX(sizes[0].width, sizes[0].height);
+  w = cvRound(sizes[0].width * sf);
+  h = cvRound(sizes[0].height * sf);
+  canvas.create(h, w * 2, CV_8UC3);
+
+  for (int i = 0; i < files_.size(); i++) {
+    if (batch_map[i] == -1)
+      continue;
+
+    for (int k = 0; k < 2; k++) {
+      cv::Mat img = cv::imread(files_[i][k].toStdString(), 0), rimg, cimg;
+      cv::remap(img, rimg, rmap[k][0], rmap[k][1], cv::INTER_LINEAR);
+      cv::cvtColor(rimg, cimg, cv::COLOR_GRAY2BGR);
+//      cv::Mat canvasPart = !isVerticalStereo ? canvas(Rect(w * k, 0, w, h)) : canvas(Rect(0, h * k, w, h));
+      cv::Mat canvasPart = canvas(cv::Rect(w * k, 0, w, h));
+      cv::resize(cimg, canvasPart, canvasPart.size(), 0, 0, cv::INTER_AREA);
+
+      cv::Rect vroi(cvRound(validRoi[k].x * sf), cvRound(validRoi[k].y * sf),
+                    cvRound(validRoi[k].width * sf), cvRound(validRoi[k].height * sf));
+      rectangle(canvasPart, vroi, cv::Scalar(0, 0, 255), 3, 8);
+
+    }
+
+    for (int j = 0; j < canvas.rows; j += 16)
+      line(canvas, cv::Point(0, j), cv::Point(canvas.cols, j), cv::Scalar(0, 255, 0), 1, 8);
+
+    imshow("rectified", canvas);
+    char c = (char) cv::waitKey();
+    if (c == 27 || c == 'q' || c == 'Q')
+      break;
+  }
+
   emit EnableControlElements();
 }
 
@@ -283,6 +362,15 @@ QList<QImage> MLECalibrator::GetImages(const QStringList &filenames) {
   for (const QString &filename: filenames)
     images.append(QImage(filename));
   return images;
+}
+
+QImage MLECalibrator::CreateRectifiedImage(const QList<QImage> &images,
+                                           const QList<gago::calibration::PatternEstimationParameters> &pattern_parameters,
+                                           const gago::calibration::CalibrationEstimates &calibration_estimates,
+                                           QImage &out) {
+  if (images.size() != pattern_parameters.size())
+    return QImage();
+
 }
 
 }
