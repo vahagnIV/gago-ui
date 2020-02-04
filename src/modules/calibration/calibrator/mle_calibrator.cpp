@@ -42,7 +42,10 @@ MLECalibrator::MLECalibrator(QWidget *parent,
           &MLECalibrator::ShowOnRectifiedViewer);
   connect(this, &MLECalibrator::DisableControlElements, this, &MLECalibrator::DisableControlElementsSlot);
   connect(this, &MLECalibrator::EnableControlElements, this, &MLECalibrator::EnableControlElementsSlot);
-  connect(rectifiedImageViewWindow_, &RectifiedImageViewWindow::ActiveBatchChanged, this, &MLECalibrator::ActiveBatchChanges);
+  connect(rectifiedImageViewWindow_,
+          &RectifiedImageViewWindow::ActiveBatchChanged,
+          this,
+          &MLECalibrator::ActiveBatchChanges);
 
   ui_->listView->setAutoFillBackground(true);
 }
@@ -298,7 +301,7 @@ void MLECalibrator::ShowOnRectifiedViewer(int batch_idx) {
 }
 
 void MLECalibrator::ActiveBatchChanges(int batch_idx) {
-  ui_->listView->model();
+  ui_->listView->setCurrentIndex(ui_->listView->model()->index(batch_idx, 0));
 }
 
 }

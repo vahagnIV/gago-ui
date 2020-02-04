@@ -7,6 +7,7 @@ RectifiedImageViewWindow::RectifiedImageViewWindow(QWidget *parent) :
   ui->setupUi(this);
   connect(ui->actionBack, &QAction::triggered, this, &RectifiedImageViewWindow::PreviousButtonPressedSlot);
   connect(ui->actionForward, &QAction::triggered, this, &RectifiedImageViewWindow::NextButtonPressedSlot);
+  //ui->horizontalLayout->setAlignment(Qt::AlignTop | ui->horizontalLayout->alignment());
 }
 
 RectifiedImageViewWindow::~RectifiedImageViewWindow() {
@@ -108,9 +109,11 @@ QImage RectifiedImageViewWindow::CreateRectifiedImage(const QList<cv::Mat> & ima
   }
 
   for (int j = 0; j < canvas.rows; j += 16)
-    line(canvas, cv::Point(0, j), cv::Point(canvas.cols, j), cv::Scalar(0, 255, 0), 1, 8);
+    cv::line(canvas, cv::Point(0, j), cv::Point(canvas.cols, j), cv::Scalar(0, 255, 0), 2, 8);
+
 
   cv::cvtColor(canvas, canvas, cv::COLOR_RGB2BGR);
+
 
   QImage output_image(canvas.data, canvas.cols, canvas.rows, canvas.cols * canvas.channels(), QImage::Format_RGB888);
   return output_image.copy();

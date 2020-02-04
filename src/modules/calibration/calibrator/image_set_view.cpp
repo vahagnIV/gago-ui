@@ -28,7 +28,6 @@ void ImageSetView::ShowContextMenu(const QPoint &pos) {
 
   // Show context menu at handling position
   myMenu.exec(globalPos);
-
 }
 
 void ImageSetView::DeleteItem() {
