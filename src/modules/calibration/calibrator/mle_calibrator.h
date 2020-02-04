@@ -13,6 +13,7 @@
 #include "common/video_player.h"
 #include "mle_configuration_settings.h"
 #include "calibration_estimates.h"
+#include "rectified_image_view_window.h"
 
 namespace Ui {
 class MLECalibrationWindow;
@@ -26,12 +27,12 @@ class MLECalibrator : public QDialog, public ICalibrator {
  Q_OBJECT
  public:
   MLECalibrator(QWidget *parent,
-                const std::shared_ptr<gago::calibration::pattern::IPattern> &pattern,
-                const MLEConfigurationSettings &settings);
-  ~MLECalibrator();
+                const std::shared_ptr<gago::calibration::pattern::IPattern> & pattern,
+                const MLEConfigurationSettings & settings);
+  virtual ~MLECalibrator();
   void Calibrate() override;
-  void Notify(const std::shared_ptr<std::vector<io::video::Capture>> &ptr) override;
-  void SetCameras(const std::vector<const io::video::CameraMeta *> &vector) override;
+  void Notify(const std::shared_ptr<std::vector<io::video::Capture>> & ptr) override;
+  void SetCameras(const std::vector<const io::video::CameraMeta *> & vector) override;
 
  private slots:
   void OnCalibrateButtonClicked();
@@ -39,19 +40,17 @@ class MLECalibrator : public QDialog, public ICalibrator {
   void CaptureRequested();
   void RestoreFilenames(const char *format, QStringList cameras_);
   void BatchesRemoved(int start_idx, int count);
+  void ActiveBatchChanges(int batch_idx);
   void DisableControlElementsSlot();
   void EnableControlElementsSlot();
+  void ShowOnRectifiedViewer(int batch_idx);
  signals:
   void DisableControlElements();
   void EnableControlElements();
  private:
-  void GetTotalWidthMaxHeight(const QList<QImage> &images, int &out_total_width, int &out_max_height);
-  QImage GetThumbnail(const QList<QImage> &images, int max_width);
-  QList<QImage> GetImages(const QStringList &filenames);
-  QImage CreateRectifiedImage(const QList<QImage> &images,
-                              const QList<gago::calibration::PatternEstimationParameters> & pattern_parameters,
-                              const gago::calibration::CalibrationEstimates &calibration_estimates,
-                              QImage &out);
+  void GetTotalWidthMaxHeight(const QList<QImage> & images, int & out_total_width, int & out_max_height);
+  QImage GetThumbnail(const QList<QImage> & images, int max_width);
+  QList<QImage> GetImages(const QStringList & filenames);
 
   Ui::MLECalibrationWindow *ui_;
 
@@ -60,6 +59,11 @@ class MLECalibrator : public QDialog, public ICalibrator {
   int control_disable_bit_mask_;
 
   MLEConfigurationSettings settings_;
+  gago::calibration::CalibrationEstimates estimates_;
+  QList<int> valid_batch_map_;
+
+  RectifiedImageViewWindow *rectifiedImageViewWindow_;
+  int current_shown_image_idx_;
 
   long next_capture_time_;
   int last_image_index;

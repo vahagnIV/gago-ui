@@ -14,35 +14,42 @@
 #include <QMediaPlayer>
 #include <QPainter>
 #include <QColormap>
+#include <iostream>
 
 namespace gago {
 namespace gui {
 namespace calibration {
 
 MLECalibrator::MLECalibrator(QWidget *parent,
-                             const std::shared_ptr<gago::calibration::pattern::IPattern> &pattern,
-                             const MLEConfigurationSettings &settings) : QDialog(parent),
-                                                                         ui_(new Ui::MLECalibrationWindow()),
-                                                                         pattern_(pattern),
-                                                                         settings_(settings),
-                                                                         last_image_index(0),
-                                                                         player(settings.sounds_enabled
-                                                                                ? new QMediaPlayer : nullptr),
-                                                                         next_capture_time_(std::numeric_limits<typeof(next_capture_time_)>::max()) {
+                             const std::shared_ptr<gago::calibration::pattern::IPattern> & pattern,
+                             const MLEConfigurationSettings & settings) : QDialog(parent),
+                                                                          ui_(new Ui::MLECalibrationWindow()),
+                                                                          pattern_(pattern),
+                                                                          settings_(settings),
+                                                                          last_image_index(0),
+                                                                          player(settings.sounds_enabled
+                                                                                 ? new QMediaPlayer : nullptr),
+                                                                          next_capture_time_(std::numeric_limits<typeof(next_capture_time_)>::max()) {
   ui_->setupUi(this);
+  rectifiedImageViewWindow_ = new RectifiedImageViewWindow(this);
+  rectifiedImageViewWindow_->hide();
   connect(ui_->pushButton, &QPushButton::pressed, this, &MLECalibrator::CaptureRequested);
   connect(ui_->pushButton_2, &QPushButton::pressed, this, &MLECalibrator::OnCalibrateButtonClicked);
   connect(ui_->listView, &gago::calibration::ImageSetView::BatchRemoved, this, &MLECalibrator::BatchesRemoved);
+  connect(ui_->listView,
+          &gago::calibration::ImageSetView::ProperiesShowRequested,
+          this,
+          &MLECalibrator::ShowOnRectifiedViewer);
   connect(this, &MLECalibrator::DisableControlElements, this, &MLECalibrator::DisableControlElementsSlot);
   connect(this, &MLECalibrator::EnableControlElements, this, &MLECalibrator::EnableControlElementsSlot);
+  connect(rectifiedImageViewWindow_, &RectifiedImageViewWindow::ActiveBatchChanged, this, &MLECalibrator::ActiveBatchChanges);
+
   ui_->listView->setAutoFillBackground(true);
-
-  ;
-
 }
 
 MLECalibrator::~MLECalibrator() {
   delete ui_;
+  delete rectifiedImageViewWindow_;
 }
 
 void MLECalibrator::Close() {
@@ -53,7 +60,7 @@ void MLECalibrator::Calibrate() {
   exec();
 }
 
-void MLECalibrator::Notify(const std::shared_ptr<std::vector<io::video::Capture>> &ptr) {
+void MLECalibrator::Notify(const std::shared_ptr<std::vector<io::video::Capture>> & ptr) {
   std::vector<cv::Mat> images;
   for (int j = 0; j < ptr->size(); ++j) {
     images.push_back((*ptr)[j].data);
@@ -74,7 +81,7 @@ void MLECalibrator::Notify(const std::shared_ptr<std::vector<io::video::Capture>
       QStringList filenames;
       files_.push_back(QStringList());
       QList<QImage> images;
-      for (const io::video::Capture &capture: *ptr) {
+      for (const io::video::Capture & capture: *ptr) {
         QString filename = QString::asprintf(format, capture.camera->GetName().c_str(), last_image_index);
         QDir dir(settings_.image_save_folder);
         QImage image(capture.data.data,
@@ -109,7 +116,7 @@ void MLECalibrator::Notify(const std::shared_ptr<std::vector<io::video::Capture>
 
 }
 
-void MLECalibrator::SetCameras(const std::vector<const io::video::CameraMeta *> &vector) {
+void MLECalibrator::SetCameras(const std::vector<const io::video::CameraMeta *> & vector) {
   emit DisableControlElements();
 
   QStringList cam_names;
@@ -138,7 +145,7 @@ void MLECalibrator::SetCameras(const std::vector<const io::video::CameraMeta *> 
 
   RestoreFilenames(format, cam_names);
 
-  for (QStringList &filenames: files_) {
+  for (QStringList & filenames: files_) {
     QList<QImage> images = GetImages(filenames);
     QImage thumbnail = GetThumbnail(images, 140);
     ui_->listView->Append(thumbnail);
@@ -157,23 +164,23 @@ void MLECalibrator::OnCalibrateButtonClicked() {
   emit DisableControlElements();
   std::this_thread::sleep_for(std::chrono::seconds(1));
   gago::calibration::OpenCvMLE mle(pattern_, settings_);
-  gago::calibration::CalibrationEstimates estimates;
-  QList<int> batch_map;
+
   QList<QList<gago::calibration::PatternEstimationParameters>> pattern_estimation_parameters;
   QList<cv::Size> sizes;
-  mle.Calibrate(files_, estimates, pattern_estimation_parameters, sizes, batch_map);
+  mle.Calibrate(files_, estimates_, pattern_estimation_parameters, sizes, valid_batch_map_);
+  rectifiedImageViewWindow_->SetCalibrationEstimates(estimates_, sizes[0], files_, valid_batch_map_);
 
   for (int batch_idx = 0; batch_idx < files_.size(); ++batch_idx) {
-    int image_idx = batch_map[batch_idx];
+    int image_idx = valid_batch_map_[batch_idx];
     if (-1 == image_idx)
       continue;
     QList<QImage> images = GetImages(files_[batch_idx]);
     for (int camera_idx = 0; camera_idx < files_[batch_idx].size(); ++camera_idx) {
-      QImage &image = images[camera_idx];
+      QImage & image = images[camera_idx];
       QColor color;
-      if (pattern_estimation_parameters[batch_idx][camera_idx].reprojection_error < 0.5)
+      if (pattern_estimation_parameters[image_idx][camera_idx].reprojection_error < 0.5)
         color = QColor(0, 255, 0);
-      else if (pattern_estimation_parameters[batch_idx][camera_idx].reprojection_error < 1.0)
+      else if (pattern_estimation_parameters[image_idx][camera_idx].reprojection_error < 1.0)
         color = QColor(0, 0, 255);
       else
         color = QColor(255, 0, 0);
@@ -185,85 +192,6 @@ void MLECalibrator::OnCalibrateButtonClicked() {
     }
     ui_->listView->Replace(batch_idx, GetThumbnail(images, 140));
   }
-
-  cv::Mat rmap[2][2];
-  cv::Mat R1, R2, P1, P2, Q;
-  cv::Rect validRoi[2];
-  stereoRectify(estimates.intrinsic_parameters[0].camera_matrix,
-                estimates.intrinsic_parameters[0].distortion_coefficients,
-                estimates.intrinsic_parameters[1].camera_matrix,
-                estimates.intrinsic_parameters[1].distortion_coefficients,
-                sizes[0],
-                estimates.R,
-                estimates.T,
-                R1,
-                R2,
-                P1,
-                P2,
-                Q,
-                cv::CALIB_ZERO_DISPARITY,
-                1,
-                sizes[0],
-                &validRoi[0],
-                &validRoi[1]);
-
-  std::cout << R1 << std::endl;
-  std::cout << R2 << std::endl;
-  std::cout << P1 << std::endl;
-  std::cout << P2 << std::endl;
-
-  initUndistortRectifyMap(estimates.intrinsic_parameters[0].camera_matrix,
-                          estimates.intrinsic_parameters[0].distortion_coefficients,
-                          R1,
-                          P1,
-                          sizes[0],
-                          CV_16SC2,
-                          rmap[0][0],
-                          rmap[0][1]);
-  initUndistortRectifyMap(estimates.intrinsic_parameters[1].camera_matrix,
-                          estimates.intrinsic_parameters[1].distortion_coefficients,
-                          R2,
-                          P2,
-                          sizes[0],
-                          CV_16SC2,
-                          rmap[1][0],
-                          rmap[1][1]);
-
-  cv::Mat canvas;
-  double sf;
-  int w, h;
-  sf = 600. / MAX(sizes[0].width, sizes[0].height);
-  w = cvRound(sizes[0].width * sf);
-  h = cvRound(sizes[0].height * sf);
-  canvas.create(h, w * 2, CV_8UC3);
-
-  for (int i = 0; i < files_.size(); i++) {
-    if (batch_map[i] == -1)
-      continue;
-
-    for (int k = 0; k < 2; k++) {
-      cv::Mat img = cv::imread(files_[i][k].toStdString(), 0), rimg, cimg;
-      cv::remap(img, rimg, rmap[k][0], rmap[k][1], cv::INTER_LINEAR);
-      cv::cvtColor(rimg, cimg, cv::COLOR_GRAY2BGR);
-//      cv::Mat canvasPart = !isVerticalStereo ? canvas(Rect(w * k, 0, w, h)) : canvas(Rect(0, h * k, w, h));
-      cv::Mat canvasPart = canvas(cv::Rect(w * k, 0, w, h));
-      cv::resize(cimg, canvasPart, canvasPart.size(), 0, 0, cv::INTER_AREA);
-
-      cv::Rect vroi(cvRound(validRoi[k].x * sf), cvRound(validRoi[k].y * sf),
-                    cvRound(validRoi[k].width * sf), cvRound(validRoi[k].height * sf));
-      rectangle(canvasPart, vroi, cv::Scalar(0, 0, 255), 3, 8);
-
-    }
-
-    for (int j = 0; j < canvas.rows; j += 16)
-      line(canvas, cv::Point(0, j), cv::Point(canvas.cols, j), cv::Scalar(0, 255, 0), 1, 8);
-
-    imshow("rectified", canvas);
-    char c = (char) cv::waitKey();
-    if (c == 27 || c == 'q' || c == 'Q')
-      break;
-  }
-
   emit EnableControlElements();
 }
 
@@ -271,7 +199,7 @@ void MLECalibrator::RestoreFilenames(const char *format, QStringList cameras_) {
   last_image_index = 0;
   QDir directory(settings_.image_save_folder);
   QStringList filters = {QString(format).replace("%s", cameras_[0]).replace("%03d", "*")};
-  for (const QString &filename: directory.entryList(filters)) {
+  for (const QString & filename: directory.entryList(filters, QDir::NoFilter, QDir::SortFlag::Name)) {
     int idx = filename.right(7).left(3).toInt();
     QStringList idx_files = {directory.filePath(filename)};
     for (int i = 1; i < cameras_.size(); ++i) {
@@ -330,7 +258,7 @@ void MLECalibrator::EnableControlElementsSlot() {
   qApp->processEvents();
 }
 
-QImage MLECalibrator::GetThumbnail(const QList<QImage> &images, int max_width) {
+QImage MLECalibrator::GetThumbnail(const QList<QImage> & images, int max_width) {
   int total_width, max_height;
   GetTotalWidthMaxHeight(images, total_width, max_height);
 
@@ -338,7 +266,7 @@ QImage MLECalibrator::GetThumbnail(const QList<QImage> &images, int max_width) {
   QPainter painter;
   int offset = 0;
   painter.begin(&thumbnail);
-  for (const QImage &image: images) {
+  for (const QImage & image: images) {
     painter.drawImage(offset, 0, image);
     offset += image.width();
   }
@@ -346,31 +274,31 @@ QImage MLECalibrator::GetThumbnail(const QList<QImage> &images, int max_width) {
   return thumbnail.scaledToWidth(max_width);
 }
 
-void MLECalibrator::GetTotalWidthMaxHeight(const QList<QImage> &images,
-                                           int &out_total_width,
-                                           int &out_max_height) {
+void MLECalibrator::GetTotalWidthMaxHeight(const QList<QImage> & images,
+                                           int & out_total_width,
+                                           int & out_max_height) {
   out_max_height = 0;
   out_total_width = 0;
-  for (const QImage &image: images) {
+  for (const QImage & image: images) {
     out_max_height = std::max(image.height(), out_max_height);
     out_total_width += image.width();
   }
 }
 
-QList<QImage> MLECalibrator::GetImages(const QStringList &filenames) {
+QList<QImage> MLECalibrator::GetImages(const QStringList & filenames) {
   QList<QImage> images;
-  for (const QString &filename: filenames)
-    images.append(QImage(filename));
+  for (const QString & filename: filenames)
+    images.append(QImage(filename).convertToFormat(QImage::Format_RGB888));
   return images;
 }
 
-QImage MLECalibrator::CreateRectifiedImage(const QList<QImage> &images,
-                                           const QList<gago::calibration::PatternEstimationParameters> &pattern_parameters,
-                                           const gago::calibration::CalibrationEstimates &calibration_estimates,
-                                           QImage &out) {
-  if (images.size() != pattern_parameters.size())
-    return QImage();
+void MLECalibrator::ShowOnRectifiedViewer(int batch_idx) {
+  rectifiedImageViewWindow_->SetActiveBatch(batch_idx);
+  rectifiedImageViewWindow_->exec();
+}
 
+void MLECalibrator::ActiveBatchChanges(int batch_idx) {
+  ui_->listView->model();
 }
 
 }

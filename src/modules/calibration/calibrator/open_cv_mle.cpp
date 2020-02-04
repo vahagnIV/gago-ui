@@ -62,11 +62,12 @@ int OpenCvMLE::Calibrate(const QList<QStringList> &files,
                                        pattern_params,
                                        new_object_points);
       for (int batch_idx = 0; batch_idx < files.size(); ++batch_idx) {
-        if (out_batch_idx[batch_idx] == -1)
+        int valid_batch_id = out_batch_idx[batch_idx];
+        if (-1 == valid_batch_id)
           continue;
-        if (out_pattern_estimation_parameters.size() >= batch_idx)
+        if (out_pattern_estimation_parameters.size() == valid_batch_id)
           out_pattern_estimation_parameters.append(QList<PatternEstimationParameters>());
-        out_pattern_estimation_parameters[batch_idx].append(pattern_params[batch_idx]);
+        out_pattern_estimation_parameters[valid_batch_id].append(pattern_params[valid_batch_id]);
       }
 
       if (0 != result)
@@ -105,6 +106,8 @@ int OpenCvMLE::GetImagePoints(const QList<QStringList> &files,
     return EmptyList;
 
   out_image_points.resize(files[0].size());
+  out_batch_idx.clear();
+  out_batch_idx.reserve(files.size());
 
   // All images per camera should have the same size in all batches,
   // hence, we keep the sizes of the first batch in order to
@@ -120,6 +123,7 @@ int OpenCvMLE::GetImagePoints(const QList<QStringList> &files,
 
     std::vector<cv::Mat> images;
     std::vector<std::vector<cv::Point2f>> pts;
+    int valid_count = 0;
     for (int cam_idx = 0; cam_idx < image_batch.size(); ++cam_idx) {
       const QString &image_path = image_batch[cam_idx];
 
@@ -136,7 +140,7 @@ int OpenCvMLE::GetImagePoints(const QList<QStringList> &files,
       for (int camera_idx = 0; camera_idx < pts.size(); ++camera_idx) {
         out_image_points[camera_idx].push_back(pts[camera_idx]);
       }
-      out_batch_idx.append(out_batch_idx.size());
+      out_batch_idx.append(valid_count++);
     } else
       out_batch_idx.append(-1);
   }

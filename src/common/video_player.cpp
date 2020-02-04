@@ -17,7 +17,6 @@ void VideoPlayer::ShowImage(const cv::Mat & image) {
   float scale = 1;
 
   scale = std::min(scale, (float) size.width() / image.cols);
-
   scale = std::min(scale, (float) size.height() / image.rows);
   qimage_ =
       QImage(image.data, image.cols, image.rows, image.cols * image.channels(), QImage::Format_RGB888);
