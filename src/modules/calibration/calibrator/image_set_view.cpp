@@ -7,6 +7,7 @@
 #include <QMenu>
 #include <QListWidgetItem>
 #include <QStandardItemModel>
+#include <QPainter>
 
 namespace gago {
 namespace calibration {
@@ -78,8 +79,58 @@ void ImageSetView::Replace(int idx, const QImage & new_image) {
 
 }
 
-void ImageSetView::Append(const QStringList & filenames) {
+void ImageSetView::Append(const QStringList & filenames, bool use) {
+  QImage icon = GetThumbnail(filenames, true);
+  QPixmap pm = QPixmap::fromImage(icon);
+  QStandardItem *item = new QStandardItem();
+  item->setIcon(pm);
+  item->setCheckable(true);
+  item->setText("");
+  QFont f;
+  f.setPointSize(1);
+  item->setFont(f);
+  item->setCheckState(use ? Qt::CheckState::Checked : Qt::CheckState::Unchecked);
+  item->setEditable(false);
+  model_->appendRow(item);
+  parameters_.append(BatchCalibrationResult(filenames));
+}
 
+QImage ImageSetView::GetThumbnail(const QStringList & image_paths, int max_width) {
+  QList<QImage> images;
+  for (const QString & image_path: image_paths)
+    images.append(QImage(image_path));
+
+  int total_width, max_height;
+  GetTotalWidthMaxHeight(images, total_width, max_height);
+
+  QImage thumbnail(total_width, max_height, QImage::Format_RGB888);
+  QPainter painter;
+  int offset = 0;
+  painter.begin(&thumbnail);
+  for (const QImage & image: images) {
+    painter.drawImage(offset, 0, image);
+    offset += image.width();
+  }
+  painter.end();
+  return thumbnail.scaledToWidth(max_width);
+}
+
+void ImageSetView::GetTotalWidthMaxHeight(const QList<QImage> & images,
+                                          int & out_total_width,
+                                          int & out_max_height) {
+  out_max_height = 0;
+  out_total_width = 0;
+  for (const QImage & image: images) {
+    out_max_height = std::max(image.height(), out_max_height);
+    out_total_width += image.width();
+  }
+}
+
+void ImageSetView::GetAllowedList(QList<BatchCalibrationResult *> & out_list) {
+  for (int i = 0; i < model_->rowCount(); ++i) {
+    if (model_->item(i, 0)->checkState() == Qt::CheckState::Checked)
+      out_list.append(&parameters_[i]);
+  }
 }
 
 }
