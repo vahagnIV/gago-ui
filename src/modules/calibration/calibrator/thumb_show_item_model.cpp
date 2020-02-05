@@ -61,6 +61,7 @@ bool ThumbShowItemModel::removeRows(int row, int count, const QModelIndex &paren
 void ThumbShowItemModel::AppendThumbnail(const QImage &thumbnail) {
   beginInsertRows(QModelIndex(), images_.size(), images_.size() + 1);
   images_.append(thumbnail);
+
   endInsertRows();
 }
 
