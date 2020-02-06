@@ -18,6 +18,9 @@ class IPattern {
   virtual bool Extract(const std::vector<cv::Mat> & image,
                        std::vector<std::vector<cv::Point2f>> & out_detected_points, bool subpix = false) const = 0;
 
+  virtual bool Extract(const cv::Mat & image,
+                       std::vector<cv::Point2f> & out_detected_points, bool subpix = false) const = 0;
+
   virtual void GetObjectPoints(std::vector<std::vector<cv::Point3f>> & out_object_points, int n_copies) const = 0;
 
   virtual void DrawPattern(cv::Mat & out_matrix, const std::vector<cv::Point2f> & points) const = 0;

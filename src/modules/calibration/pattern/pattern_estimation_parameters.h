@@ -6,14 +6,10 @@
 #define GAGO_UI_PATTERN_ESTIMATION_PARAMETERS_H
 #include <opencv2/opencv.hpp>
 #include <QStringList>
+#include "estimation_state.h"
+
 namespace gago {
 namespace calibration {
-
-enum PatternEstimationState {
-  PES_Unestimated,
-  PES_OK,
-  PES_Broken
-};
 
 struct PatternEstimationParameters {
   PatternEstimationParameters() {}
@@ -21,10 +17,11 @@ struct PatternEstimationParameters {
   PatternEstimationParameters(const cv::Mat & rvecs, const cv::Mat & tvecs, float rpj_error)
       : rotation_vectors(rvecs), translation_vectors(tvecs), reprojection_error(rpj_error) {}
   cv::Mat rotation_vectors; // Rodrigues parametrization
-  cv::Mat translation_vectors; //
+  cv::Mat translation_vectors;
   float reprojection_error;
   QString filename;
-  PatternEstimationState state;
+  EstimationState state;
+  cv::Size image_size;
 };
 
 }

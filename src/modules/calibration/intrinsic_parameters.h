@@ -14,6 +14,7 @@ struct IntrinsicParameters {
   cv::Mat distortion_coefficients;
   double rms;
   double total_average_error;
+  cv::Size image_size;
 };
 
 }

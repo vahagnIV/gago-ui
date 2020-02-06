@@ -18,7 +18,7 @@ ImageSetView::ImageSetView(QWidget *parent) : QListView(parent) {
   setFlow(TopToBottom);
   setWordWrap(true);
   setUniformItemSizes(false);
-  setIconSize(QSize(300, 300));
+  setIconSize(QSize(180, 200));
   model_ = new QStandardItemModel();
   model_->setColumnCount(1);
 
@@ -80,7 +80,7 @@ void ImageSetView::Replace(int idx, const QImage & new_image) {
 }
 
 void ImageSetView::Append(const QStringList & filenames, bool use) {
-  QImage icon = GetThumbnail(filenames, true);
+  QImage icon = GetThumbnail(filenames, 300);
   QPixmap pm = QPixmap::fromImage(icon);
   QStandardItem *item = new QStandardItem();
   item->setIcon(pm);
@@ -93,6 +93,7 @@ void ImageSetView::Append(const QStringList & filenames, bool use) {
   item->setEditable(false);
   model_->appendRow(item);
   parameters_.append(BatchCalibrationResult(filenames));
+  parameters_.back().enabled = use;
 }
 
 QImage ImageSetView::GetThumbnail(const QStringList & image_paths, int max_width) {
@@ -131,6 +132,11 @@ void ImageSetView::GetAllowedList(QList<BatchCalibrationResult *> & out_list) {
     if (model_->item(i, 0)->checkState() == Qt::CheckState::Checked)
       out_list.append(&parameters_[i]);
   }
+}
+
+void gago::calibration::ImageSetView::ItemChanged(QStandardItem *item) {
+  int idx = model_->indexFromItem(item).row();
+  parameters_[idx].enabled = item->checkState() == Qt::CheckState::Checked;
 }
 
 }

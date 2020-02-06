@@ -83,7 +83,6 @@ void MLECalibrator::Notify(const std::shared_ptr<std::vector<io::video::Capture>
 
       QStringList filenames;
       files_.push_back(QStringList());
-      QList<QImage> images;
       for (const io::video::Capture & capture: *ptr) {
         QString filename = QString::asprintf(format, capture.camera->GetName().c_str(), last_image_index);
         QDir dir(settings_.image_save_folder);
@@ -96,9 +95,8 @@ void MLECalibrator::Notify(const std::shared_ptr<std::vector<io::video::Capture>
         writer.write(image);
         filenames.append(filename);
         files_.back().push_back(dir.filePath(filename));
-        images.push_back(image);
       }
-      ui_->listView->Append(GetThumbnail(images, 140));
+      ui_->listView->Append(files_.back(), true);
 
       ++last_image_index;
     } else {
@@ -149,9 +147,7 @@ void MLECalibrator::SetCameras(const std::vector<const io::video::CameraMeta *> 
   RestoreFilenames(format, cam_names);
 
   for (QStringList & filenames: files_) {
-    QList<QImage> images = GetImages(filenames);
-    QImage thumbnail = GetThumbnail(images, 140);
-    ui_->listView->Append(thumbnail);
+    ui_->listView->Append(filenames, true);
   }
   emit EnableControlElements();
 }
@@ -165,10 +161,15 @@ void MLECalibrator::CaptureRequested() {
 
 void MLECalibrator::OnCalibrateButtonClicked() {
   emit DisableControlElements();
-  std::this_thread::sleep_for(std::chrono::seconds(1));
+
   gago::calibration::OpenCvMLE mle(pattern_, settings_);
+  QList< gago::calibration::BatchCalibrationResult *>  batch_calibration_results;
+  ui_->listView->GetAllowedList(batch_calibration_results);
+
+
 
   QList<QList<gago::calibration::PatternEstimationParameters>> pattern_estimation_parameters;
+  mle.Calibrate(batch_calibration_results, estimates_);
   QList<cv::Size> sizes;
   mle.Calibrate(files_, estimates_, pattern_estimation_parameters, sizes, valid_batch_map_);
   rectifiedImageViewWindow_->SetCalibrationEstimates(estimates_, sizes[0], files_, valid_batch_map_);

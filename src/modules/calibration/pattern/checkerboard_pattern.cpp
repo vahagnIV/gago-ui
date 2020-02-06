@@ -57,6 +57,22 @@ Pattern CheckerboardPattern::GetType() const {
   return CHESSBOARD;
 }
 
+bool CheckerboardPattern::Extract(const cv::Mat & image,
+                                  std::vector<cv::Point2f> & out_detected_points,
+                                  bool subpix) const {
+
+  if (!cv::findChessboardCorners(image, pattern_size_, out_detected_points))
+    return false;
+  if (subpix)
+    cv::cornerSubPix(image,
+                     out_detected_points,
+                     cv::Size(11, 11),
+                     cv::Size(-1, -1),
+                     cv::TermCriteria(cv::TermCriteria::EPS | cv::TermCriteria::COUNT, 30, 0.0001));
+
+  return true;
+}
+
 }
 }
 }

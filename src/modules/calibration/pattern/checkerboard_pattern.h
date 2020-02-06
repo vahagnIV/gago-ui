@@ -20,6 +20,7 @@ class CheckerboardPattern : public IPattern {
   const cv::Size & GetSize() const override;
   Pattern GetType() const override;
   void GetObjectPoints(std::vector<std::vector<cv::Point3f>> & out_object_points, int n_copies) const override;
+  bool Extract(const cv::Mat & image, std::vector<cv::Point2f> & out_detected_points, bool subpix) const override;
  private:
   cv::Size pattern_size_;
   float square_size_;

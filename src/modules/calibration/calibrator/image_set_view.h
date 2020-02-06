@@ -26,6 +26,7 @@ class ImageSetView : public QListView {
  private slots:
   void RowsRemoved(int row_idx, int count);
   void ShowProperties();
+  void ItemChanged(QStandardItem *item);
  signals:
   void BatchRemoved(int row_idx, int count);
   void ProperiesShowRequested(int batch_idx);
