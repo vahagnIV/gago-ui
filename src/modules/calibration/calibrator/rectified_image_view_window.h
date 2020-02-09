@@ -3,20 +3,22 @@
 
 #include <QDialog>
 #include <calibration_estimates.h>
+#include "batch_calibration_result.h"
 
 namespace Ui {
 class RectifiedImageViewWindow;
 }
+
 
 class RectifiedImageViewWindow : public QDialog {
  Q_OBJECT
 
  public:
   explicit RectifiedImageViewWindow(QWidget *parent = 0);
+
   void SetCalibrationEstimates(const gago::calibration::CalibrationEstimates & estimates,
-                               const cv::Size & image_size,
-                               const QList<QStringList> & files,
-                               const QList<int> & valid_map);
+                               const QList<gago::calibration::BatchCalibrationResult> & results);
+
 
   ~RectifiedImageViewWindow();
  signals:
@@ -32,9 +34,8 @@ class RectifiedImageViewWindow : public QDialog {
   QImage CreateRectifiedImage(const QList<cv::Mat> & images);
   Ui::RectifiedImageViewWindow *ui;
   gago::calibration::CalibrationEstimates estimates_;
-  QList<int> valid_batch_map_;
-  QList<QStringList> files_;
-  QList<int> valid_map_;
+  QList<gago::calibration::BatchCalibrationResult> batch_calib_results_;
+
   int current_selected_idx_;
 
   cv::Mat rmap[2][2];

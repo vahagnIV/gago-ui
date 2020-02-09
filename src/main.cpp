@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
 
   settings_module->Configure();
 
-  main_module->Show();
+  gago::gui::modules::ModuleManager::Instance().Start();
   std::cout << "Main module shown " << std::endl;
 
   return QApplication::exec();

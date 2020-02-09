@@ -22,15 +22,16 @@ unsigned int CameraModule::MinorVersion() const {
   return 0;
 }
 
-void CameraModule::QRequiredModules(std::vector<RequiredModuleParams> & out_required_modules) {
+void CameraModule::QRequiredModules(std::vector<RequiredModuleParams> &out_required_modules) {
   out_required_modules.resize(1);
   out_required_modules[0].Name = "settings";
   out_required_modules[0].MinMajorVersion = 1;
   out_required_modules[0].MinMinorVersion = 0;
 }
 
-void CameraModule::SetRequiredModules(const std::vector<IModule *> & modules) {
-  ((SettingsModule *) modules[0])->RegisterConfigurable(this);
+void CameraModule::SetRequiredModules(const std::vector<IModule *> &modules) {
+  settings_module_ = ((SettingsModule *) modules[0]);
+  settings_module_->RegisterConfigurable(this);
 }
 
 configuration::IConfigurator *CameraModule::GetConfigurator() {
@@ -56,6 +57,18 @@ void CameraModule::RegisterWatcher(CameraWatcher *watcher) {
 
 void CameraModule::UnRegisterWatcher(CameraWatcher *watcher) {
   driver_.UnRegister(watcher);
+}
+
+QVector<const io::video::CameraMeta *> CameraModule::GetCameras() {
+  return QVector<const io::video::CameraMeta *>::fromStdVector(driver_.GetCameras());;
+}
+
+int CameraModule::GetWeight() const {
+  return settings_module_->GetWeight() + 1;
+}
+
+CameraModule::~CameraModule() {
+  driver_.Stop();
 }
 
 }

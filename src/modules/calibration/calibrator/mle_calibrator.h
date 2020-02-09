@@ -30,16 +30,16 @@ class MLECalibrator : public QDialog, public ICalibrator {
                 const std::shared_ptr<gago::calibration::pattern::IPattern> & pattern,
                 const MLEConfigurationSettings & settings);
   virtual ~MLECalibrator();
-  void Calibrate() override;
+  int Calibrate() override;
   void Notify(const std::shared_ptr<std::vector<io::video::Capture>> & ptr) override;
   void SetCameras(const std::vector<const io::video::CameraMeta *> & vector) override;
+  const gago::calibration::CalibrationEstimates &GetEstimates() const override;
 
  private slots:
   void OnCalibrateButtonClicked();
   void Close();
   void CaptureRequested();
   void RestoreFilenames(const char *format, QStringList cameras_);
-  void BatchesRemoved(int start_idx, int count);
   void ActiveBatchChanges(int batch_idx);
   void DisableControlElementsSlot();
   void EnableControlElementsSlot();
@@ -48,10 +48,6 @@ class MLECalibrator : public QDialog, public ICalibrator {
   void DisableControlElements();
   void EnableControlElements();
  private:
-  void GetTotalWidthMaxHeight(const QList<QImage> & images, int & out_total_width, int & out_max_height);
-  QImage GetThumbnail(const QList<QImage> & images, int max_width);
-  QList<QImage> GetImages(const QStringList & filenames);
-
   Ui::MLECalibrationWindow *ui_;
 
   QList<common::VideoPlayer *> players_;
@@ -60,10 +56,9 @@ class MLECalibrator : public QDialog, public ICalibrator {
 
   MLEConfigurationSettings settings_;
   gago::calibration::CalibrationEstimates estimates_;
-  QList<int> valid_batch_map_;
 
   RectifiedImageViewWindow *rectifiedImageViewWindow_;
-  int current_shown_image_idx_;
+
 
   long next_capture_time_;
   int last_image_index;

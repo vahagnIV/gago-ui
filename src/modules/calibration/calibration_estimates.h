@@ -11,6 +11,7 @@ namespace calibration {
 
 struct CalibrationEstimates {
   IntrinsicParameters intrinsic_parameters[2];
+
   cv::Mat R; // Rotation matrix
   cv::Mat T; // Translation vector
   cv::Mat E; // ?

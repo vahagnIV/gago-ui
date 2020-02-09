@@ -5,6 +5,9 @@
 #include "module_manager.h"
 #include <dlfcn.h>
 #include <iostream>
+#include <QVector>
+#include<QDebug>
+
 namespace gago {
 namespace gui {
 namespace modules {
@@ -45,6 +48,7 @@ bool ModuleManager::LoadModule(const std::string &path) {
     container.delete_function(container.module_ptr);
     return false;
   }
+  container.module_weight = modules_.size();
 
   modules_[container.module_ptr->SystemName()] = container;
   std::cout << "Successfully loaded module " << container.module_ptr->Name() + " "
@@ -80,6 +84,7 @@ bool ModuleManager::SatisfyRequirements() {
                   << " is too old. " << std::endl;
         return false;
       }
+      found_model_container.module_weight += it.second.module_weight;
 
       required_modules.push_back(found_model_container.module_ptr);
 
@@ -103,11 +108,37 @@ modules::IModule *ModuleManager::GetModule(const std::string &system_name) const
 }
 
 ModuleManager::~ModuleManager() {
-  for (auto &module : modules_) {
-    if (module.second.module_ptr->SystemName() != "main")
-      module.second.delete_function(module.second.module_ptr);
-    dlclose(module.second.handle);
+
+  QVector<internal::_ModuleContainer *> containers;
+  for (auto &module : modules_)
+    containers.append(&module.second);
+  qSort(containers.begin(),
+        containers.end(),
+        [&](const internal::_ModuleContainer *first, internal::_ModuleContainer *second) {
+          return first->module_ptr->GetWeight() < second->module_ptr->GetWeight();
+        });
+
+  for (internal::_ModuleContainer *module : containers) {
+    if (module->module_ptr->SystemName() == "main")
+      continue;
+    qInfo() << QString::fromStdString(module->module_ptr->SystemName());
+    module->delete_function(module->module_ptr);
+    dlclose(module->handle);
   }
+}
+
+void ModuleManager::Start() {
+  QVector<internal::_ModuleContainer *> containers;
+  for (auto &module : modules_)
+    containers.append(&module.second);
+  qSort(containers.begin(),
+        containers.end(),
+        [&](const internal::_ModuleContainer *first, internal::_ModuleContainer *second) {
+          return first->module_ptr->GetWeight() > second->module_ptr->GetWeight();
+        });
+  for (auto &module: modules_)
+    module.second.module_ptr->Start();
+
 }
 
 }

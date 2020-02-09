@@ -18,6 +18,7 @@ typedef void(*t_delete_function)(modules::IModule*);
 
 namespace internal {
 struct _ModuleContainer{
+  int module_weight;
   modules::IModule * module_ptr;
   std::string path;
   void * handle;
@@ -30,6 +31,7 @@ class ModuleManager{
  public:
   bool LoadModule(const std::string & path);
   bool QLoaded(const std::string & module_name);
+  void Start();
 
   // Singletone
   static ModuleManager& Instance() {

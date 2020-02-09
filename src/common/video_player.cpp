@@ -21,7 +21,7 @@ void VideoPlayer::ShowImage(const cv::Mat & image) {
   qimage_ =
       QImage(image.data, image.cols, image.rows, image.cols * image.channels(), QImage::Format_RGB888);
 
-  qimage_ = qimage_.scaled(scale * qimage_.width(), scale * qimage_.height());
+  qimage_ = qimage_.scaled(scale * qimage_.width(), scale * qimage_.height()).copy();
 
   if (!text_.isEmpty()) {
     QPainter p;

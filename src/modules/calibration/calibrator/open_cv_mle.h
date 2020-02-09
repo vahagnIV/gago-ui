@@ -23,11 +23,6 @@ class OpenCvMLE {
   OpenCvMLE(const std::shared_ptr<pattern::IPattern> & pattern,
             const gago::gui::calibration::MLEConfigurationSettings & settings);
 
-  int Calibrate(const QList<QStringList> & files,
-                CalibrationEstimates & out_estimates,
-                QList<QList<PatternEstimationParameters>> & out_pattern_estimation_parameters,
-                QList<cv::Size> & out_sizes,
-                QList<int> & out_batch_idx);
 
   int Calibrate(QList<BatchCalibrationResult *> & out_batch_calibration_results, CalibrationEstimates & out_estimates);
 
@@ -49,17 +44,6 @@ class OpenCvMLE {
   int Calibrate2Cameras(QList<BatchCalibrationResult *> & out_batch_calibration_results,
                         const std::vector<std::vector<std::vector<cv::Point2f>>> & image_points,
                         const cv::Size & boardSize, CalibrationEstimates & out_estimates);
-  /*!
-   * Calculates the image points from the images located at "files" with shape [batch_id][camera_id].
-   * @param files vector of paths to the images in the shape [batch_id][camera_id]
-   * @param out_image_sizes The sizes of images per camera in the shape [camera_id]
-   * @param out_image_points output vector of image points in the shape [camera_id][batch_id][point_id]
-   * @return 0 on success or the error code
-   */
-  int GetImagePoints(const QList<QStringList> & files,
-                     QList<cv::Size> & out_image_sizes,
-                     std::vector<std::vector<std::vector<cv::Point2f>>> & out_image_points,
-                     QList<int> & out_batch_idx) const;
 
   /*!
    * Finds the intrinsic parameters of a single camera
@@ -77,17 +61,7 @@ class OpenCvMLE {
    * @param totalAvgErr
    * @return 0 if the calibration successfull or an error code
    */
-  int CalibrateSeparateCamera(const std::vector<std::vector<cv::Point2f> > & image_points,
-                              const std::vector<std::vector<cv::Point3f> > & object_points,
-                              cv::Size imageSize,
-                              cv::Size boardSize,
-                              float aspectRatio,
-      //float grid_width,
-                              bool release_object,
-                              int flags,
-                              IntrinsicParameters & intrinsic_parameters,
-                              QList<PatternEstimationParameters> & out_pattern_parameters,
-                              std::vector<cv::Point3f> & newObjPoints);
+
 
   void ComputeSingleCamReprojectionError(const std::vector<cv::Point3f> & object_points,
                                          const std::vector<cv::Point2f> & image_points,

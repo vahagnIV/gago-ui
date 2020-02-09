@@ -14,7 +14,7 @@ RectifiedImageViewWindow::~RectifiedImageViewWindow() {
   delete ui;
 }
 
-void RectifiedImageViewWindow::ShowImage(const QImage & image) {
+void RectifiedImageViewWindow::ShowImage(const QImage &image) {
   QSize size = this->size();
   float scale = 1;
 
@@ -28,63 +28,17 @@ void RectifiedImageViewWindow::ShowImage(const QImage & image) {
 }
 
 void RectifiedImageViewWindow::NextButtonPressedSlot() {
-  int new_id = (current_selected_idx_ + 1) % files_.size();
+  int new_id = (current_selected_idx_ + 1) % batch_calib_results_.size();
   SetActiveBatch(new_id);
 }
 
 void RectifiedImageViewWindow::PreviousButtonPressedSlot() {
-  int new_id = current_selected_idx_ == 0 ? files_.size() - 1 : current_selected_idx_ - 1;
+  int new_id = current_selected_idx_ == 0 ? batch_calib_results_.size() - 1 : current_selected_idx_ - 1;
   SetActiveBatch(new_id);
 }
 
-void RectifiedImageViewWindow::SetCalibrationEstimates(const gago::calibration::CalibrationEstimates & estimates,
-                                                       const cv::Size & image_size,
-                                                       const QList<QStringList> & files,
-                                                       const QList<int> & valid_map) {
-  estimates_ = estimates;
-  valid_map_ = valid_map;
-  files_ = files;
-  this->image_size = image_size;
 
-  stereoRectify(estimates_.intrinsic_parameters[0].camera_matrix,
-                estimates_.intrinsic_parameters[0].distortion_coefficients,
-                estimates_.intrinsic_parameters[1].camera_matrix,
-                estimates_.intrinsic_parameters[1].distortion_coefficients,
-                image_size,
-                estimates_.R,
-                estimates_.T,
-                R1,
-                R2,
-                P1,
-                P2,
-                Q,
-                cv::CALIB_ZERO_DISPARITY,
-                1,
-                image_size,
-                &validRoi[0],
-                &validRoi[1]);
-
-  initUndistortRectifyMap(estimates_.intrinsic_parameters[0].camera_matrix,
-                          estimates_.intrinsic_parameters[0].distortion_coefficients,
-                          R1,
-                          P1,
-                          image_size,
-                          CV_16SC2,
-                          rmap[0][0],
-                          rmap[0][1]);
-  initUndistortRectifyMap(estimates_.intrinsic_parameters[1].camera_matrix,
-                          estimates_.intrinsic_parameters[1].distortion_coefficients,
-                          R2,
-                          P2,
-                          image_size,
-                          CV_16SC2,
-                          rmap[1][0],
-                          rmap[1][1]);
-
-  SetActiveBatch(0);
-}
-
-QImage RectifiedImageViewWindow::CreateRectifiedImage(const QList<cv::Mat> & images) {
+QImage RectifiedImageViewWindow::CreateRectifiedImage(const QList<cv::Mat> &images) {
 
   cv::Mat canvas, img;
   double sf;
@@ -111,9 +65,7 @@ QImage RectifiedImageViewWindow::CreateRectifiedImage(const QList<cv::Mat> & ima
   for (int j = 0; j < canvas.rows; j += 16)
     cv::line(canvas, cv::Point(0, j), cv::Point(canvas.cols, j), cv::Scalar(0, 255, 0), 2, 8);
 
-
   cv::cvtColor(canvas, canvas, cv::COLOR_RGB2BGR);
-
 
   QImage output_image(canvas.data, canvas.cols, canvas.rows, canvas.cols * canvas.channels(), QImage::Format_RGB888);
   return output_image.copy();
@@ -121,8 +73,8 @@ QImage RectifiedImageViewWindow::CreateRectifiedImage(const QList<cv::Mat> & ima
 
 QList<cv::Mat> RectifiedImageViewWindow::LoadFiles(int batch_idx) {
   QList<cv::Mat> result;
-  for (const QString filename : files_[batch_idx]) {
-    result.append(cv::imread(filename.toStdString()));
+  for (const gago::calibration::PatternEstimationParameters &params : batch_calib_results_[batch_idx].pattern_params) {
+    result.append(cv::imread(params.filename.toStdString()));
   }
   return result;
 }
@@ -131,7 +83,57 @@ void RectifiedImageViewWindow::SetActiveBatch(int batch_idx) {
   current_selected_idx_ = batch_idx;
   QImage image = CreateRectifiedImage(LoadFiles(batch_idx));
   ShowImage(image);
-  ui->label_2->setText(files_[batch_idx][0]);
-  ui->label_3->setText(files_[batch_idx][1]);
-  ActiveBatchChanged(batch_idx);
+  ui->label_2->setText(batch_calib_results_[batch_idx].pattern_params[0].filename);
+  ui->label_3->setText(batch_calib_results_[batch_idx].pattern_params[1].filename);
+  emit ActiveBatchChanged(batch_idx);
+}
+
+void RectifiedImageViewWindow::SetCalibrationEstimates(const gago::calibration::CalibrationEstimates &estimates,
+                                                       const QList<gago::calibration::BatchCalibrationResult> &results) {
+  estimates_ = estimates;
+  batch_calib_results_ = results;
+  if (results.isEmpty())
+    return;
+  int first_valid_idx = 0;
+  while (results[first_valid_idx].pattern_params.isEmpty())
+    ++first_valid_idx;
+  cv::Size imsize = batch_calib_results_[first_valid_idx].pattern_params[0].image_size;
+  // TODO: remove this line in future
+  image_size = imsize;
+
+  stereoRectify(estimates_.intrinsic_parameters[0].camera_matrix,
+                estimates_.intrinsic_parameters[0].distortion_coefficients,
+                estimates_.intrinsic_parameters[1].camera_matrix,
+                estimates_.intrinsic_parameters[1].distortion_coefficients,
+                image_size,
+                estimates_.R,
+                estimates_.T,
+                R1,
+                R2,
+                P1,
+                P2,
+                Q,
+                cv::CALIB_ZERO_DISPARITY,
+                1,
+                imsize,
+                &validRoi[0],
+                &validRoi[1]);
+
+  initUndistortRectifyMap(estimates_.intrinsic_parameters[0].camera_matrix,
+                          estimates_.intrinsic_parameters[0].distortion_coefficients,
+                          R1,
+                          P1,
+                          image_size,
+                          CV_16SC2,
+                          rmap[0][0],
+                          rmap[0][1]);
+  initUndistortRectifyMap(estimates_.intrinsic_parameters[1].camera_matrix,
+                          estimates_.intrinsic_parameters[1].distortion_coefficients,
+                          R2,
+                          P2,
+                          imsize,
+                          CV_16SC2,
+                          rmap[1][0],
+                          rmap[1][1]);
+
 }

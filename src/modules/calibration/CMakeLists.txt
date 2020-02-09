@@ -12,8 +12,8 @@ file(GLOB MODULE_SOURCES *.h *.cpp pattern/*.h pattern/*.cpp calibrator/*.h cali
 
 list(REMOVE_ITEM MODULE_SOURCES test.cpp)
 
-qt5_wrap_cpp(QtCPPSources calibration_configurator.h calibrator/mle_calibrator.h calibrator/image_set_view.h calibration_module.h )
-qt5_wrap_ui(QtUISources calibrator/mle_calibration_window.ui)
+qt5_wrap_cpp(QtCPPSources calibration_configurator.h calibrator/mle_calibrator.h calibrator/image_set_view.h calibration_module.h calibrator/rectified_image_view_window.h )
+qt5_wrap_ui(QtUISources calibrator/mle_calibration_window.ui calibrator/rectified_image_view_window.ui)
 
 message(${Qt5Multimedia_LIBRARIES})
 

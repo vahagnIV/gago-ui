@@ -115,6 +115,13 @@ void MainModule::SetCurrentView(int idx) {
   this->views_[idx]->StartDrawing(this->main_window_.centralWidget());
 }
 
+int MainModule::GetWeight() const {
+  return 1;
+}
+void MainModule::Start() {
+  Show();
+}
+
 }
 }
 }

@@ -1,6 +1,6 @@
 #include <QtWidgets/QHBoxLayout>
 #include "camera_view_module.h"
-#include "modules/main/main_module.h"
+
 #include "video_player.h"
 
 namespace gago {
@@ -22,7 +22,7 @@ unsigned int Camera_viewModule::MinorVersion() const {
   return 0;
 }
 
-void Camera_viewModule::QRequiredModules(std::vector<RequiredModuleParams> & out_required_modules) {
+void Camera_viewModule::QRequiredModules(std::vector<RequiredModuleParams> &out_required_modules) {
   out_required_modules.resize(2);
   out_required_modules[0].Name = "main";
   out_required_modules[0].MinMajorVersion = 1;
@@ -34,13 +34,15 @@ void Camera_viewModule::QRequiredModules(std::vector<RequiredModuleParams> & out
 
 }
 
-void Camera_viewModule::SetRequiredModules(const std::vector<IModule *> & modules) {
+void Camera_viewModule::SetRequiredModules(const std::vector<IModule *> &modules) {
   for (IModule *module: modules) {
     if (module->SystemName() == "main")
-      ((MainModule *) modules[0])->RegisterView(this);
+      main_module_ = ((MainModule *) modules[0]);
+
     else if (module->SystemName() == "camera")
       camera_module_ = (CameraModule *) module;
   }
+  main_module_->RegisterView(this);
 }
 
 void Camera_viewModule::StartDrawing(QWidget *widget) {
@@ -52,22 +54,20 @@ void Camera_viewModule::StopDrawing() {
   camera_module_->UnRegisterWatcher(this);
 }
 
-const std::string & Camera_viewModule::GetName() const {
+const std::string &Camera_viewModule::GetName() const {
   return view_name_;
 }
 
-void Camera_viewModule::Notify(const std::shared_ptr<std::vector<io::video::Capture>> & ptr) {
-  for (const io::video::Capture & capture: *ptr) {
+void Camera_viewModule::Notify(const std::shared_ptr<std::vector<io::video::Capture>> &ptr) {
+  for (const io::video::Capture &capture: *ptr) {
     players_[capture.camera->GetUniqueId()]->ShowImage(capture.data);
   }
 }
 
-void Camera_viewModule::SetCameras(const std::vector<const io::video::CameraMeta *> & vector) {
+void Camera_viewModule::SetCameras(const std::vector<const io::video::CameraMeta *> &vector) {
   ClearPlayers();
 
-
   QHBoxLayout *layout = new QHBoxLayout();
-
 
   for (const io::video::CameraMeta *camera : vector) {
     players_[camera->GetUniqueId()] = new common::VideoPlayer();
@@ -85,8 +85,12 @@ void Camera_viewModule::ClearPlayers() {
 }
 
 Camera_viewModule::~Camera_viewModule() {
-  StopDrawing();
+  //StopDrawing();
   ClearPlayers();
+}
+
+int Camera_viewModule::GetWeight() const {
+  return main_module_->GetWeight() + camera_module_->GetWeight() + 1;
 }
 
 }

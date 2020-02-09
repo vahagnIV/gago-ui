@@ -26,6 +26,7 @@ public:
     virtual void RegisterConfigurable(configuration::IConfigurable *);
     virtual void Configure();
     virtual ~SettingsModule() = default;
+  int GetWeight() const override;
  private:
   void Save (std::vector<configuration::IConfigurator *> &configurators);
   QMainWindow *main_window_;

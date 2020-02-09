@@ -24,7 +24,7 @@ struct RequiredModuleParams {
 
 class IModule {
  public:
-  IModule(const std::string & name, const std::string & system_name): name_(name), system_name_(system_name){}
+  IModule(const std::string &name, const std::string &system_name) : name_(name), system_name_(system_name) {}
   virtual ModuleInitializationResult Initalize() = 0;
   const std::string &Name() const { return name_; }
   const std::string &SystemName() const { return system_name_; }
@@ -32,6 +32,8 @@ class IModule {
   virtual unsigned int MinorVersion() const = 0;
   virtual void QRequiredModules(std::vector<RequiredModuleParams> &out_required_modules) = 0;
   virtual void SetRequiredModules(const std::vector<IModule *> &modules) = 0;
+  virtual int GetWeight() const = 0;
+  virtual void Start() {};
  protected:
   virtual ~IModule() = default;
   std::string name_;

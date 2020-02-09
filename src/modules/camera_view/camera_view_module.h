@@ -4,6 +4,7 @@
 #include "imodule.h"
 #include "modules/main/view.h"
 #include "modules/camera/camera_module.h"
+#include "modules/main/main_module.h"
 #include "video_player.h"
 
 namespace gago {
@@ -29,10 +30,12 @@ class Camera_viewModule : public IModule, public View, public CameraWatcher {
   void Notify(const std::shared_ptr<std::vector<io::video::Capture>> & ptr) override;
   void SetCameras(const std::vector<const io::video::CameraMeta *> & vector) override;
   virtual ~Camera_viewModule();
+  int GetWeight() const override;
  private:
   void ClearPlayers();
   std::string view_name_ = "Raw Cameras";
   CameraModule * camera_module_;
+  MainModule * main_module_;
   std::unordered_map<std::string, gago::gui::common::VideoPlayer*> players_;
   QWidget * draw_widget_;
 

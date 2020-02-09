@@ -19,14 +19,16 @@ class MainModule : public IModule {
   unsigned int MinorVersion() const override;
   void QRequiredModules(std::vector<RequiredModuleParams> &out_required_modules) override;
   void SetRequiredModules(const std::vector<IModule *> &modules) override;
+  int GetWeight() const override;
+  void Start() override ;
 
   // Main Module
   virtual void Show();
   virtual QAction *CreateMenuBranch(std::string path);
-  virtual QMainWindow *MainWindow() ;
-  virtual ~MainModule() = default;
+  virtual QMainWindow *MainWindow();
+  virtual ~MainModule() {};
 
-  virtual void RegisterView(View * view);
+  virtual void RegisterView(View *view);
  private:
   void SetCurrentView(int idx);
   gago::gui::modules::MainWindow main_window_;

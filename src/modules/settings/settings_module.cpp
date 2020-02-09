@@ -94,6 +94,10 @@ void SettingsModule::Configure() {
   istream.close();
 }
 
+int SettingsModule::GetWeight() const {
+  return 2;
+}
+
 }
 }
 }
