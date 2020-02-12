@@ -24,14 +24,14 @@ class OpenCvMLE {
             const gago::gui::calibration::MLEConfigurationSettings & settings);
 
 
-  int Calibrate(QList<BatchCalibrationResult *> & out_batch_calibration_results, CalibrationEstimates & out_estimates);
+  int Calibrate(QList<BatchCalibrationResult> & out_batch_calibration_results, CalibrationEstimates & out_estimates);
 
  protected:
 
-  int GetImagePoints(QList<BatchCalibrationResult *> & out_batch_calibration_results,
+  int GetImagePoints(QList<BatchCalibrationResult> & out_batch_calibration_results,
                      std::vector<std::vector<std::vector<cv::Point2f>>> & out_image_points);
 
-  int CalibrateSingleCamera(QList<BatchCalibrationResult *> & out_batch_calibration_results,
+  int CalibrateSingleCamera(QList<BatchCalibrationResult> & out_batch_calibration_results,
                             int cam_idx,
                             const std::vector<std::vector<std::vector<cv::Point2f>>> & image_points,
                             const cv::Size & boardSize,
@@ -41,7 +41,7 @@ class OpenCvMLE {
                             int flags,
                             IntrinsicParameters & out_intrinsic_parameters,
                             std::vector<cv::Point3f> & newObjPoints);
-  int Calibrate2Cameras(QList<BatchCalibrationResult *> & out_batch_calibration_results,
+  int Calibrate2Cameras(QList<BatchCalibrationResult> & out_batch_calibration_results,
                         const std::vector<std::vector<std::vector<cv::Point2f>>> & image_points,
                         const cv::Size & boardSize, CalibrationEstimates & out_estimates);
 
@@ -71,7 +71,7 @@ class OpenCvMLE {
   void ComputeStereoRigReprojectionError(const std::vector<cv::Point3f> & object_points,
                                          const std::vector<std::vector<cv::Point2f>> & image_points,
                                          const CalibrationEstimates & estimates,
-                                         BatchCalibrationResult * out_result);
+                                         BatchCalibrationResult & out_result);
 
   std::shared_ptr<pattern::IPattern> pattern_;
   gago::gui::calibration::MLEConfigurationSettings settings_;

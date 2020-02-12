@@ -13,15 +13,14 @@ namespace gago {
 namespace calibration {
 
 struct BatchCalibrationResult {
-  BatchCalibrationResult() : enabled(false), state(PES_Unestimated) {}
+  BatchCalibrationResult() : state(PES_Unestimated) {}
 
-  BatchCalibrationResult(const QStringList & file_paths) : enabled(false), state(PES_Unestimated) {
+  BatchCalibrationResult(const QStringList & file_paths) :state(PES_Unestimated) {
     for (const QString & file_path: file_paths)
       pattern_params.append(PatternEstimationParameters(file_path));
   }
 
   QList<PatternEstimationParameters> pattern_params;
-  bool enabled;
   EstimationState state;
   double rms;
 };

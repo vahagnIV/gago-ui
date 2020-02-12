@@ -21,6 +21,7 @@ class RectifiedImageViewWindow : public QDialog {
 
 
   ~RectifiedImageViewWindow();
+  bool CanShow();
  signals:
   void ActiveBatchChanged(int batch_idx);
  public slots:

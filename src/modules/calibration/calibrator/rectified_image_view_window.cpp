@@ -14,7 +14,7 @@ RectifiedImageViewWindow::~RectifiedImageViewWindow() {
   delete ui;
 }
 
-void RectifiedImageViewWindow::ShowImage(const QImage &image) {
+void RectifiedImageViewWindow::ShowImage(const QImage & image) {
   QSize size = this->size();
   float scale = 1;
 
@@ -37,8 +37,7 @@ void RectifiedImageViewWindow::PreviousButtonPressedSlot() {
   SetActiveBatch(new_id);
 }
 
-
-QImage RectifiedImageViewWindow::CreateRectifiedImage(const QList<cv::Mat> &images) {
+QImage RectifiedImageViewWindow::CreateRectifiedImage(const QList<cv::Mat> & images) {
 
   cv::Mat canvas, img;
   double sf;
@@ -73,7 +72,7 @@ QImage RectifiedImageViewWindow::CreateRectifiedImage(const QList<cv::Mat> &imag
 
 QList<cv::Mat> RectifiedImageViewWindow::LoadFiles(int batch_idx) {
   QList<cv::Mat> result;
-  for (const gago::calibration::PatternEstimationParameters &params : batch_calib_results_[batch_idx].pattern_params) {
+  for (const gago::calibration::PatternEstimationParameters & params : batch_calib_results_[batch_idx].pattern_params) {
     result.append(cv::imread(params.filename.toStdString()));
   }
   return result;
@@ -88,8 +87,8 @@ void RectifiedImageViewWindow::SetActiveBatch(int batch_idx) {
   emit ActiveBatchChanged(batch_idx);
 }
 
-void RectifiedImageViewWindow::SetCalibrationEstimates(const gago::calibration::CalibrationEstimates &estimates,
-                                                       const QList<gago::calibration::BatchCalibrationResult> &results) {
+void RectifiedImageViewWindow::SetCalibrationEstimates(const gago::calibration::CalibrationEstimates & estimates,
+                                                       const QList<gago::calibration::BatchCalibrationResult> & results) {
   estimates_ = estimates;
   batch_calib_results_ = results;
   if (results.isEmpty())
@@ -136,4 +135,8 @@ void RectifiedImageViewWindow::SetCalibrationEstimates(const gago::calibration::
                           rmap[1][0],
                           rmap[1][1]);
 
+}
+
+bool RectifiedImageViewWindow::CanShow() {
+  return !R1.empty() && !R2.empty();
 }

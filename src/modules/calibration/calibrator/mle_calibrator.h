@@ -40,10 +40,8 @@ class MLECalibrator : public QDialog, public ICalibrator {
   void Close();
   void CaptureRequested();
   void RestoreFilenames(const char *format, QStringList cameras_);
-  void ActiveBatchChanges(int batch_idx);
   void DisableControlElementsSlot();
   void EnableControlElementsSlot();
-  void ShowOnRectifiedViewer(int batch_idx);
  signals:
   void DisableControlElements();
   void EnableControlElements();
@@ -56,9 +54,6 @@ class MLECalibrator : public QDialog, public ICalibrator {
 
   MLEConfigurationSettings settings_;
   gago::calibration::CalibrationEstimates estimates_;
-
-  RectifiedImageViewWindow *rectifiedImageViewWindow_;
-
 
   long next_capture_time_;
   int last_image_index;

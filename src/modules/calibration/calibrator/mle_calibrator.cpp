@@ -21,37 +21,29 @@ namespace gui {
 namespace calibration {
 
 MLECalibrator::MLECalibrator(QWidget *parent,
-                             const std::shared_ptr<gago::calibration::pattern::IPattern> &pattern,
-                             const MLEConfigurationSettings &settings) : QDialog(parent),
-                                                                         ui_(new Ui::MLECalibrationWindow()),
-                                                                         pattern_(pattern),
-                                                                         settings_(settings),
-                                                                         last_image_index(0),
-                                                                         player(settings.sounds_enabled
-                                                                                ? new QMediaPlayer : nullptr),
-                                                                         next_capture_time_(std::numeric_limits<typeof(next_capture_time_)>::max()) {
+                             const std::shared_ptr<gago::calibration::pattern::IPattern> & pattern,
+                             const MLEConfigurationSettings & settings) : QDialog(parent),
+                                                                          ui_(new Ui::MLECalibrationWindow()),
+                                                                          pattern_(pattern),
+                                                                          settings_(settings),
+                                                                          last_image_index(0),
+                                                                          player(settings.sounds_enabled
+                                                                                 ? new QMediaPlayer : nullptr),
+                                                                          next_capture_time_(std::numeric_limits<typeof(next_capture_time_)>::max()) {
   ui_->setupUi(this);
-  rectifiedImageViewWindow_ = new RectifiedImageViewWindow(this);
-  rectifiedImageViewWindow_->hide();
+
   connect(ui_->pushButton, &QPushButton::pressed, this, &MLECalibrator::CaptureRequested);
   connect(ui_->pushButton_2, &QPushButton::pressed, this, &MLECalibrator::OnCalibrateButtonClicked);
-  connect(ui_->listView,
-          &gago::calibration::ImageSetView::ProperiesShowRequested,
-          this,
-          &MLECalibrator::ShowOnRectifiedViewer);
+
   connect(this, &MLECalibrator::DisableControlElements, this, &MLECalibrator::DisableControlElementsSlot);
   connect(this, &MLECalibrator::EnableControlElements, this, &MLECalibrator::EnableControlElementsSlot);
-  connect(rectifiedImageViewWindow_,
-          &RectifiedImageViewWindow::ActiveBatchChanged,
-          this,
-          &MLECalibrator::ActiveBatchChanges);
 
   ui_->listView->setAutoFillBackground(true);
 }
 
 MLECalibrator::~MLECalibrator() {
   delete ui_;
-  delete rectifiedImageViewWindow_;
+
 }
 
 void MLECalibrator::Close() {
@@ -63,7 +55,7 @@ int MLECalibrator::Calibrate() {
   return estimates_.T.empty() ? 1 : 0;
 }
 
-void MLECalibrator::Notify(const std::shared_ptr<std::vector<io::video::Capture>> &ptr) {
+void MLECalibrator::Notify(const std::shared_ptr<std::vector<io::video::Capture>> & ptr) {
   std::vector<cv::Mat> images;
   for (int j = 0; j < ptr->size(); ++j) {
     images.push_back((*ptr)[j].data);
@@ -83,7 +75,7 @@ void MLECalibrator::Notify(const std::shared_ptr<std::vector<io::video::Capture>
 
       QStringList filenames;
       files_.push_back(QStringList());
-      for (const io::video::Capture &capture: *ptr) {
+      for (const io::video::Capture & capture: *ptr) {
         QString filename = QString::asprintf(format, capture.camera->GetName().c_str(), last_image_index);
         QDir dir(settings_.image_save_folder);
         QImage image(capture.data.data,
@@ -96,7 +88,7 @@ void MLECalibrator::Notify(const std::shared_ptr<std::vector<io::video::Capture>
         filenames.append(filename);
         files_.back().push_back(dir.filePath(filename));
       }
-      ui_->listView->Append(files_.back(), true);
+      ui_->listView->Append(files_.back());
 
       ++last_image_index;
     } else {
@@ -117,7 +109,7 @@ void MLECalibrator::Notify(const std::shared_ptr<std::vector<io::video::Capture>
 
 }
 
-void MLECalibrator::SetCameras(const std::vector<const io::video::CameraMeta *> &vector) {
+void MLECalibrator::SetCameras(const std::vector<const io::video::CameraMeta *> & vector) {
   emit DisableControlElements();
 
   QStringList cam_names;
@@ -143,11 +135,12 @@ void MLECalibrator::SetCameras(const std::vector<const io::video::CameraMeta *> 
     player_layout->addWidget(new QLabel(label_text));
 
   }
+  ui_->listView->SetCameraNames(cam_names);
 
   RestoreFilenames(format, cam_names);
 
-  for (QStringList &filenames: files_) {
-    ui_->listView->Append(filenames, true);
+  for (QStringList & filenames: files_) {
+    ui_->listView->Append(filenames);
   }
   emit EnableControlElements();
 }
@@ -163,14 +156,25 @@ void MLECalibrator::OnCalibrateButtonClicked() {
   emit DisableControlElements();
 
   gago::calibration::OpenCvMLE mle(pattern_, settings_);
-  QList<gago::calibration::BatchCalibrationResult *> batch_calibration_results;
-  ui_->listView->GetAllowedList(batch_calibration_results);
 
-  QList<QList<gago::calibration::PatternEstimationParameters>> pattern_estimation_parameters;
-  mle.Calibrate(batch_calibration_results, estimates_);
+  QList<gago::calibration::BatchCalibrationResult> & batches = ui_->listView->GetBatchCalibrationResults();
+
+  // Reset the state if it was calibrated previously
+  for (gago::calibration::BatchCalibrationResult & image_batch: batches) {
+    if (image_batch.state == gago::calibration::PES_Calibrated)
+      image_batch.state = gago::calibration::PES_Unestimated;
+
+    for (gago::calibration::PatternEstimationParameters & param : image_batch.pattern_params)
+      if (param.state == gago::calibration::PES_Calibrated)
+        param.state = gago::calibration::PES_Unestimated;
+
+  }
+
+  mle.Calibrate(batches, estimates_);
 
   ui_->listView->Update();
-  rectifiedImageViewWindow_->SetCalibrationEstimates(estimates_, ui_->listView->GetBatchCalibrationResults());
+  if (!estimates_.R.empty())
+    ui_->listView->SetCalibrationEstimates(estimates_);
 
   emit EnableControlElements();
 }
@@ -179,7 +183,7 @@ void MLECalibrator::RestoreFilenames(const char *format, QStringList cameras_) {
   last_image_index = 0;
   QDir directory(settings_.image_save_folder);
   QStringList filters = {QString(format).replace("%s", cameras_[0]).replace("%03d", "*")};
-  for (const QString &filename: directory.entryList(filters, QDir::NoFilter, QDir::SortFlag::Name)) {
+  for (const QString & filename: directory.entryList(filters, QDir::NoFilter, QDir::SortFlag::Name)) {
     int idx = filename.right(7).left(3).toInt();
     QStringList idx_files = {directory.filePath(filename)};
     for (int i = 1; i < cameras_.size(); ++i) {
@@ -225,16 +229,7 @@ void MLECalibrator::EnableControlElementsSlot() {
   qApp->processEvents();
 }
 
-void MLECalibrator::ShowOnRectifiedViewer(int batch_idx) {
-  rectifiedImageViewWindow_->SetActiveBatch(batch_idx);
-  rectifiedImageViewWindow_->exec();
-}
-
-void MLECalibrator::ActiveBatchChanges(int batch_idx) {
-  ui_->listView->setCurrentIndex(ui_->listView->model()->index(batch_idx, 0));
-}
-
-const gago::calibration::CalibrationEstimates &MLECalibrator::GetEstimates() const {
+const gago::calibration::CalibrationEstimates & MLECalibrator::GetEstimates() const {
   return estimates_;
 }
 

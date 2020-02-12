@@ -62,23 +62,29 @@
      <item>
       <layout class="QVBoxLayout" name="verticalLayout_3">
        <item>
-          <widget class="gago::calibration::ImageSetView" name="listView">
-             <property name="minimumSize">
-              <size>
-               <width>200</width>
-               <height>0</height>
-              </size>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>200</width>
-               <height>16777215</height>
-              </size>
-             </property>
-             <property name="viewMode">
-              <enum>QListView::ListMode</enum>
-             </property>
-            </widget>
+        <widget class="gago::calibration::ImageSetView" name="listView">
+         <property name="minimumSize">
+          <size>
+           <width>300</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>280</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="midLineWidth">
+          <number>2</number>
+         </property>
+         <property name="cornerButtonEnabled">
+          <bool>false</bool>
+         </property>
+         <attribute name="horizontalHeaderVisible">
+          <bool>true</bool>
+         </attribute>
+        </widget>
        </item>
       </layout>
      </item>
@@ -86,14 +92,14 @@
    </item>
   </layout>
  </widget>
-<customwidgets>
+ <customwidgets>
   <customwidget>
    <class>gago::calibration::ImageSetView</class>
-   <extends>QListView</extends>
+   <extends>QTableView</extends>
    <header>image_set_view.h</header>
    <container>1</container>
   </customwidget>
-</customwidgets>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

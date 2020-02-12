@@ -8,10 +8,11 @@ namespace gago {
 namespace calibration {
 
 enum EstimationState {
-  PES_Unestimated,
-  PES_Extracted,
-  PES_Calibrated,
-  PES_Broken
+  PES_Unestimated = 1,
+  PES_Extracted = 2,
+  PES_Calibrated = 3,
+  PES_Broken = 4,
+  PES_Disabled = 5
 };
 
 }
