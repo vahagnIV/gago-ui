@@ -167,11 +167,9 @@ void MLECalibrator::OnCalibrateButtonClicked() {
     for (gago::calibration::PatternEstimationParameters & param : image_batch.pattern_params)
       if (param.state == gago::calibration::PES_Calibrated)
         param.state = gago::calibration::PES_Unestimated;
-
   }
 
   mle.Calibrate(batches, estimates_);
-
   ui_->listView->Update();
   if (!estimates_.R.empty())
     ui_->listView->SetCalibrationEstimates(estimates_);

@@ -117,25 +117,24 @@ void ImageSetView::Update() {
 
     QList<QImage> images = GetImages(result);
     for (int cam_idx = 0; cam_idx < result.pattern_params.size(); ++cam_idx) {
-      if(result.state == PES_Calibrated)
+      if (result.state == PES_Calibrated)
         model_->setData(model_->index(batch_idx, cam_idx), backgroun_color, Qt::BackgroundRole);
       else
         model_->setData(model_->index(batch_idx, cam_idx), QVariant(), Qt::BackgroundRole);
       QStandardItem *item = model_->itemFromIndex(model_->index(batch_idx, cam_idx));
       QImage & image = images[cam_idx];
-      if (result.pattern_params[cam_idx].state == PES_Calibrated) {
 
+      QColor color = result.pattern_params[cam_idx].state == PES_Calibrated
+                     ? GetColor(result.pattern_params[cam_idx].reprojection_error) : QColor(128, 128, 128);
 
-        QColor color = result.pattern_params[cam_idx].state == PES_Calibrated
-                       ? GetColor(result.pattern_params[cam_idx].reprojection_error) : QColor(128, 128, 128);
-
-        QPainter painter(&image);
-        QPen pen(color, 50);
-        painter.setPen(pen);
-        painter.drawRect(0, 0, image.width(), image.height());
+      QPainter painter(&image);
+      QPen pen(color, 50);
+      painter.setPen(pen);
+      painter.drawRect(0, 0, image.width(), image.height());
+      if (PES_Calibrated == result.pattern_params[cam_idx].state)
         item->setToolTip(QString::asprintf("Calibration error: %.4f",
                                            result.pattern_params[cam_idx].reprojection_error));
-      }
+
       item->setIcon(QPixmap::fromImage(image));
     }
   }
