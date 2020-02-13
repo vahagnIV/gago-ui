@@ -12,13 +12,13 @@ namespace gago {
 namespace gui {
 namespace modules {
 
-SettingsWindow::SettingsWindow(std::vector<configuration::IConfigurator *> &configurators, QWidget *parent)
+SettingsWindow::SettingsWindow(QList<configuration::IConfigurator *> &configurators, QWidget *parent)
     : configurators_(configurators), QDialog(parent), ui(new Ui::SettingsWindow) {
   ui->setupUi(this);
   connect(ui->buttonBox, &QDialogButtonBox::clicked, this, &SettingsWindow::clicked);
   for (configuration::IConfigurator *configurator: configurators_) {
     QWidget *tab = new QWidget();
-    ui->tabWidget->addTab(tab, configurator->ConfigWindowName().c_str());
+    ui->tabWidget->addTab(tab, configurator->ConfigWindowName());
     configurator->DrawConfigurationPage(tab);
   }
 }

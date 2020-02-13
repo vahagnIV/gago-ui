@@ -1,7 +1,7 @@
 #ifndef MAIN_MODULE_H
 #define MAIN_MODULE_H
 
-#include "../../imodule.h"
+#include "imodule.h"
 #include "main_window.h"
 #include "view.h"
 
@@ -17,7 +17,7 @@ class MainModule : public IModule {
   ModuleInitializationResult Initalize() override;
   unsigned int MajorVersion() const override;
   unsigned int MinorVersion() const override;
-  void QRequiredModules(QList<RequiredModuleParams> &out_required_modules) override;
+  void GetRequiredModules(QList<RequiredModuleParams> & out_required_modules) override;
   void SetRequiredModules(const QList<IModule *> &modules) override;
   int GetWeight() const override;
   void Start() override ;

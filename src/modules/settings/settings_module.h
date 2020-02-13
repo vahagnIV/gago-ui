@@ -2,6 +2,7 @@
 #define SETTINGS_MODULE_H
 
 #include <QMainWindow>
+#include <QList>
 #include "imodule.h"
 #include "iconfigurable.h"
 #include "settings_window.h"
@@ -19,7 +20,7 @@ public:
     ModuleInitializationResult Initalize () override;
     unsigned int MajorVersion () const override;
     unsigned int MinorVersion () const override;
-    void QRequiredModules(QList<RequiredModuleParams> & out_required_modules) override;
+    void GetRequiredModules(QList<RequiredModuleParams> & out_required_modules) override;
     void SetRequiredModules(const QList<IModule *> & modules) override;
 
     //Settings
@@ -28,9 +29,9 @@ public:
     virtual ~SettingsModule() = default;
   int GetWeight() const override;
  private:
-  void Save (std::vector<configuration::IConfigurator *> &configurators);
+  void Save (QList<configuration::IConfigurator *> &configurators);
   QMainWindow *main_window_;
-  std::vector<configuration::IConfigurable *> configurables_;
+  QList<configuration::IConfigurable *> configurables_;
 
 };
 

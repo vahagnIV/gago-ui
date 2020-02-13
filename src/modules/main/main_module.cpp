@@ -34,7 +34,7 @@ unsigned int MainModule::MinorVersion() const {
   return 0;
 }
 
-void MainModule::QRequiredModules(QList<RequiredModuleParams> & out_required_modules) {
+void MainModule::GetRequiredModules(QList<RequiredModuleParams> & out_required_modules) {
 }
 
 void MainModule::SetRequiredModules(const QList<IModule *> & modules) {

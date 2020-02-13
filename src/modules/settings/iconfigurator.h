@@ -19,7 +19,7 @@ class IConfigurator {
   virtual void Apply() = 0;
   virtual void GetConfiguration(nlohmann::json & out_json) = 0;
   virtual void SetConfiguration(const nlohmann::json & json) = 0;
-  virtual const std::string &ConfigWindowName() const = 0;
+  virtual const QString &ConfigWindowName() const = 0;
   virtual ~IConfigurator()= default;
 };
 

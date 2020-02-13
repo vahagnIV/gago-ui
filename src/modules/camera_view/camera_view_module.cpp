@@ -22,7 +22,7 @@ unsigned int Camera_viewModule::MinorVersion() const {
   return 0;
 }
 
-void Camera_viewModule::QRequiredModules(QList<RequiredModuleParams> & out_required_modules) {
+void Camera_viewModule::GetRequiredModules(QList<RequiredModuleParams> & out_required_modules) {
   out_required_modules = {RequiredModuleParams{.Name = "main", .MinMajorVersion = 1, .MinMinorVersion = 0},
                           RequiredModuleParams{.Name = "camera", .MinMajorVersion = 1, .MinMinorVersion = 0}};
 }

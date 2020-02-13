@@ -26,7 +26,7 @@ unsigned int SettingsModule::MinorVersion() const {
   return 0;
 }
 
-void SettingsModule::QRequiredModules(QList<RequiredModuleParams> & out_required_modules) {
+void SettingsModule::GetRequiredModules(QList<RequiredModuleParams> & out_required_modules) {
   out_required_modules = {RequiredModuleParams{Name : "main", MinMajorVersion : 1, MinMinorVersion : 0}};
 }
 
@@ -37,7 +37,7 @@ void SettingsModule::SetRequiredModules(const QList<IModule *> & modules) {
   QObject::connect(action,
                    &QAction::triggered,
                    [&]() {
-                     std::vector<configuration::IConfigurator *> configurators;
+                     QList<configuration::IConfigurator *> configurators;
                      for (configuration::IConfigurable *configurable: configurables_) {
                        configurators.push_back(configurable->GetConfigurator());
                      }
@@ -61,12 +61,12 @@ void SettingsModule::RegisterConfigurable(configuration::IConfigurable *configur
   configurables_.push_back(configurable);
 }
 
-void SettingsModule::Save(std::vector<configuration::IConfigurator *> & configurators) {
+void SettingsModule::Save(QList<configuration::IConfigurator *> & configurators) {
   nlohmann::json json;
   for (configuration::IConfigurator *configurator: configurators) {
     nlohmann::json module_json;
     configurator->GetConfiguration(module_json);
-    json[configurator->ConfigWindowName()] = module_json;
+    json[configurator->ConfigWindowName().toStdString()] = module_json;
   }
   std::ofstream of("settings.json");
   of << json;
@@ -82,8 +82,8 @@ void SettingsModule::Configure() {
   istream >> json;
   for (configuration::IConfigurable *configurable: configurables_) {
     configuration::IConfigurator *configurator = configurable->GetConfigurator();
-    if (json.find(configurator->ConfigWindowName()) != json.end())
-      configurator->SetConfiguration(json[configurator->ConfigWindowName()]);
+    if (json.find(configurator->ConfigWindowName().toStdString()) != json.end())
+      configurator->SetConfiguration(json[configurator->ConfigWindowName().toStdString()]);
     configurable->ApplyConfiguration(configurator);
     configurable->DisposeConfigurator(configurator);
   }

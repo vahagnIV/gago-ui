@@ -15,8 +15,6 @@ class CalibPatternConfiguratorFactory {
  public:
   static IConfigurator *CreateConfigurator(CalibrationPatternType type);
   static void DisposeConfigurator(IConfigurator *configurator);
- private:
-  nlohmann::json calib_pattern_setting_json_;
 };
 
 }

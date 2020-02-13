@@ -5,7 +5,7 @@
 #ifndef GAGO_UI_CALIBRATOR_TYPE_H
 #define GAGO_UI_CALIBRATOR_TYPE_H
 
-#include <string>
+#include <QString>
 
 namespace gago {
 namespace gui {
@@ -15,9 +15,9 @@ enum CalibratorType {
   MLE_Calibrator
 };
 
-std::string to_string(CalibratorType type);
+QString to_string(CalibratorType type);
 
-bool try_parse(const std::string & type_str, CalibratorType & out_type);
+bool try_parse(const QString & type_str, CalibratorType & out_type);
 }
 }
 }

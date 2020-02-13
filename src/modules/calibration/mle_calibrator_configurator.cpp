@@ -4,11 +4,11 @@
 
 #include <QGridLayout>
 #include <QLabel>
-#include "mle_calibrator_configurator.h"
-#include "calibrator_type.h"
-#include <QLineEdit>
 #include <QPushButton>
 #include <QFileDialog>
+
+#include "mle_calibrator_configurator.h"
+#include "calibrator_type.h"
 
 namespace gago {
 namespace gui {
@@ -77,7 +77,7 @@ void MLECalibratorConfigurator::SetConfiguration(const nlohmann::json & json) {
     current_settings_.sounds_enabled = json["SoundEnabled"];
 }
 
-const std::string & MLECalibratorConfigurator::ConfigWindowName() const {
+const QString & MLECalibratorConfigurator::ConfigWindowName() const {
   return window_name_;
 }
 

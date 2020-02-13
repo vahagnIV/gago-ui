@@ -4,9 +4,10 @@
 
 #ifndef GAGO_UI_CHECKERBOARD_CONFIGURATOR_H
 #define GAGO_UI_CHECKERBOARD_CONFIGURATOR_H
-#include "modules/settings/iconfigurator.h"
 #include <QGridLayout>
 #include <QSpinBox>
+
+#include "modules/settings/iconfigurator.h"
 
 namespace gago {
 namespace gui {
@@ -24,11 +25,11 @@ class CheckerboardConfigurator : IConfigurator {
   void Apply() override;
   void GetConfiguration(nlohmann::json &out_json) override;
   void SetConfiguration(const nlohmann::json &json) override;
-  const std::string &ConfigWindowName() const override;
+  const QString &ConfigWindowName() const override;
   const CheckerboardParams &GetSettings() const { return current_params_; }
   virtual ~CheckerboardConfigurator();
  private:
-  const std::string window_name_ = "Checkerboard";
+  const QString window_name_ = "Checkerboard";
   QGridLayout *layout_;
   CheckerboardParams current_params_;
   QSpinBox *nx_box_;

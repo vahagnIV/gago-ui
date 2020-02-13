@@ -4,10 +4,12 @@
 
 #ifndef GAGO_UI_CALIBRATION_CONFIGURATOR_H
 #define GAGO_UI_CALIBRATION_CONFIGURATOR_H
+
 #include <QObject>
 #include <QFrame>
 #include <QComboBox>
 #include <QGroupBox>
+
 #include "modules/settings/iconfigurator.h"
 #include "calib_pattern_configurator_factory.h"
 #include "calibrator_type.h"
@@ -30,7 +32,7 @@ class CalibrationConfigurator : public QObject, public IConfigurator {
   void Apply() override;
   void GetConfiguration(nlohmann::json & out_json) override;
   void SetConfiguration(const nlohmann::json & json) override;
-  const std::string & ConfigWindowName() const override;
+  const QString & ConfigWindowName() const override;
   virtual ~CalibrationConfigurator();
 
   IConfigurator *GetActivePatternConfigurator();
@@ -42,7 +44,7 @@ class CalibrationConfigurator : public QObject, public IConfigurator {
  private:
   void DrawPatternSide();
   void DrawCalibratorSide();
-  std::string window_name = "Calibration";
+  QString window_name = "Calibration";
   CalibrationConfiguration current_calibration_settings_;
 
   QGroupBox *calibrator_group_box_;

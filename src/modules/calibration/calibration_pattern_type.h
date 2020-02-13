@@ -4,7 +4,7 @@
 
 #ifndef GAGO_UI_CALIBRATION_PATTERN_TYPE_H
 #define GAGO_UI_CALIBRATION_PATTERN_TYPE_H
-#include <string>
+#include <QString>
 
 namespace gago {
 namespace gui {
@@ -14,9 +14,9 @@ enum CalibrationPatternType {
   Checkerboard
 };
 
-std::string to_string(CalibrationPatternType type);
+QString to_string(CalibrationPatternType type);
 
-bool try_parse(const std::string & type_str, CalibrationPatternType & out_type);
+bool try_parse(const QString & type_str, CalibrationPatternType & out_type);
 
 
 

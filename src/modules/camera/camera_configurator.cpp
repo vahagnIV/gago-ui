@@ -65,7 +65,7 @@ void CameraConfigurator::SetConfiguration(const nlohmann::json & json) {
   }
 }
 
-const std::string & CameraConfigurator::ConfigWindowName() const {
+const QString & CameraConfigurator::ConfigWindowName() const {
   return window_name;
 }
 

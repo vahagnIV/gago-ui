@@ -30,7 +30,7 @@ class IModule {
   const QString &SystemName() const { return system_name_; }
   virtual unsigned int MajorVersion() const = 0;
   virtual unsigned int MinorVersion() const = 0;
-  virtual void QRequiredModules(QList<RequiredModuleParams> &out_required_modules) = 0;
+  virtual void GetRequiredModules(QList<RequiredModuleParams> & out_required_modules) = 0;
   virtual void SetRequiredModules(const QList<IModule *> &modules) = 0;
   virtual int GetWeight() const = 0;
   virtual void Start() {};

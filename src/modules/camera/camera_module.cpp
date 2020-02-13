@@ -1,5 +1,5 @@
-#include <modules/settings/settings_module.h>
 #include "camera_module.h"
+#include "modules/settings/settings_module.h"
 #include "camera_configurator.h"
 
 namespace gago {
@@ -22,8 +22,8 @@ unsigned int CameraModule::MinorVersion() const {
   return 0;
 }
 
-void CameraModule::QRequiredModules(QList<RequiredModuleParams> & out_required_modules) {
-  out_required_modules = {RequiredModuleParams{.Name = "settings", .MinMajorVersion = 1, .MinMinorVersion = 0}};
+void CameraModule::GetRequiredModules(QList<RequiredModuleParams> & out_required_modules) {
+  out_required_modules = {RequiredModuleParams{Name : "settings", MinMajorVersion : 1, MinMinorVersion : 0}};
 }
 
 void CameraModule::SetRequiredModules(const QList<IModule *> & modules) {

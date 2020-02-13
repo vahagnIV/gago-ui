@@ -1,13 +1,14 @@
-#include <modules/settings/settings_module.h>
+#include <QAction>
+#include <QStandardPaths>
+#include <QTextStream>
+#include <QFileDialog>
+
+#include "modules/settings/settings_module.h"
 #include "calibration_module.h"
 #include "modules/main/main_module.h"
 #include "calibration_configurator.h"
 #include "pattern/calibration_pattern_factory.h"
 #include "calibrator/calibrator_factory.h"
-#include <QAction>
-#include <QStandardPaths>
-#include <QtCore/QTextStream>
-#include <QtWidgets/QFileDialog>
 
 namespace gago {
 namespace gui {
@@ -48,7 +49,7 @@ void CalibrationModule::Calibrate() {
 
 }
 
-void CalibrationModule::QRequiredModules(QList<RequiredModuleParams> &out_required_modules) {
+void CalibrationModule::GetRequiredModules(QList<RequiredModuleParams> & out_required_modules) {
   out_required_modules = {RequiredModuleParams{Name: "main", MinMajorVersion: 1, MinMinorVersion: 0},
                           RequiredModuleParams{Name: "settings", MinMajorVersion: 1, MinMinorVersion: 0},
                           RequiredModuleParams{Name: "camera", MinMajorVersion: 1, MinMinorVersion: 0}};

@@ -3,9 +3,9 @@
 //
 
 
+#include "checkerboard_configurator.h"
 #include <QLabel>
 #include <QSpinBox>
-#include "checkerboard_configurator.h"
 
 namespace gago {
 namespace gui {
@@ -42,7 +42,7 @@ void CheckerboardConfigurator::SetConfiguration(const nlohmann::json & json) {
     current_params_.n_y = json["Ny"];
 }
 
-const std::string & CheckerboardConfigurator::ConfigWindowName() const {
+const QString & CheckerboardConfigurator::ConfigWindowName() const {
   return window_name_;
 }
 CheckerboardConfigurator::~CheckerboardConfigurator() {

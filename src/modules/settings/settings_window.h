@@ -26,7 +26,7 @@ class SettingsWindow : public QDialog {
   friend class modules::SettingsModule;
  Q_OBJECT
  public:
-  explicit SettingsWindow(std::vector<configuration::IConfigurator *> & configurators, QWidget *parent = 0);
+  explicit SettingsWindow(QList<configuration::IConfigurator *> & configurators, QWidget *parent = 0);
   virtual ~SettingsWindow();
  public slots:
   void clicked(QAbstractButton *btn);
@@ -35,7 +35,7 @@ class SettingsWindow : public QDialog {
  private:
   void apply();
   Ui::SettingsWindow *ui;
-  std::vector<configuration::IConfigurator *> configurators_;
+  QList<configuration::IConfigurator *> configurators_;
 };
 
 }

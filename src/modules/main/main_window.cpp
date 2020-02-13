@@ -4,6 +4,7 @@
 
 #include "main_window.h"
 #include "ui_main_window.h"
+
 namespace gago {
 namespace gui {
 namespace modules {

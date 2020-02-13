@@ -20,7 +20,7 @@ class Camera_viewModule : public IModule, public View, public CameraWatcher {
   ModuleInitializationResult Initalize() override;
   unsigned int MajorVersion() const override;
   unsigned int MinorVersion() const override;
-  void QRequiredModules(QList<RequiredModuleParams> & out_required_modules) override;
+  void GetRequiredModules(QList<RequiredModuleParams> & out_required_modules) override;
   void SetRequiredModules(const QList<IModule *> & modules) override;
 
   // View

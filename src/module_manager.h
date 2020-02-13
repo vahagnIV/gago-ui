@@ -5,8 +5,9 @@
 #ifndef GAGO_UI_SRC_MODULE_MANAGER_H_
 #define GAGO_UI_SRC_MODULE_MANAGER_H_
 
-#include <QMap>
 #include <QString>
+#include <QMap>
+
 #include "imodule.h"
 
 namespace gago {
@@ -21,7 +22,6 @@ namespace internal {
 struct _ModuleContainer{
   int module_weight;
   modules::IModule * module_ptr;
-  std::string path;
   void * handle;
   t_create_function create_function;
   t_delete_function delete_function;

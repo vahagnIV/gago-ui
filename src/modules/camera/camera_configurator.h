@@ -5,8 +5,6 @@
 #ifndef GAGO_UI_SRC_MODULES_CAMERA_CAMERA_CONFIGURATOR_H_
 #define GAGO_UI_SRC_MODULES_CAMERA_CAMERA_CONFIGURATOR_H_
 
-#include <modules/settings/iconfigurator.h>
-#include <io/video/camera.h>
 #include <QLabel>
 #include <QCheckBox>
 #include <QHBoxLayout>
@@ -15,6 +13,9 @@
 #include <QComboBox>
 #include <QWidget>
 #include <QListView>
+
+#include "io/video/camera.h"
+#include "modules/settings/iconfigurator.h"
 
 namespace gago {
 namespace gui {
@@ -42,7 +43,7 @@ class CameraConfigurator : public IConfigurator {
   void Apply() override;
   void GetConfiguration(nlohmann::json &out_json) override;
   void SetConfiguration(const nlohmann::json &json) override;
-  const std::string &ConfigWindowName() const override;
+  const QString &ConfigWindowName() const override;
 
   //
   const std::vector<io::video::CameraSettings> &GetSettings() const {
@@ -51,7 +52,7 @@ class CameraConfigurator : public IConfigurator {
  private:
   void InitControlElements();
   void DrawOnWidget(QWidget * widget);
-  std::string window_name = "Camera";
+  QString window_name = "Camera";
   const std::vector<gago::io::video::CameraSettings> devices_;
   std::vector<io::video::CameraSettings> current_settings_;
   std::vector<internal::CameraLayout> camera_layouts_;

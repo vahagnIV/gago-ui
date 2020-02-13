@@ -1,12 +1,12 @@
 #ifndef CALIBRATION_MODULE_H
 #define CALIBRATION_MODULE_H
 
-#include "../../imodule.h"
+#include <QDir>
+#include "imodule.h"
 #include "pattern/ipattern.h"
 #include "modules/settings/iconfigurable.h"
 #include "modules/camera/camera_module.h"
 #include "calibration_estimates.h"
-#include <QDir>
 
 namespace gago {
 namespace gui {
@@ -22,7 +22,7 @@ class CalibrationModule : public QObject,  public IModule, public configuration:
   ModuleInitializationResult Initalize() override;
   unsigned int MajorVersion() const override;
   unsigned int MinorVersion() const override;
-  void QRequiredModules(QList<RequiredModuleParams> & out_required_modules) override;
+  void GetRequiredModules(QList<RequiredModuleParams> & out_required_modules) override;
   void SetRequiredModules(const QList<IModule *> & modules) override;
   int GetWeight() const override;
   void Start() override ;

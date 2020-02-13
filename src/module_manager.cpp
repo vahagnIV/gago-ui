@@ -2,11 +2,12 @@
 // Created by vahagn on 12/29/19.
 //
 
-#include "module_manager.h"
 #include <dlfcn.h>
-#include <iostream>
+
 #include <QVector>
 #include<QDebug>
+
+#include "module_manager.h"
 
 namespace gago {
 namespace gui {
@@ -61,7 +62,7 @@ bool ModuleManager::SatisfyRequirements() {
   for (internal::_ModuleContainer & container: modules_.values()) {
 
     QList<modules::RequiredModuleParams> required_module_params;
-    container.module_ptr->QRequiredModules(required_module_params);
+    container.module_ptr->GetRequiredModules(required_module_params);
     QList<modules::IModule *> required_modules;
 
     required_modules.reserve(required_module_params.size());
