@@ -32,8 +32,8 @@ unsigned int CalibrationModule::MinorVersion() const {
 
 void CalibrationModule::Calibrate() {
   configuration::CalibrationConfigurator *cnf = new configuration::CalibrationConfigurator();
-  if (!settings_.empty())
-    cnf->SetConfiguration(settings_);
+  /*if (!settings_.empty())
+    cnf->SetConfiguration(settings_);*/
 
   // Create calibrator
   std::shared_ptr<calibration::ICalibrator> window = calibration::CalibratorFactory::Create(cnf, main_window_);
@@ -74,8 +74,6 @@ void CalibrationModule::SetRequiredModules(const QList<IModule *> &modules) {
 
 configuration::IConfigurator *CalibrationModule::GetConfigurator() {
   configuration::IConfigurator *cnf = new configuration::CalibrationConfigurator();
-  if (!settings_.empty())
-    cnf->SetConfiguration(settings_);
   return cnf;
 }
 
@@ -84,8 +82,8 @@ void CalibrationModule::DisposeConfigurator(configuration::IConfigurator *config
   delete cnf;
 }
 
-void CalibrationModule::ApplyConfiguration(configuration::IConfigurator *configurator) {
-  configurator->GetConfiguration(settings_);
+void CalibrationModule::ApplyConfiguration(QSettings & settings, configuration::IConfigurator *configurator) {
+  //configurator->GetConfiguration(settings_);
 }
 
 QDir CalibrationModule::GetParamSaveFolder(QVector<const io::video::CameraMeta *> cameras) {
@@ -191,6 +189,14 @@ void CalibrationModule::Start() {
   LoadEstimatesFromOpenCvYml(GetParamSaveFolder(camera_module_->GetCameras()));
   if(!estimates_.R.empty())
     save_action_->setEnabled(true);
+}
+
+void CalibrationModule::Configure(QSettings & settings) {
+
+}
+
+const QString & CalibrationModule::GetName() const {
+  return Name();
 }
 
 }

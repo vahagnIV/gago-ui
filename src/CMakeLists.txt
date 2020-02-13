@@ -1,12 +1,11 @@
 find_package(Qt5Core REQUIRED)
 find_package(Qt5Network REQUIRED)
 find_package(Qt5Widgets CONFIG REQUIRED)
+set(CUDA_TOOLKIT_ROOT_DIR /usr/local/cuda-10.1)
 find_package(OpenCV CONFIG REQUIRED)
 find_package(LibGago REQUIRED)
-find_package(Boost COMPONENTS system filesystem REQUIRED)
 
 file(GLOB SOURCES *.h *.cpp config/*.h)
-
 
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)

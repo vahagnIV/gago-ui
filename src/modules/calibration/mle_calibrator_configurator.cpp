@@ -55,7 +55,7 @@ void MLECalibratorConfigurator::Apply() {
   current_settings_.wait_time = wait_time_spinbox_->value();
   current_settings_.sounds_enabled = sound_enabled_chkbx_->isChecked();
 }
-
+/*
 void MLECalibratorConfigurator::GetConfiguration(nlohmann::json & out_json) {
   out_json["CalibrateSeparately"] = current_settings_.calibrate_camera_first;
   out_json["ImageSaveFolder"] = current_settings_.image_save_folder.toStdString();
@@ -75,7 +75,7 @@ void MLECalibratorConfigurator::SetConfiguration(const nlohmann::json & json) {
 
   if (json.find("SoundEnabled") != json.end())
     current_settings_.sounds_enabled = json["SoundEnabled"];
-}
+}*/
 
 const QString & MLECalibratorConfigurator::ConfigWindowName() const {
   return window_name_;

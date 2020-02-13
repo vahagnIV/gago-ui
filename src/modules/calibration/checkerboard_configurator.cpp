@@ -11,7 +11,6 @@ namespace gago {
 namespace gui {
 namespace configuration {
 
-
 void CheckerboardConfigurator::DrawConfigurationPage(QWidget *widget) {
   layout_ = new QGridLayout();
   widget->setLayout(layout_);
@@ -29,7 +28,7 @@ void CheckerboardConfigurator::Apply() {
   current_params_.n_x = nx_box_->value();
   current_params_.n_y = ny_box_->value();
 }
-
+/*
 void CheckerboardConfigurator::GetConfiguration(nlohmann::json & out_json) {
   out_json["Nx"] = current_params_.n_x;
   out_json["Ny"] = current_params_.n_y;
@@ -41,7 +40,7 @@ void CheckerboardConfigurator::SetConfiguration(const nlohmann::json & json) {
   if (json.find("Ny") != json.end())
     current_params_.n_y = json["Ny"];
 }
-
+*/
 const QString & CheckerboardConfigurator::ConfigWindowName() const {
   return window_name_;
 }

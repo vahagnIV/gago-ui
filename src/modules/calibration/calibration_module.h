@@ -30,7 +30,9 @@ class CalibrationModule : public QObject,  public IModule, public configuration:
   // IConfigurable
   configuration::IConfigurator *GetConfigurator() override;
   void DisposeConfigurator(configuration::IConfigurator *configurator) override;
-  void ApplyConfiguration(configuration::IConfigurator *configurator) override;
+  void ApplyConfiguration(QSettings & settings, configuration::IConfigurator *configurator) override;
+  void Configure(QSettings & settings) override;
+  const QString & GetName() const override;
   // CalibrationModule
  private slots:
   void Calibrate();
@@ -43,7 +45,7 @@ class CalibrationModule : public QObject,  public IModule, public configuration:
   // Since we can plug and unplug different calibration patterns and calibrators,
   // and we want to remeber the configurations even for unused patterns, we have
   // to keep the configuration loaded
-  nlohmann::json settings_;
+
   QWidget * main_window_;
   CameraModule * camera_module_;
   QAction *save_action_;

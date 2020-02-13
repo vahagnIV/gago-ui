@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QList>
+#include <QSettings>
 #include "imodule.h"
 #include "iconfigurable.h"
 #include "settings_window.h"
@@ -11,7 +12,8 @@ namespace gago {
 namespace gui {
 namespace modules {
 
-class SettingsModule: public IModule{
+class SettingsModule: public QObject, public IModule{
+  Q_OBJECT
 
 public:
     SettingsModule();
@@ -26,12 +28,15 @@ public:
     //Settings
     virtual void RegisterConfigurable(configuration::IConfigurable *);
     virtual void Configure();
-    virtual ~SettingsModule() = default;
+    virtual ~SettingsModule(){};
   int GetWeight() const override;
+ private slots:
+  void ShowSettings();
  private:
-  void Save (QList<configuration::IConfigurator *> &configurators);
+  void Save ();
   QMainWindow *main_window_;
   QList<configuration::IConfigurable *> configurables_;
+  QSettings settings_;
 
 };
 

@@ -99,37 +99,6 @@ void CalibrationConfigurator::Apply() {
   current_calibration_settings_.calib_pattern_type = SupportedPatterns[patterns_combo->currentIndex()];
 }
 
-void CalibrationConfigurator::GetConfiguration(nlohmann::json &out_json) {
-  for (IConfigurator *configurator: calib_pattern_configurators_)
-    configurator->GetConfiguration(out_json["Pattern"][configurator->ConfigWindowName().toStdString()]);
-  for (IConfigurator *configurator: calibrator_configurators_)
-    configurator->GetConfiguration(out_json["Calibrator"][configurator->ConfigWindowName().toStdString()]);
-}
-
-void CalibrationConfigurator::SetConfiguration(const nlohmann::json &json) {
-  if (json.find("Pattern") != json.end())
-    for (IConfigurator *configurator: calib_pattern_configurators_) {
-      if (json["Pattern"].find(configurator->ConfigWindowName().toStdString()) != json["Pattern"].end()) {
-        configurator->SetConfiguration(json["Pattern"][configurator->ConfigWindowName().toStdString()]);
-      }
-    }
-
-  if (json.find("Calibrator") != json.end())
-    for (IConfigurator *configurator: calibrator_configurators_) {
-      if (json["Calibrator"].find(configurator->ConfigWindowName().toStdString()) != json["Calibrator"].end()) {
-        configurator->SetConfiguration(json["Calibrator"][configurator->ConfigWindowName().toStdString()]);
-      }
-    }
-  if (!(json.find("SelectedPatternType") != json.end()
-      && try_parse(QString::fromStdString(json["SelectedPatternType"]), current_calibration_settings_.calib_pattern_type)))
-    current_calibration_settings_.calib_pattern_type = SupportedPatterns[0];
-
-  if (!(json.find("SelectedCalibratorType") != json.end()
-      && try_parse(QString::fromStdString(json["SelectedCalibratorType"]), current_calibration_settings_.calibrator_type)))
-    current_calibration_settings_.calibrator_type = SupportedCalibrators[0];
-
-}
-
 const QString &CalibrationConfigurator::ConfigWindowName() const {
   return window_name;
 }
@@ -166,6 +135,37 @@ CalibrationConfigurator::~CalibrationConfigurator() {
     CalibratorConfiguratorFactory::DisposeConfigurator(calibrator_configurators_[i]);
   }
 }
+
+/*void CalibrationConfigurator::GetConfiguration(nlohmann::json &out_json) {
+  for (IConfigurator *configurator: calib_pattern_configurators_)
+    configurator->GetConfiguration(out_json["Pattern"][configurator->ConfigWindowName().toStdString()]);
+  for (IConfigurator *configurator: calibrator_configurators_)
+    configurator->GetConfiguration(out_json["Calibrator"][configurator->ConfigWindowName().toStdString()]);
+}
+
+void CalibrationConfigurator::SetConfiguration(const nlohmann::json &json) {
+  if (json.find("Pattern") != json.end())
+    for (IConfigurator *configurator: calib_pattern_configurators_) {
+      if (json["Pattern"].find(configurator->ConfigWindowName().toStdString()) != json["Pattern"].end()) {
+        configurator->SetConfiguration(json["Pattern"][configurator->ConfigWindowName().toStdString()]);
+      }
+    }
+
+  if (json.find("Calibrator") != json.end())
+    for (IConfigurator *configurator: calibrator_configurators_) {
+      if (json["Calibrator"].find(configurator->ConfigWindowName().toStdString()) != json["Calibrator"].end()) {
+        configurator->SetConfiguration(json["Calibrator"][configurator->ConfigWindowName().toStdString()]);
+      }
+    }
+  if (!(json.find("SelectedPatternType") != json.end()
+      && try_parse(QString::fromStdString(json["SelectedPatternType"]), current_calibration_settings_.calib_pattern_type)))
+    current_calibration_settings_.calib_pattern_type = SupportedPatterns[0];
+
+  if (!(json.find("SelectedCalibratorType") != json.end()
+      && try_parse(QString::fromStdString(json["SelectedCalibratorType"]), current_calibration_settings_.calibrator_type)))
+    current_calibration_settings_.calibrator_type = SupportedCalibrators[0];
+
+}*/
 
 }
 }

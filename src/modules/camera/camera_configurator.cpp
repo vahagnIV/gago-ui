@@ -33,37 +33,7 @@ void CameraConfigurator::Apply() {
   camera_list_view->setFocus();
 }
 
-void CameraConfigurator::GetConfiguration(nlohmann::json & out_json) {
-  for (int i = 0; i < current_settings_.size(); ++i) {
-    nlohmann::json conf;
-    conf["name"] = current_settings_[i].config.name;
-    conf["format"] = current_settings_[i].config.format_index;
-    conf["resolution"] = current_settings_[i].config.resolution_index;
-    conf["status"] = io::video::to_string(current_settings_[i].config.status);
-    out_json[devices_[i].camera->GetUniqueId()] = conf;
-  }
-}
 
-void CameraConfigurator::SetConfiguration(const nlohmann::json & json) {
-  for (int i = 0; i < devices_.size(); ++i) {
-    if(json.find(devices_[i].camera->GetUniqueId())!=json.end())
-    {
-      const nlohmann::json & json_settings = json[devices_[i].camera->GetUniqueId()];
-      if(json_settings.find("name")!= json_settings.end())
-        current_settings_[i].config.name = json_settings["name"];
-
-      if(json_settings.find("format")!= json_settings.end())
-        current_settings_[i].config.format_index = json_settings["format"];
-
-      if(json_settings.find("resolution")!= json_settings.end())
-        current_settings_[i].config.resolution_index = json_settings["resolution"];
-
-      std::string mmm = json_settings["status"];
-      if(json_settings.find("status")!= json_settings.end())
-        io::video::try_parse(json_settings["status"], current_settings_[i].config.status);
-    }
-  }
-}
 
 const QString & CameraConfigurator::ConfigWindowName() const {
   return window_name;

@@ -9,7 +9,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 file(GLOB MODULE_SOURCES *.h *.cpp)
 
 qt5_wrap_ui(QtUiSources settings_window.ui)
-qt5_wrap_cpp(QtCPPSources settings_window.h )
+qt5_wrap_cpp(QtCPPSources settings_window.h settings_module.h)
 
 add_library(settings_module SHARED ${MODULE_SOURCES} ${QtCPPSources} ${QtUiSources})
 

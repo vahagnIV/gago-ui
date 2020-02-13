@@ -23,8 +23,6 @@ class MLECalibratorConfigurator : public IConfigurator {
   MLECalibratorConfigurator();
   void DrawConfigurationPage(QWidget *widget) override;
   void Apply() override;
-  void GetConfiguration(nlohmann::json & out_json) override;
-  void SetConfiguration(const nlohmann::json & json) override;
   const QString & ConfigWindowName() const override;
   const calibration::MLEConfigurationSettings & GetSettings(){ return current_settings_;}
  protected:

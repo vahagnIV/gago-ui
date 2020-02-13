@@ -5,7 +5,7 @@
 #ifndef GAGO_UI_SRC_MODULES_SETTINGS_I_CONFIGURATOR_H_
 #define GAGO_UI_SRC_MODULES_SETTINGS_I_CONFIGURATOR_H_
 
-#include <nlohmann/json.hpp>
+#include <QJsonObject>
 #include <QWidget>
 
 namespace gago {
@@ -17,8 +17,8 @@ class IConfigurator {
   IConfigurator() = default;
   virtual void DrawConfigurationPage(QWidget * widget) = 0;
   virtual void Apply() = 0;
-  virtual void GetConfiguration(nlohmann::json & out_json) = 0;
-  virtual void SetConfiguration(const nlohmann::json & json) = 0;
+  /*virtual void GetConfiguration(QJsonObject & out_json) = 0;
+  virtual void SetConfiguration(const QJsonObject & json) = 0;*/
   virtual const QString &ConfigWindowName() const = 0;
   virtual ~IConfigurator()= default;
 };

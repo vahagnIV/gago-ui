@@ -99,6 +99,8 @@ void MainModule::RegisterView(View *view) {
 }
 
 void MainModule::SetCurrentView(int idx) {
+  if(views_.empty())
+    return;
   View * view = this->views_[idx];
   QAction * new_action = main_window_.menuBar()->findChild<QAction *>(QString::fromStdString("View/" + view->GetName()));
   new_action->setChecked(true);

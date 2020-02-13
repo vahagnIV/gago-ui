@@ -23,8 +23,6 @@ class CheckerboardConfigurator : IConfigurator {
   CheckerboardConfigurator() = default;
   void DrawConfigurationPage(QWidget *widget) override;
   void Apply() override;
-  void GetConfiguration(nlohmann::json &out_json) override;
-  void SetConfiguration(const nlohmann::json &json) override;
   const QString &ConfigWindowName() const override;
   const CheckerboardParams &GetSettings() const { return current_params_; }
   virtual ~CheckerboardConfigurator();

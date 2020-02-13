@@ -21,9 +21,10 @@ class CameraModule : public IModule, public configuration::IConfigurable {
   virtual ~CameraModule() ;
 
   // IConfigurable
-  void ApplyConfiguration(configuration::IConfigurator *configurator) override;
+  void ApplyConfiguration(QSettings & settings, configuration::IConfigurator *configurator) override;
   configuration::IConfigurator *GetConfigurator() override;
   void DisposeConfigurator(configuration::IConfigurator *configurator) override;
+  const QString & GetName() const override;
 
   // IModule
   ModuleInitializationResult Initalize() override;
@@ -37,6 +38,7 @@ class CameraModule : public IModule, public configuration::IConfigurable {
   virtual void RegisterWatcher(CameraWatcher *watcher);
   virtual void UnRegisterWatcher(CameraWatcher *watcher);
   virtual QVector<const io::video::CameraMeta *> GetCameras();
+  void Configure( QSettings & settings) override;
  private:
   io::video::V4lDriver driver_;
   SettingsModule *settings_module_;

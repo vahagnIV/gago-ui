@@ -42,11 +42,22 @@ void CameraModule::DisposeConfigurator(configuration::IConfigurator *configurato
   delete cfr;
 }
 
-void CameraModule::ApplyConfiguration(configuration::IConfigurator *configurator) {
+void CameraModule::ApplyConfiguration(QSettings & settings, configuration::IConfigurator *configurator) {
   configuration::CameraConfigurator *cfr = (configuration::CameraConfigurator *) configurator;
-  const std::vector<io::video::CameraSettings> settings = cfr->GetSettings();
-  driver_.SetSettings(settings);
-  driver_.Start();
+  const std::vector<io::video::CameraSettings> & cam_settings = cfr->GetSettings();
+  driver_.SetSettings(cam_settings);
+
+  settings.beginWriteArray(Name(), cam_settings.size());
+  for (int cam_idx = 0; cam_idx < cam_settings.size(); ++cam_idx) {
+    settings.setArrayIndex(cam_idx);
+    const io::video::CameraSettings & cam_setting = cam_settings[cam_idx];
+    settings.setValue("name", QString::fromStdString(cam_setting.config.name));
+    settings.setValue("format", cam_setting.config.format_index);
+    settings.setValue("resolution", cam_setting.config.resolution_index);
+    settings.setValue("status", QString::fromStdString(to_string(cam_setting.config.status)));
+    settings.setValue("uniqueId", QString::fromStdString(cam_setting.camera->GetUniqueId()));
+  }
+  settings.endArray();
 }
 void CameraModule::RegisterWatcher(CameraWatcher *watcher) {
   driver_.RegisterWatcher(watcher);
@@ -66,6 +77,36 @@ int CameraModule::GetWeight() const {
 
 CameraModule::~CameraModule() {
   driver_.Stop();
+}
+
+void CameraModule::Configure(QSettings & settings) {
+  std::vector<io::video::CameraSettings> default_settings;
+  driver_.GetSettings(default_settings);
+  std::vector<io::video::CameraSettings> cam_settings = default_settings;
+
+  int size = settings.beginReadArray(Name());
+  QMap<QString, int> uid_to_index;
+  for (int cam_idx = 0; cam_idx < default_settings.size(); ++cam_idx)
+    uid_to_index[QString::fromStdString(default_settings[cam_idx].camera->GetUniqueId())] = cam_idx;
+
+  for (int cam_idx = 0; cam_idx < size; ++cam_idx) {
+    settings.setArrayIndex(cam_idx);
+    QString uid = settings.value("uniqueId").value<QString>();
+    if (!uid_to_index.contains(uid))
+      continue;
+    int idx = uid_to_index[uid];
+    cam_settings[idx].config.name = settings.value("name").toString().toStdString();
+    cam_settings[idx].config.format_index = settings.value("format").toInt();
+    cam_settings[idx].config.format_index = settings.value("resolution").toInt();
+    try_parse(settings.value("format").toString().toStdString(), cam_settings[idx].config.status);
+
+  }
+  settings.endArray();
+  driver_.SetSettings(cam_settings);
+}
+
+const QString & CameraModule::GetName() const {
+  return Name();
 }
 
 }
