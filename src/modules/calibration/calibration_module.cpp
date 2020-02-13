@@ -37,7 +37,7 @@ void CalibrationModule::Calibrate() {
   // Create calibrator
   std::shared_ptr<calibration::ICalibrator> window = calibration::CalibratorFactory::Create(cnf, main_window_);
   camera_module_->RegisterWatcher(window.get());
-  if (0 == window->Calibrate()) {
+  if (QDialog::Accepted == window->Calibrate()) {
     estimates_ = window->GetEstimates();
     QVector<const io::video::CameraMeta *> cameras = camera_module_->GetCameras();
     QDir param__save_folder = GetParamSaveFolder(cameras);
@@ -48,23 +48,13 @@ void CalibrationModule::Calibrate() {
 
 }
 
-void CalibrationModule::QRequiredModules(std::vector<RequiredModuleParams> &out_required_modules) {
-  out_required_modules.resize(3);
-
-  out_required_modules[0].Name = "main";
-  out_required_modules[0].MinMajorVersion = 1;
-  out_required_modules[0].MinMinorVersion = 0;
-
-  out_required_modules[1].Name = "settings";
-  out_required_modules[1].MinMajorVersion = 1;
-  out_required_modules[1].MinMinorVersion = 0;
-
-  out_required_modules[2].Name = "camera";
-  out_required_modules[2].MinMajorVersion = 1;
-  out_required_modules[2].MinMinorVersion = 0;
+void CalibrationModule::QRequiredModules(QList<RequiredModuleParams> &out_required_modules) {
+  out_required_modules = {RequiredModuleParams{Name: "main", MinMajorVersion: 1, MinMinorVersion: 0},
+                          RequiredModuleParams{Name: "settings", MinMajorVersion: 1, MinMinorVersion: 0},
+                          RequiredModuleParams{Name: "camera", MinMajorVersion: 1, MinMinorVersion: 0}};
 }
 
-void CalibrationModule::SetRequiredModules(const std::vector<IModule *> &modules) {
+void CalibrationModule::SetRequiredModules(const QList<IModule *> &modules) {
   for (IModule *module: modules) {
     if (module->SystemName() == "main") {
       main_window_ = ((MainModule *) module)->MainWindow();

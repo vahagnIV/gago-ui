@@ -42,13 +42,16 @@ class MLECalibrator : public QDialog, public ICalibrator {
   void RestoreFilenames(const char *format, QStringList cameras_);
   void DisableControlElementsSlot();
   void EnableControlElementsSlot();
- signals:
+  void OnSaveButtonClicked();
+
+signals:
   void DisableControlElements();
   void EnableControlElements();
  private:
   Ui::MLECalibrationWindow *ui_;
 
   QList<common::VideoPlayer *> players_;
+  QList<QLabel *> cam_labels_;
   std::shared_ptr<gago::calibration::pattern::IPattern> pattern_;
   int control_disable_bit_mask_;
 
@@ -56,7 +59,7 @@ class MLECalibrator : public QDialog, public ICalibrator {
   gago::calibration::CalibrationEstimates estimates_;
 
   long next_capture_time_;
-  int last_image_index;
+  int last_capture_index_;
   const char format[12] = "%s_%03d.jpg";
   QMediaPlayer *player;
 

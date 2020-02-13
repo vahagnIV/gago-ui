@@ -27,8 +27,8 @@ class CameraModule : public IModule, public configuration::IConfigurable {
   ModuleInitializationResult Initalize() override;
   unsigned int MajorVersion() const override;
   unsigned int MinorVersion() const override;
-  void QRequiredModules(std::vector<RequiredModuleParams> &out_required_modules) override;
-  void SetRequiredModules(const std::vector<IModule *> &modules) override;
+  void QRequiredModules(QList<RequiredModuleParams> &out_required_modules) override;
+  void SetRequiredModules(const QList<IModule *> &modules) override;
   int GetWeight() const override;
 
   virtual void RegisterWatcher(CameraWatcher *watcher);

@@ -34,10 +34,10 @@ unsigned int MainModule::MinorVersion() const {
   return 0;
 }
 
-void MainModule::QRequiredModules(std::vector<RequiredModuleParams> & out_required_modules) {
+void MainModule::QRequiredModules(QList<RequiredModuleParams> & out_required_modules) {
 }
 
-void MainModule::SetRequiredModules(const std::vector<IModule *> & modules) {
+void MainModule::SetRequiredModules(const QList<IModule *> & modules) {
 
 }
 

@@ -22,19 +22,12 @@ unsigned int Camera_viewModule::MinorVersion() const {
   return 0;
 }
 
-void Camera_viewModule::QRequiredModules(std::vector<RequiredModuleParams> &out_required_modules) {
-  out_required_modules.resize(2);
-  out_required_modules[0].Name = "main";
-  out_required_modules[0].MinMajorVersion = 1;
-  out_required_modules[0].MinMinorVersion = 0;
-
-  out_required_modules[1].Name = "camera";
-  out_required_modules[1].MinMajorVersion = 1;
-  out_required_modules[1].MinMinorVersion = 0;
-
+void Camera_viewModule::QRequiredModules(QList<RequiredModuleParams> & out_required_modules) {
+  out_required_modules = {RequiredModuleParams{.Name = "main", .MinMajorVersion = 1, .MinMinorVersion = 0},
+                          RequiredModuleParams{.Name = "camera", .MinMajorVersion = 1, .MinMinorVersion = 0}};
 }
 
-void Camera_viewModule::SetRequiredModules(const std::vector<IModule *> &modules) {
+void Camera_viewModule::SetRequiredModules(const QList<IModule *> & modules) {
   for (IModule *module: modules) {
     if (module->SystemName() == "main")
       main_module_ = ((MainModule *) modules[0]);
@@ -54,17 +47,17 @@ void Camera_viewModule::StopDrawing() {
   camera_module_->UnRegisterWatcher(this);
 }
 
-const std::string &Camera_viewModule::GetName() const {
+const std::string & Camera_viewModule::GetName() const {
   return view_name_;
 }
 
-void Camera_viewModule::Notify(const std::shared_ptr<std::vector<io::video::Capture>> &ptr) {
-  for (const io::video::Capture &capture: *ptr) {
+void Camera_viewModule::Notify(const std::shared_ptr<std::vector<io::video::Capture>> & ptr) {
+  for (const io::video::Capture & capture: *ptr) {
     players_[capture.camera->GetUniqueId()]->ShowImage(capture.data);
   }
 }
 
-void Camera_viewModule::SetCameras(const std::vector<const io::video::CameraMeta *> &vector) {
+void Camera_viewModule::SetCameras(const std::vector<const io::video::CameraMeta *> & vector) {
   ClearPlayers();
 
   QHBoxLayout *layout = new QHBoxLayout();

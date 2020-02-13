@@ -5,7 +5,8 @@
 #ifndef GAGO_UI_SRC_MODULE_MANAGER_H_
 #define GAGO_UI_SRC_MODULE_MANAGER_H_
 
-#include <unordered_map>
+#include <QMap>
+#include <QString>
 #include "imodule.h"
 
 namespace gago {
@@ -29,8 +30,8 @@ struct _ModuleContainer{
 
 class ModuleManager{
  public:
-  bool LoadModule(const std::string & path);
-  bool QLoaded(const std::string & module_name);
+  bool LoadModule(const QString & path);
+  bool QLoaded(const QString & module_name);
   void Start();
 
   // Singletone
@@ -39,11 +40,11 @@ class ModuleManager{
     return instance;
   }
   bool SatisfyRequirements();
-  modules::IModule * GetModule(const std::string &system_name) const;
+  modules::IModule * GetModule(const QString &system_name) const;
   virtual ~ModuleManager();
  private:
   ModuleManager();
-  std::unordered_map<std::string, internal::_ModuleContainer> modules_;
+  QMap<QString, internal::_ModuleContainer> modules_;
   inline uint64_t GetCombinedVersion(uint32_t major, uint32_t minor) const;
 
 };

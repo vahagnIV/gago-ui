@@ -131,11 +131,19 @@ void ImageSetView::Update() {
       QPen pen(color, 50);
       painter.setPen(pen);
       painter.drawRect(0, 0, image.width(), image.height());
-      if (PES_Calibrated == result.pattern_params[cam_idx].state)
-        item->setToolTip(QString::asprintf("Calibration error: %.4f",
-                                           result.pattern_params[cam_idx].reprojection_error));
+      if (PES_Calibrated == result.pattern_params[cam_idx].state) {
+        QString tool_tip = QString::asprintf("Calibration error: %.4f",
+                                             result.pattern_params[cam_idx].reprojection_error);
+        if (result.pattern_params.size() == 2)
+          tool_tip += QString::asprintf("\nStereo Calibration Error: %.4f", result.rms);
 
-      item->setIcon(QPixmap::fromImage(image));
+        item->setToolTip(tool_tip);
+        item->setIcon(QPixmap::fromImage(image));
+      }
+      else
+      {
+        item->setToolTip("");
+      }
     }
   }
 }

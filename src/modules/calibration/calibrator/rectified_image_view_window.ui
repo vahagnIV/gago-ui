@@ -21,7 +21,6 @@
      </property>
      <addaction name="actionBack"/>
      <addaction name="actionForward"/>
-     <addaction name="actionDelete"/>
     </widget>
    </item>
    <item>
@@ -95,17 +94,6 @@
    </property>
    <property name="shortcut">
     <string>Right</string>
-   </property>
-  </action>
-  <action name="actionDelete">
-   <property name="icon">
-    <iconset theme="remove"/>
-   </property>
-   <property name="text">
-    <string>Delete</string>
-   </property>
-   <property name="shortcut">
-    <string>Del</string>
    </property>
   </action>
  </widget>

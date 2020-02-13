@@ -103,7 +103,7 @@ int OpenCvMLE::Calibrate(QList<BatchCalibrationResult> & out_batch_calibration_r
   if (std::any_of(out_batch_calibration_results.begin(),
                   out_batch_calibration_results.end(),
                   [&](const BatchCalibrationResult & image_batch) { return image_batch.pattern_params.size() >= 2; }))
-    Calibrate2Cameras(out_batch_calibration_results, image_points, pattern_->GetSize(), out_estimates);
+    return Calibrate2Cameras(out_batch_calibration_results, image_points, pattern_->GetSize(), out_estimates);
 
   return 0;
 }

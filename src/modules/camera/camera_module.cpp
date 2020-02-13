@@ -22,14 +22,11 @@ unsigned int CameraModule::MinorVersion() const {
   return 0;
 }
 
-void CameraModule::QRequiredModules(std::vector<RequiredModuleParams> &out_required_modules) {
-  out_required_modules.resize(1);
-  out_required_modules[0].Name = "settings";
-  out_required_modules[0].MinMajorVersion = 1;
-  out_required_modules[0].MinMinorVersion = 0;
+void CameraModule::QRequiredModules(QList<RequiredModuleParams> & out_required_modules) {
+  out_required_modules = {RequiredModuleParams{.Name = "settings", .MinMajorVersion = 1, .MinMinorVersion = 0}};
 }
 
-void CameraModule::SetRequiredModules(const std::vector<IModule *> &modules) {
+void CameraModule::SetRequiredModules(const QList<IModule *> & modules) {
   settings_module_ = ((SettingsModule *) modules[0]);
   settings_module_->RegisterConfigurable(this);
 }

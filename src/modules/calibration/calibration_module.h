@@ -22,8 +22,8 @@ class CalibrationModule : public QObject,  public IModule, public configuration:
   ModuleInitializationResult Initalize() override;
   unsigned int MajorVersion() const override;
   unsigned int MinorVersion() const override;
-  void QRequiredModules(std::vector<RequiredModuleParams> & out_required_modules) override;
-  void SetRequiredModules(const std::vector<IModule *> & modules) override;
+  void QRequiredModules(QList<RequiredModuleParams> & out_required_modules) override;
+  void SetRequiredModules(const QList<IModule *> & modules) override;
   int GetWeight() const override;
   void Start() override ;
 

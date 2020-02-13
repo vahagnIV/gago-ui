@@ -2,7 +2,7 @@
 #define SETTINGS_MODULE_H
 
 #include <QMainWindow>
-#include "../../imodule.h"
+#include "imodule.h"
 #include "iconfigurable.h"
 #include "settings_window.h"
 
@@ -19,8 +19,8 @@ public:
     ModuleInitializationResult Initalize () override;
     unsigned int MajorVersion () const override;
     unsigned int MinorVersion () const override;
-    void QRequiredModules(std::vector<RequiredModuleParams> & out_required_modules) override;
-    void SetRequiredModules(const std::vector<IModule *> & modules) override;
+    void QRequiredModules(QList<RequiredModuleParams> & out_required_modules) override;
+    void SetRequiredModules(const QList<IModule *> & modules) override;
 
     //Settings
     virtual void RegisterConfigurable(configuration::IConfigurable *);

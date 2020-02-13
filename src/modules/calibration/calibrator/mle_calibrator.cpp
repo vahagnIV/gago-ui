@@ -26,14 +26,15 @@ MLECalibrator::MLECalibrator(QWidget *parent,
                                                                           ui_(new Ui::MLECalibrationWindow()),
                                                                           pattern_(pattern),
                                                                           settings_(settings),
-                                                                          last_image_index(0),
+                                                                          last_capture_index_(0),
                                                                           player(settings.sounds_enabled
                                                                                  ? new QMediaPlayer : nullptr),
                                                                           next_capture_time_(std::numeric_limits<typeof(next_capture_time_)>::max()) {
   ui_->setupUi(this);
 
-  connect(ui_->pushButton, &QPushButton::pressed, this, &MLECalibrator::CaptureRequested);
-  connect(ui_->pushButton_2, &QPushButton::pressed, this, &MLECalibrator::OnCalibrateButtonClicked);
+  connect(ui_->captureButton, &QPushButton::pressed, this, &MLECalibrator::CaptureRequested);
+  connect(ui_->calibrateButton, &QPushButton::pressed, this, &MLECalibrator::OnCalibrateButtonClicked);
+  connect(ui_->saveButton, &QPushButton::pressed, this, &MLECalibrator::OnSaveButtonClicked);
 
   connect(this, &MLECalibrator::DisableControlElements, this, &MLECalibrator::DisableControlElementsSlot);
   connect(this, &MLECalibrator::EnableControlElements, this, &MLECalibrator::EnableControlElementsSlot);
@@ -51,8 +52,7 @@ void MLECalibrator::Close() {
 }
 
 int MLECalibrator::Calibrate() {
-  exec();
-  return estimates_.T.empty() ? 1 : 0;
+  return exec();
 }
 
 void MLECalibrator::Notify(const std::shared_ptr<std::vector<io::video::Capture>> & ptr) {
@@ -76,7 +76,7 @@ void MLECalibrator::Notify(const std::shared_ptr<std::vector<io::video::Capture>
       QStringList filenames;
       files_.push_back(QStringList());
       for (const io::video::Capture & capture: *ptr) {
-        QString filename = QString::asprintf(format, capture.camera->GetName().c_str(), last_image_index);
+        QString filename = QString::asprintf(format, capture.camera->GetName().c_str(), last_capture_index_);
         QDir dir(settings_.image_save_folder);
         QImage image(capture.data.data,
                      capture.data.cols,
@@ -90,7 +90,7 @@ void MLECalibrator::Notify(const std::shared_ptr<std::vector<io::video::Capture>
       }
       ui_->listView->Append(files_.back());
 
-      ++last_image_index;
+      ++last_capture_index_;
     } else {
       if (settings_.sounds_enabled) {
         player->setMedia(QUrl::fromLocalFile(
@@ -119,21 +119,19 @@ void MLECalibrator::SetCameras(const std::vector<const io::video::CameraMeta *> 
 
     players_.push_back(new common::VideoPlayer());
     QVBoxLayout *player_layout = new QVBoxLayout();
-    this->ui_->horizontalLayout_3->addLayout(player_layout);
+    this->ui_->videoLayout->addLayout(player_layout);
     players_[i]->setMinimumWidth(200);
     players_[i]->setMinimumHeight(200);
     player_layout->addWidget(players_[i], 0, Qt::AlignHCenter);
-    QString label_text = "Matrix\t Distortion\n";
-    label_text += "1450.256\t0\t541.68\t0.0012, 0.168\n";
-    label_text += "0\t1449.368\t321.19\t0.00785,0.0147\n";
-    label_text += "0\t0\t1\n";
-    label_text = "Average error:\t0.1587549\n"
-                 "Maximal error:\t0.4578\n"
-                 "Minimal error:\t0.078547";
-
+    QLabel *cam_label = new QLabel("Uncalibrated");
+    QFont font;
+    font.setPointSize(12);
+    font.setBold(true);
+    font.setWeight(75);
+    cam_label->setFont(font);
+    cam_labels_.append(cam_label);
     player_layout->addStretch(1);
-    player_layout->addWidget(new QLabel(label_text));
-
+    player_layout->addWidget(cam_label);
   }
   ui_->listView->SetCameraNames(cam_names);
 
@@ -147,7 +145,6 @@ void MLECalibrator::SetCameras(const std::vector<const io::video::CameraMeta *> 
 
 void MLECalibrator::CaptureRequested() {
   DisableControlElements();
-  ui_->pushButton->setEnabled(false);
   next_capture_time_ = (std::chrono::high_resolution_clock::now().time_since_epoch()
       + std::chrono::seconds(settings_.wait_time)).count();
 }
@@ -169,16 +166,27 @@ void MLECalibrator::OnCalibrateButtonClicked() {
         param.state = gago::calibration::PES_Unestimated;
   }
 
-  mle.Calibrate(batches, estimates_);
-  ui_->listView->Update();
-  if (!estimates_.R.empty())
-    ui_->listView->SetCalibrationEstimates(estimates_);
+  if (0 == mle.Calibrate(batches, estimates_)) {
+    ui_->listView->Update();
+    if (!estimates_.R.empty()) {
+      ui_->listView->SetCalibrationEstimates(estimates_);
+      ui_->multiviewInfoLabel->setText(QString::asprintf("Stereo Calibration Error: %.4f", estimates_.rms));
+    }
+
+    for (int cam_idx = 0; cam_idx < batches[0].pattern_params.size(); ++cam_idx) {
+      QString label_text = QString::asprintf("Average error: %.4f", estimates_.intrinsic_parameters[cam_idx].rms);
+
+      cam_labels_[cam_idx]->setText(label_text);
+    }
+    ui_->saveButton->setEnabled(true);
+  }
+
 
   emit EnableControlElements();
 }
 
 void MLECalibrator::RestoreFilenames(const char *format, QStringList cameras_) {
-  last_image_index = 0;
+  last_capture_index_ = 0;
   QDir directory(settings_.image_save_folder);
   QStringList filters = {QString(format).replace("%s", cameras_[0]).replace("%03d", "*")};
   for (const QString & filename: directory.entryList(filters, QDir::NoFilter, QDir::SortFlag::Name)) {
@@ -192,38 +200,45 @@ void MLECalibrator::RestoreFilenames(const char *format, QStringList cameras_) {
 
     if (idx_files.size() == cameras_.size()) {
       files_.push_back(idx_files);
-      last_image_index = std::max(last_image_index, idx);
+      last_capture_index_ = std::max(last_capture_index_, idx);
     }
   }
 }
 
 void MLECalibrator::DisableControlElementsSlot() {
   control_disable_bit_mask_ = 0;
-  if (ui_->pushButton->isEnabled()) {
+  if (ui_->captureButton->isEnabled()) {
     control_disable_bit_mask_ |= 1;
-    ui_->pushButton->setEnabled(false);
+    ui_->captureButton->setEnabled(false);
   }
 
-  if (ui_->pushButton_2->isEnabled()) {
+  if (ui_->calibrateButton->isEnabled()) {
     control_disable_bit_mask_ |= 2;
-    ui_->pushButton_2->setEnabled(false);
+    ui_->calibrateButton->setEnabled(false);
   }
 
   if (ui_->listView->isEnabled()) {
     control_disable_bit_mask_ |= 4;
     ui_->listView->setEnabled(false);
   }
+  if (ui_->saveButton->isEnabled()) {
+    control_disable_bit_mask_ |= 8;
+    ui_->saveButton->setEnabled(false);
+  }
   qApp->processEvents();
 }
 
 void MLECalibrator::EnableControlElementsSlot() {
   if (control_disable_bit_mask_ & 1)
-    ui_->pushButton->setEnabled(true);
+    ui_->captureButton->setEnabled(true);
   if (control_disable_bit_mask_ & 2)
-    ui_->pushButton_2->setEnabled(true);
+    ui_->calibrateButton->setEnabled(true);
 
   if (control_disable_bit_mask_ & 4)
     ui_->listView->setEnabled(true);
+
+  if (control_disable_bit_mask_ & 8)
+    ui_->saveButton->setEnabled(true);
   qApp->processEvents();
 }
 
@@ -231,8 +246,15 @@ const gago::calibration::CalibrationEstimates & MLECalibrator::GetEstimates() co
   return estimates_;
 }
 
+void MLECalibrator::OnSaveButtonClicked() {
+  setResult(QDialog::Accepted);
+  accept();
+}
+
 }
 }
 }
+
+
 
 
