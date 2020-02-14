@@ -11,30 +11,32 @@
 #include <QGroupBox>
 
 #include "modules/settings/iconfigurator.h"
-#include "calib_pattern_configurator_factory.h"
+#include "calibration_pattern_type.h"
 #include "calibrator_type.h"
 
 namespace gago {
 namespace gui {
 namespace configuration {
-
-struct CalibrationConfiguration {
-  CalibrationPatternType calib_pattern_type;
-  CalibratorType calibrator_type;
-};
+class CalibrationSettings;
 
 class CalibrationConfigurator : public QObject, public IConfigurator {
+
  Q_OBJECT
  public:
-  CalibrationConfigurator(QObject *parent = nullptr);
+  CalibrationConfigurator(const QList<IConfigurator *> & calib_pattern_configurators,
+      const QList<IConfigurator *> & calibrator_configurators,
+                          CalibrationSettings * settings     );
 
   void DrawConfigurationPage(QWidget *widget) override;
   void Apply() override;
   const QString & ConfigWindowName() const override;
   virtual ~CalibrationConfigurator();
-
-  IConfigurator *GetActivePatternConfigurator();
-  IConfigurator *GetActiveCalibratorConfigurator();
+  CalibrationPatternType GetSelectedPatternType() const;
+  CalibratorType  GetSelectedCalibratorType() const;
+  const QList<IConfigurator *> & GetPatternConfigurators() const;
+  const QList<IConfigurator *> & GetCalibratorConfigurators() const;
+  QList<IConfigurator *> & GetPatternConfigurators() ;
+  QList<IConfigurator *> & GetCalibratorConfigurators();
  private slots:
   void CalibrationPatternChanged(int idx);
   void CalibratorChanged(int idx);
@@ -43,20 +45,20 @@ class CalibrationConfigurator : public QObject, public IConfigurator {
   void DrawPatternSide();
   void DrawCalibratorSide();
   QString window_name = "Calibration";
-  CalibrationConfiguration current_calibration_settings_;
-
-  QGroupBox *calibrator_group_box_;
 
   // Calib pattern
-  std::vector<IConfigurator *> calib_pattern_configurators_;
+  QList<IConfigurator *> calib_pattern_configurators_;
   std::vector<QFrame *> calib_pattern_configurator_frames_;
   QGroupBox *pattern_group_box_ = nullptr;
   QComboBox *patterns_combo;
 
   //Calibrator
-  std::vector<IConfigurator *> calibrator_configurators_;
+  QGroupBox *calibrator_group_box_;
+  QList<IConfigurator *> calibrator_configurators_;
   std::vector<QFrame *> calibrator_configurator_frames_;
-  QComboBox * calibrator_combo_;
+  QComboBox *calibrator_combo_;
+
+  CalibrationSettings * settings_;
 
 };
 

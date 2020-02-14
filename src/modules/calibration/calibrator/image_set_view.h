@@ -36,7 +36,6 @@ class ImageSetView : public QTableView {
   QList<QImage> GetImages(const BatchCalibrationResult &image_batch);
   QColor GetColor(float rms);
 
-
   QStandardItemModel *model_;
   QList<BatchCalibrationResult> parameters_;
   RectifiedImageViewWindow *rectifiedImageViewWindow_;

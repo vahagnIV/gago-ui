@@ -7,12 +7,13 @@
 #include "modules/settings/iconfigurable.h"
 #include "modules/camera/camera_module.h"
 #include "calibration_estimates.h"
+#include "settings/calibration_settings.h"
 
 namespace gago {
 namespace gui {
 namespace modules {
 
-class CalibrationModule : public QObject,  public IModule, public configuration::IConfigurable {
+class CalibrationModule : public QObject,  public IModule {
   Q_OBJECT
 
  public:
@@ -27,12 +28,6 @@ class CalibrationModule : public QObject,  public IModule, public configuration:
   int GetWeight() const override;
   void Start() override ;
 
-  // IConfigurable
-  configuration::IConfigurator *GetConfigurator() override;
-  void DisposeConfigurator(configuration::IConfigurator *configurator) override;
-  void ApplyConfiguration(QSettings & settings, configuration::IConfigurator *configurator) override;
-  void Configure(QSettings & settings) override;
-  const QString & GetName() const override;
   // CalibrationModule
  private slots:
   void Calibrate();
@@ -49,6 +44,7 @@ class CalibrationModule : public QObject,  public IModule, public configuration:
   QWidget * main_window_;
   CameraModule * camera_module_;
   QAction *save_action_;
+  configuration::CalibrationSettings settings_;
 
 };
 

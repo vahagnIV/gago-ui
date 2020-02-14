@@ -3,7 +3,6 @@
 //
 
 #include "image_set_view.h"
-#include "thumb_show_item_model.h"
 #include <QMenu>
 #include <QListWidgetItem>
 #include <QStandardItemModel>

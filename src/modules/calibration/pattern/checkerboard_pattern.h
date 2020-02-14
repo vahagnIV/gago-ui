@@ -5,7 +5,9 @@
 #ifndef LIBGAGO_SRC_CALIBRATION_PATTERN_CHECKERBOARD_PATTERN_H_
 #define LIBGAGO_SRC_CALIBRATION_PATTERN_CHECKERBOARD_PATTERN_H_
 
+#include <QSharedPointer>
 #include "ipattern.h"
+#include "settings/checkerboard_pattern_settings.h"
 
 namespace gago {
 namespace calibration {
@@ -13,7 +15,7 @@ namespace pattern {
 
 class CheckerboardPattern : public IPattern {
  public:
-  CheckerboardPattern(unsigned nx, unsigned ny, float square_size = 1);
+  CheckerboardPattern(const QSharedPointer<gago::gui::configuration::CheckerboardPatternSettings > & settings);
   bool Extract(const std::vector<cv::Mat> & image,
                std::vector<std::vector<cv::Point2f>> & out_detected_points, bool subpix = false) const override;
   void DrawPattern(cv::Mat & out_image, const std::vector<cv::Point2f> & points) const override;

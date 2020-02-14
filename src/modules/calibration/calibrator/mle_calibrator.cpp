@@ -2,34 +2,33 @@
 // Created by vahagn on 1/18/20.
 //
 
-#include "mle_calibrator.h"
-#include "ui_mle_calibration_window.h"
-#include "common/video_player.h"
-#include "thumb_show_item_model.h"
-#include "open_cv_mle.h"
-#include <QHBoxLayout>
-#include <chrono>
 #include <QDir>
 #include <QImageWriter>
 #include <QMediaPlayer>
 #include <QPainter>
 #include <QColormap>
-#include <iostream>
+
+#include "mle_calibrator.h"
+#include "ui_mle_calibration_window.h"
+#include "common/video_player.h"
+#include "open_cv_mle.h"
+#include <QHBoxLayout>
+#include <chrono>
 
 namespace gago {
 namespace gui {
 namespace calibration {
 
 MLECalibrator::MLECalibrator(QWidget *parent,
-                             const std::shared_ptr<gago::calibration::pattern::IPattern> & pattern,
-                             const MLEConfigurationSettings & settings) : QDialog(parent),
-                                                                          ui_(new Ui::MLECalibrationWindow()),
-                                                                          pattern_(pattern),
-                                                                          settings_(settings),
-                                                                          last_capture_index_(0),
-                                                                          player(settings.sounds_enabled
-                                                                                 ? new QMediaPlayer : nullptr),
-                                                                          next_capture_time_(std::numeric_limits<typeof(next_capture_time_)>::max()) {
+                             const QSharedPointer<gago::calibration::pattern::IPattern> & pattern,
+                             const QSharedPointer<gago::gui::configuration::MLECalibratorSettings> & settings)
+    : QDialog(parent),
+      ui_(new Ui::MLECalibrationWindow()),
+      pattern_(pattern),
+      settings_(settings),
+      last_capture_index_(0),
+      player(new QMediaPlayer),
+      next_capture_time_(std::numeric_limits<typeof(next_capture_time_)>::max()) {
   ui_->setupUi(this);
 
   connect(ui_->captureButton, &QPushButton::pressed, this, &MLECalibrator::CaptureRequested);
@@ -77,22 +76,22 @@ void MLECalibrator::Notify(const std::shared_ptr<std::vector<io::video::Capture>
       files_.push_back(QStringList());
       for (const io::video::Capture & capture: *ptr) {
         QString filename = QString::asprintf(format, capture.camera->GetName().c_str(), last_capture_index_);
-        QDir dir(settings_.image_save_folder);
+
         QImage image(capture.data.data,
                      capture.data.cols,
                      capture.data.rows,
                      capture.data.cols * capture.data.channels(),
                      QImage::Format_RGB888);
-        QImageWriter writer(dir.filePath(filename));
+        QImageWriter writer(settings_->ImageSaveFolder().filePath(filename));
         writer.write(image);
         filenames.append(filename);
-        files_.back().push_back(dir.filePath(filename));
+        files_.back().push_back(settings_->ImageSaveFolder().filePath(filename));
       }
       ui_->listView->Append(files_.back());
 
       ++last_capture_index_;
     } else {
-      if (settings_.sounds_enabled) {
+      if (true) {
         player->setMedia(QUrl::fromLocalFile(
             "/home/vahagn/CLionProjects/gago-ui/sounds/Computer Error-SoundBible.com-1655839472.mp3"));
         player->setVolume(50);
@@ -146,13 +145,13 @@ void MLECalibrator::SetCameras(const std::vector<const io::video::CameraMeta *> 
 void MLECalibrator::CaptureRequested() {
   DisableControlElements();
   next_capture_time_ = (std::chrono::high_resolution_clock::now().time_since_epoch()
-      + std::chrono::seconds(settings_.wait_time)).count();
+      + std::chrono::seconds(settings_->CaptureWaitTime())).count();
 }
 
 void MLECalibrator::OnCalibrateButtonClicked() {
   emit DisableControlElements();
 
-  gago::calibration::OpenCvMLE mle(pattern_, settings_);
+  gago::calibration::OpenCvMLE mle(pattern_, settings_->CalibrateCamerasSeparately());
 
   QList<gago::calibration::BatchCalibrationResult> & batches = ui_->listView->GetBatchCalibrationResults();
 
@@ -187,15 +186,15 @@ void MLECalibrator::OnCalibrateButtonClicked() {
 
 void MLECalibrator::RestoreFilenames(const char *format, QStringList cameras_) {
   last_capture_index_ = 0;
-  QDir directory(settings_.image_save_folder);
+
   QStringList filters = {QString(format).replace("%s", cameras_[0]).replace("%03d", "*")};
-  for (const QString & filename: directory.entryList(filters, QDir::NoFilter, QDir::SortFlag::Name)) {
+  for (const QString & filename: settings_->ImageSaveFolder().entryList(filters, QDir::NoFilter, QDir::SortFlag::Name)) {
     int idx = filename.right(7).left(3).toInt();
-    QStringList idx_files = {directory.filePath(filename)};
+    QStringList idx_files = {settings_->ImageSaveFolder().filePath(filename)};
     for (int i = 1; i < cameras_.size(); ++i) {
       QString cam_filename = QString::asprintf(format, cameras_[i].toStdString().c_str(), idx);
-      if (directory.exists(cam_filename))
-        idx_files.push_back(directory.filePath(cam_filename));
+      if (settings_->ImageSaveFolder().exists(cam_filename))
+        idx_files.push_back(settings_->ImageSaveFolder().filePath(cam_filename));
     }
 
     if (idx_files.size() == cameras_.size()) {

@@ -5,6 +5,7 @@
 #ifndef GAGO_UI_CONSTS_H
 #define GAGO_UI_CONSTS_H
 
+#include <QList>
 #include "calibrator_type.h"
 #include "calibration_pattern_type.h"
 
@@ -12,8 +13,8 @@ namespace gago {
 namespace gui {
 namespace configuration {
 
-const CalibrationPatternType SupportedPatterns[1] = {Checkerboard};
-const CalibratorType SupportedCalibrators[1] = {MLE_Calibrator};
+const QList<CalibrationPatternType> SupportedPatterns = {Checkerboard};
+const QList<CalibratorType> SupportedCalibrators = {MLE_Calibrator};
 
 }
 }

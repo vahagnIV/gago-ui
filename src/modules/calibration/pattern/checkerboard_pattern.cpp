@@ -8,8 +8,9 @@ namespace gago {
 namespace calibration {
 namespace pattern {
 
-CheckerboardPattern::CheckerboardPattern(unsigned nx, unsigned ny, float square_size) : pattern_size_(nx, ny),
-                                                                                        square_size_(square_size) {
+CheckerboardPattern::CheckerboardPattern(const QSharedPointer<gago::gui::configuration::CheckerboardPatternSettings> & settings)
+    : pattern_size_(settings->GetNx(), settings->GetNy()),
+      square_size_(1) {
 
 }
 

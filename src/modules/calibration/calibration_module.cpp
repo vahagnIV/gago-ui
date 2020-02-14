@@ -6,8 +6,7 @@
 #include "modules/settings/settings_module.h"
 #include "calibration_module.h"
 #include "modules/main/main_module.h"
-#include "calibration_configurator.h"
-#include "pattern/calibration_pattern_factory.h"
+#include "settings/calibration_configurator.h"
 #include "calibrator/calibrator_factory.h"
 
 namespace gago {
@@ -31,13 +30,8 @@ unsigned int CalibrationModule::MinorVersion() const {
 }
 
 void CalibrationModule::Calibrate() {
-  configuration::CalibrationConfigurator *cnf = new configuration::CalibrationConfigurator();
-  /*if (!settings_.empty())
-    cnf->SetConfiguration(settings_);*/
-
-  // Create calibrator
-  std::shared_ptr<calibration::ICalibrator> window = calibration::CalibratorFactory::Create(cnf, main_window_);
-  camera_module_->RegisterWatcher(window.get());
+  QSharedPointer<calibration::ICalibrator> window = calibration::CalibratorFactory::Create(&settings_, main_window_);
+  camera_module_->RegisterWatcher(window.data());
   if (QDialog::Accepted == window->Calibrate()) {
     estimates_ = window->GetEstimates();
     QVector<const io::video::CameraMeta *> cameras = camera_module_->GetCameras();
@@ -45,7 +39,7 @@ void CalibrationModule::Calibrate() {
     SaveEstimatesAsOpenCvYml(param__save_folder);
     save_action_->setEnabled(true);
   }
-  camera_module_->UnRegisterWatcher(window.get());
+  camera_module_->UnRegisterWatcher(window.data());
 
 }
 
@@ -66,25 +60,12 @@ void CalibrationModule::SetRequiredModules(const QList<IModule *> &modules) {
       save_action_->setEnabled(false);
 
     } else if (module->SystemName() == "settings") {
-      ((SettingsModule *) module)->RegisterConfigurable(this);
+      ((SettingsModule *) module)->RegisterConfigurable(&settings_);
     } else if (module->SystemName() == "camera")
       camera_module_ = (CameraModule *) module;
   }
 }
 
-configuration::IConfigurator *CalibrationModule::GetConfigurator() {
-  configuration::IConfigurator *cnf = new configuration::CalibrationConfigurator();
-  return cnf;
-}
-
-void CalibrationModule::DisposeConfigurator(configuration::IConfigurator *configurator) {
-  configuration::CalibrationConfigurator *cnf = (configuration::CalibrationConfigurator *) configurator;
-  delete cnf;
-}
-
-void CalibrationModule::ApplyConfiguration(QSettings & settings, configuration::IConfigurator *configurator) {
-  //configurator->GetConfiguration(settings_);
-}
 
 QDir CalibrationModule::GetParamSaveFolder(QVector<const io::video::CameraMeta *> cameras) {
   QStringList l = QStandardPaths::standardLocations(QStandardPaths::HomeLocation);
@@ -191,13 +172,6 @@ void CalibrationModule::Start() {
     save_action_->setEnabled(true);
 }
 
-void CalibrationModule::Configure(QSettings & settings) {
-
-}
-
-const QString & CalibrationModule::GetName() const {
-  return Name();
-}
 
 }
 }

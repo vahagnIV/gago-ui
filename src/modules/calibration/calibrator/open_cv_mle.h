@@ -4,14 +4,14 @@
 
 #ifndef GAGO_UI_SRC_MODULES_CALIBRATION_CALIBRATOR_OPEN_CV_MLE_H_
 #define GAGO_UI_SRC_MODULES_CALIBRATION_CALIBRATOR_OPEN_CV_MLE_H_
+#include <QList>
+#include <QSharedPointer>
 
 #include <opencv2/opencv.hpp>
 #include "pattern/ipattern.h"
-#include "mle_configuration_settings.h"
 #include "intrinsic_parameters.h"
 #include "pattern/pattern_estimation_parameters.h"
 #include "batch_calibration_result.h"
-#include <QList>
 
 namespace gago {
 namespace calibration {
@@ -20,9 +20,8 @@ enum { DETECTION = 0, CAPTURING = 1, CALIBRATED = 2 };
 
 class OpenCvMLE {
  public:
-  OpenCvMLE(const std::shared_ptr<pattern::IPattern> & pattern,
-            const gago::gui::calibration::MLEConfigurationSettings & settings);
-
+  OpenCvMLE(const QSharedPointer<pattern::IPattern> & pattern,
+            bool calibrate_cameras_separately);
 
   int Calibrate(QList<BatchCalibrationResult> & out_batch_calibration_results, CalibrationEstimates & out_estimates);
 
@@ -73,8 +72,8 @@ class OpenCvMLE {
                                          const CalibrationEstimates & estimates,
                                          BatchCalibrationResult & out_result);
 
-  std::shared_ptr<pattern::IPattern> pattern_;
-  gago::gui::calibration::MLEConfigurationSettings settings_;
+  QSharedPointer<pattern::IPattern> pattern_;
+  bool calibrate_cameras_separately_;
 
 };
 

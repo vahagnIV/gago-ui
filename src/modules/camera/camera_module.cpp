@@ -109,6 +109,10 @@ const QString & CameraModule::GetName() const {
   return Name();
 }
 
+void CameraModule::Start() {
+  driver_.Start();
+}
+
 }
 }
 }

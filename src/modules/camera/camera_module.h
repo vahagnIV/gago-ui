@@ -33,6 +33,7 @@ class CameraModule : public IModule, public configuration::IConfigurable {
   void GetRequiredModules(QList<RequiredModuleParams> & out_required_modules) override;
   void SetRequiredModules(const QList<IModule *> &modules) override;
   int GetWeight() const override;
+  void Start() override ;
 
   // CameraModule
   virtual void RegisterWatcher(CameraWatcher *watcher);

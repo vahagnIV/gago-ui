@@ -9,9 +9,9 @@
 namespace gago {
 namespace calibration {
 
-OpenCvMLE::OpenCvMLE(const std::shared_ptr<pattern::IPattern> & pattern,
-                     const gago::gui::calibration::MLEConfigurationSettings & settings)
-    : pattern_(pattern), settings_(settings) {
+OpenCvMLE::OpenCvMLE(const QSharedPointer<pattern::IPattern> & pattern,
+                     bool calibrate_cameras_separately)
+    : pattern_(pattern), calibrate_cameras_separately_(calibrate_cameras_separately) {
 
 }
 
@@ -87,7 +87,7 @@ int OpenCvMLE::Calibrate(QList<BatchCalibrationResult> & out_batch_calibration_r
   if (result != 0)
     return result;
 
-  if (settings_.calibrate_camera_first)
+  if (calibrate_cameras_separately_)
     for (int cam_idx = 0; cam_idx < image_points.size(); ++cam_idx) {
       if (0 == CalibrateSingleCamera(out_batch_calibration_results,
                                      cam_idx,

@@ -8,35 +8,39 @@
 #include <QCheckBox>
 #include <QLineEdit>
 #include <QSpinBox>
+#include <QDir>
 
 #include "modules/settings/iconfigurator.h"
-#include "calibrator/mle_configuration_settings.h"
 
 namespace gago {
 namespace gui {
 namespace configuration {
 
-
+class MLECalibratorSettings;
 
 class MLECalibratorConfigurator : public IConfigurator {
  public:
-  MLECalibratorConfigurator();
+  MLECalibratorConfigurator(class MLECalibratorSettings * settings);
   void DrawConfigurationPage(QWidget *widget) override;
   void Apply() override;
   const QString & ConfigWindowName() const override;
-  const calibration::MLEConfigurationSettings & GetSettings(){ return current_settings_;}
- protected:
-  calibration::MLEConfigurationSettings current_settings_;
+  bool CalibrateCamerasSeparately() const;
+  int CaptureWaitTime() const;
+  QDir ImageSaveFolder() const;
+  bool FixAspectRatio() const;
+ private:
+  class MLECalibratorSettings * settings_;
 
-  QCheckBox * camera_first_chkbx_;
+  QCheckBox *camera_first_chkbx_;
   QLineEdit *folder_line_edit_;
-  QSpinBox * wait_time_spinbox_;
-  QCheckBox  * sound_enabled_chkbx_;
+  QSpinBox *wait_time_spinbox_;
+  QCheckBox *sound_enabled_chkbx_;
 
-
-  const QString window_name_;
+  const QString window_name_ = "MLE";
 
 };
 
-}}}
+}
+}
+}
 #endif //GAGO_UI_MLE_CALIBRATOR_H
