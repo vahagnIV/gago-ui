@@ -43,7 +43,6 @@ MLECalibrator::MLECalibrator(QWidget *parent,
 
 MLECalibrator::~MLECalibrator() {
   delete ui_;
-
 }
 
 void MLECalibrator::Close() {
@@ -188,7 +187,9 @@ void MLECalibrator::RestoreFilenames(const char *format, QStringList cameras_) {
   last_capture_index_ = 0;
 
   QStringList filters = {QString(format).replace("%s", cameras_[0]).replace("%03d", "*")};
-  for (const QString & filename: settings_->ImageSaveFolder().entryList(filters, QDir::NoFilter, QDir::SortFlag::Name)) {
+  for (const QString & filename: settings_->ImageSaveFolder().entryList(filters,
+                                                                        QDir::NoFilter,
+                                                                        QDir::SortFlag::Name)) {
     int idx = filename.right(7).left(3).toInt();
     QStringList idx_files = {settings_->ImageSaveFolder().filePath(filename)};
     for (int i = 1; i < cameras_.size(); ++i) {
@@ -246,7 +247,6 @@ const gago::calibration::CalibrationEstimates & MLECalibrator::GetEstimates() co
 }
 
 void MLECalibrator::OnSaveButtonClicked() {
-  setResult(QDialog::Accepted);
   accept();
 }
 
