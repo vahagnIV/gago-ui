@@ -34,10 +34,10 @@ unsigned int MainModule::MinorVersion() const {
   return 0;
 }
 
-void MainModule::GetRequiredModules(QList<RequiredModuleParams> & out_required_modules) {
+void MainModule::GetRequiredModules(QList<RequiredModuleParams> &out_required_modules) {
 }
 
-void MainModule::SetRequiredModules(const QList<IModule *> & modules) {
+void MainModule::SetRequiredModules(const QList<IModule *> &modules) {
 
 }
 
@@ -50,25 +50,24 @@ void MainModule::Show() {
   main_window_.show();
 }
 
-QAction *MainModule::CreateMenuBranch(std::string path) {
+QAction *MainModule::CreateMenuBranch(const QString &path) {
 
-  boost::trim_if(path, boost::is_any_of("/ "));
-  std::vector<std::string> split;
-  boost::algorithm::split(split, path, boost::algorithm::is_from_range('/', '/'));
+  QStringList split = path.split('/', QString::SkipEmptyParts);
+
   QMenuBar *menu_bar = main_window_.menuBar();
 
   QMenu *root_menu, *current_menu;
   if (split.size() > 1) {
-    root_menu = menu_bar->findChild<QMenu *>(QString::fromStdString(split[0]), Qt::FindDirectChildrenOnly);
+    root_menu = menu_bar->findChild<QMenu *>(split[0], Qt::FindDirectChildrenOnly);
     if (nullptr == root_menu) {
-      root_menu = menu_bar->addMenu(QString::fromStdString(split[0]));
-      root_menu->setObjectName(QString::fromStdString(split[0]));
+      root_menu = menu_bar->addMenu(split[0]);
+      root_menu->setObjectName(split[0]);
     }
     for (int j = 1; j < split.size() - 1; ++j) {
-      current_menu = root_menu->findChild<QMenu *>(QString::fromStdString(split[j]), Qt::FindDirectChildrenOnly);
+      current_menu = root_menu->findChild<QMenu *>(split[j], Qt::FindDirectChildrenOnly);
       if (nullptr == current_menu) {
-        root_menu = root_menu->addMenu(QString::fromStdString(split[j]));
-        root_menu->setObjectName(QString::fromStdString(split[j]));
+        root_menu = root_menu->addMenu(split[j]);
+        root_menu->setObjectName(split[j]);
       } else
         root_menu = current_menu;
     }
@@ -76,8 +75,8 @@ QAction *MainModule::CreateMenuBranch(std::string path) {
     // TODO: log error
     return nullptr;
   }
-  QAction * result = root_menu->addAction(QString::fromStdString(split.back()));
-  result->setObjectName(QString::fromStdString(path));
+  QAction *result = root_menu->addAction(split.back());
+  result->setObjectName(path);
   return result;
 
 }
@@ -88,7 +87,7 @@ QMainWindow *MainModule::MainWindow() {
 
 void MainModule::RegisterView(View *view) {
   views_.push_back(view);
-  QAction *start_view = CreateMenuBranch("/View/" + view->GetName());
+  QAction *start_view = CreateMenuBranch("/View/" + view->GetViewName());
   start_view->setCheckable(true);
   start_view->setChecked(false);
   int idx = views_.size() - 1;
@@ -99,16 +98,16 @@ void MainModule::RegisterView(View *view) {
 }
 
 void MainModule::SetCurrentView(int idx) {
-  if(views_.empty())
+  if (views_.empty())
     return;
-  View * view = this->views_[idx];
-  QAction * new_action = main_window_.menuBar()->findChild<QAction *>(QString::fromStdString("View/" + view->GetName()));
+  View *view = this->views_[idx];
+  QAction *new_action = main_window_.menuBar()->findChild<QAction *>("/View/" + view->GetViewName());
   new_action->setChecked(true);
-  if(idx == this->current_view_index_)
+  if (idx == this->current_view_index_)
     return;
   if (this->current_view_index_ >= 0) {
-    QAction *old_action = main_window_.menuBar()->findChild<QAction *>(QString::fromStdString(
-        "View/" + views_[current_view_index_]->GetName()));
+    QAction *old_action = main_window_.menuBar()->findChild<QAction *>(
+        "View/" + views_[current_view_index_]->GetViewName());
     views_[current_view_index_]->StopDrawing();
     old_action->setChecked(false);
   }

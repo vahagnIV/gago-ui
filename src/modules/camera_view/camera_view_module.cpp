@@ -47,7 +47,7 @@ void Camera_viewModule::StopDrawing() {
   camera_module_->UnRegisterWatcher(this);
 }
 
-const std::string & Camera_viewModule::GetName() const {
+const QString & Camera_viewModule::GetViewName() const {
   return view_name_;
 }
 

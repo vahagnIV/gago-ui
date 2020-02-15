@@ -24,7 +24,7 @@ class MainModule : public IModule {
 
   // Main Module
   virtual void Show();
-  virtual QAction *CreateMenuBranch(std::string path);
+  virtual QAction *CreateMenuBranch(const QString & path);
   virtual QMainWindow *MainWindow();
   virtual ~MainModule() {};
 
@@ -32,7 +32,7 @@ class MainModule : public IModule {
  private:
   void SetCurrentView(int idx);
   gago::gui::modules::MainWindow main_window_;
-  std::vector<View *> views_;
+  QList<View *> views_;
   int current_view_index_;
 };
 

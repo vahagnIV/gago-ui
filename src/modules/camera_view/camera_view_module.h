@@ -26,14 +26,14 @@ class Camera_viewModule : public IModule, public View, public CameraWatcher {
   // View
   void StartDrawing(QWidget *widget) override;
   void StopDrawing() override;
-  const std::string & GetName() const override;
+  const QString & GetViewName() const override;
   void Notify(const std::shared_ptr<std::vector<io::video::Capture>> & ptr) override;
   void SetCameras(const std::vector<const io::video::CameraMeta *> & vector) override;
   virtual ~Camera_viewModule();
   int GetWeight() const override;
  private:
   void ClearPlayers();
-  std::string view_name_ = "Raw Cameras";
+  const QString view_name_ = "Raw Cameras";
   CameraModule * camera_module_;
   MainModule * main_module_;
   std::unordered_map<std::string, gago::gui::common::VideoPlayer*> players_;

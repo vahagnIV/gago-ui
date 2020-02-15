@@ -6,6 +6,7 @@
 #define GAGO_UI_VIEW_H
 
 #include <QWidget>
+#include <QString>
 
 namespace gago {
 namespace gui {
@@ -16,7 +17,7 @@ class View {
   View() = default;
   virtual void StartDrawing(QWidget *widget) = 0;
   virtual void StopDrawing() = 0;
-  virtual const std::string & GetName() const = 0;
+  virtual const QString & GetViewName() const = 0;
   virtual ~View() = default;
 };
 
