@@ -53,9 +53,9 @@ void CalibrationModule::SetRequiredModules(const QList<IModule *> &modules) {
   for (IModule *module: modules) {
     if (module->SystemName() == "main") {
       main_window_ = ((MainModule *) module)->MainWindow();
-      QAction *action = ((MainModule *) module)->CreateMenuBranch("/File/Calibration/Calibrate");
+      QAction *action = ((MainModule *) module)->GetAction("/File/Calibration/Calibrate");
       connect(action, &QAction::triggered, this, &CalibrationModule::Calibrate);
-      save_action_ = ((MainModule *) module)->CreateMenuBranch("/File/Calibration/Save As/Opencv.yml");
+      save_action_ = ((MainModule *) module)->GetAction("/File/Calibration/Save As/Opencv.yml");
       connect(save_action_, &QAction::triggered, this, &CalibrationModule::SaveParamsToFolder);
       save_action_->setEnabled(false);
 

@@ -39,16 +39,6 @@ void MainModule::SetRequiredModules(const QList<IModule *> &modules) {
 
 }
 
-QAction *MainModule::CreateMenuBranch(const QString &path) {
-
-  QStringList split = path.split('/', QString::SkipEmptyParts);
-  MenuTreeNode *node = GetMenu(split, split.size() - 1);
-
-  QAction *result = node->Menu()->addAction(split.back());
-  node->InsertAction(split.back(), result);
-  return result;
-
-}
 
 QMainWindow *MainModule::MainWindow() {
   return (QMainWindow *) this;
@@ -56,12 +46,11 @@ QMainWindow *MainModule::MainWindow() {
 
 void MainModule::RegisterView(View *view) {
   views_.push_back(view);
-  QAction *start_view = CreateMenuBranch("/View/" + view->GetViewName());
-  MenuTreeNode * node = GetMenu("View");
+  QAction *start_view = GetAction("/View/" + view->GetViewName());
+
   start_view->setCheckable(true);
   start_view->setChecked(false);
   int idx = views_.size() - 1;
-  node->InsertAction(view->GetViewName(), start_view);
 
   QObject::connect(start_view, &QAction::triggered, [this, idx, start_view]() {
     SetCurrentView(idx);
@@ -69,7 +58,7 @@ void MainModule::RegisterView(View *view) {
 }
 
 void MainModule::SetCurrentView(int idx) {
-  if (views_.empty())
+  if (idx >= views_.size() || idx < 0)
     return;
   if (idx == this->current_view_index_)
     return;
@@ -90,9 +79,10 @@ void MainModule::SetCurrentView(int idx) {
 int MainModule::GetWeight() const {
   return 1;
 }
+
 void MainModule::Start() {
   GetMenu("File")->Menu()->addSeparator();
-  QAction *quit = CreateMenuBranch("/File/Quit");
+  QAction *quit = GetAction("/File/Quit");
   quit->setIcon(QIcon::fromTheme("application-exit"));
 
   QObject::connect(quit, &QAction::triggered, [&]() { close(); });
@@ -102,7 +92,7 @@ void MainModule::Start() {
 }
 
 MainModule::~MainModule() {
-  if(current_view_index_!=-1)
+  if (current_view_index_ != -1)
     views_[current_view_index_]->StopDrawing();
   delete ui;
 
@@ -112,10 +102,6 @@ MenuTreeNode *MainModule::GetMenu(const QStringList &path, int count) {
   MenuTreeNode *current_node = &menus_;
 
   for (int i = 0; i < std::min(count, path.size()); ++i) {
-    //Create if not exists
-    qInfo() << path[i];
-    bool contains = current_node->Children().contains(path[i]);
-    int cnt = current_node->Children().size();
     if (!current_node->ContainsChild(path[i])) {
       QMenu *menu;
       if (i == 0)
@@ -130,8 +116,20 @@ MenuTreeNode *MainModule::GetMenu(const QStringList &path, int count) {
   return current_node;
 }
 
-MenuTreeNode *MainModule::GetMenu(const QString &name) {
-  return GetMenu({name}, 1);
+MenuTreeNode *MainModule::GetMenu(const QString &path) {
+  QStringList split = path.split('/', QString::SkipEmptyParts);
+  return GetMenu(split, split.size());
+}
+
+QAction *MainModule::GetAction(const QString &path) {
+  QStringList split = path.split('/', QString::SkipEmptyParts);
+  MenuTreeNode *node = GetMenu(split, split.size() - 1);
+  if (!node->ContainsAction(split.back())) {
+    QAction *action = new QAction(split.back());
+    node->InsertAction(split.back(), action);
+    return action;
+  } else
+    return node->GetAction(split.back());
 }
 
 }

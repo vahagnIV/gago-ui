@@ -29,16 +29,16 @@ class MainModule : public QMainWindow, public IModule {
   void Start() override;
 
   // Main Module
-  virtual QAction *CreateMenuBranch(const QString &path);
   virtual QMainWindow *MainWindow();
   virtual void RegisterView(View *view);
+  QAction * GetAction(const QString &path);
 
   virtual ~MainModule();
 
  private:
 
   MenuTreeNode * GetMenu(const QStringList &name, int count);
-  MenuTreeNode * GetMenu(const QString &name);
+  MenuTreeNode * GetMenu(const QString &path);
   Ui::MainWindow *ui;
   void SetCurrentView(int idx);
   QList<View *> views_;
