@@ -36,6 +36,7 @@ void SettingsModule::SetRequiredModules(const QList<IModule *> & modules) {
   MainModule *main_module = (MainModule *) modules[0];
   main_window_ = main_module->MainWindow();
   QAction *action = main_module->CreateMenuBranch("/Edit/Settings");
+  action->setIcon(QIcon::fromTheme("gnome-settings"));
   QObject::connect(action,
                    &QAction::triggered,
                    this, &SettingsModule::ShowSettings);
