@@ -4,6 +4,7 @@
 
 #ifndef GAGO_UI_SRC_IMODULE_H_
 #define GAGO_UI_SRC_IMODULE_H_
+
 #include <QString>
 #include <QList>
 

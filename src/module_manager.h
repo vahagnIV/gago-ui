@@ -31,7 +31,7 @@ struct _ModuleContainer{
 class ModuleManager{
  public:
   bool LoadModule(const QString & path);
-  bool QLoaded(const QString & module_name);
+  bool ModuleLoaded(const QString & module_name);
   void Start();
 
   // Singletone

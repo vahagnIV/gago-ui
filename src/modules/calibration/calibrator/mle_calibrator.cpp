@@ -4,9 +4,13 @@
 
 #include <QDir>
 #include <QImageWriter>
+#include <QStandardPaths>
 #include <QMediaPlayer>
 #include <QPainter>
 #include <QColormap>
+#include <QAudioFormat>
+#include <QSoundEffect>
+#include <QDebug>
 
 #include "mle_calibrator.h"
 #include "ui_mle_calibration_window.h"
@@ -27,16 +31,23 @@ MLECalibrator::MLECalibrator(QWidget *parent,
       pattern_(pattern),
       settings_(settings),
       last_capture_index_(0),
-      player(new QMediaPlayer),
+      sound_dir_("/usr/share/sounds/freedesktop/"),
       next_capture_time_(std::numeric_limits<typeof(next_capture_time_)>::max()) {
   ui_->setupUi(this);
 
   connect(ui_->captureButton, &QPushButton::pressed, this, &MLECalibrator::CaptureRequested);
   connect(ui_->calibrateButton, &QPushButton::pressed, this, &MLECalibrator::OnCalibrateButtonClicked);
   connect(ui_->saveButton, &QPushButton::pressed, this, &MLECalibrator::OnSaveButtonClicked);
+  qDebug() << QSoundEffect::supportedMimeTypes();
 
   connect(this, &MLECalibrator::DisableControlElements, this, &MLECalibrator::DisableControlElementsSlot);
   connect(this, &MLECalibrator::EnableControlElements, this, &MLECalibrator::EnableControlElementsSlot);
+  connect(this, &MLECalibrator::PlaySound, this, &MLECalibrator::PlaySoundFromPath);
+
+  sound_effects_["capture"] = new QSoundEffect(this);
+  sound_effects_["capture"]->setSource(QUrl::fromLocalFile(sound_dir_.filePath("stereo/screen-capture.oga")));
+  sound_effects_["error"] = new QSoundEffect(this);
+  sound_effects_["error"]->setSource(QUrl::fromLocalFile(sound_dir_.filePath("stereo/dialog-error.oga")));
 
   ui_->listView->setAutoFillBackground(true);
 }
@@ -64,11 +75,8 @@ void MLECalibrator::Notify(const std::shared_ptr<std::vector<io::video::Capture>
   if (next_capture_time_ < now) {
     next_capture_time_ = std::numeric_limits<typeof(next_capture_time_)>::max();
     if (found) {
-      if (player) {
-        player->setMedia(QUrl::fromLocalFile(
-            "/home/vahagn/CLionProjects/gago-ui/sounds/Camera Shutter Click-SoundBible.com-228518582.mp3"));
-        player->setVolume(50);
-        player->play();
+      if (settings_->SoundEnabled()) {
+        emit PlaySound("capture");
       }
 
       QStringList filenames;
@@ -90,11 +98,8 @@ void MLECalibrator::Notify(const std::shared_ptr<std::vector<io::video::Capture>
 
       ++last_capture_index_;
     } else {
-      if (true) {
-        player->setMedia(QUrl::fromLocalFile(
-            "/home/vahagn/CLionProjects/gago-ui/sounds/Computer Error-SoundBible.com-1655839472.mp3"));
-        player->setVolume(50);
-        player->play();
+      if (settings_->SoundEnabled()) {
+        emit PlaySound("error");
       }
     }
     emit EnableControlElements();
@@ -248,6 +253,10 @@ const gago::calibration::CalibrationEstimates & MLECalibrator::GetEstimates() co
 
 void MLECalibrator::OnSaveButtonClicked() {
   accept();
+}
+
+void MLECalibrator::PlaySoundFromPath(const QString & path) {
+  sound_effects_[path]->play();
 }
 
 }

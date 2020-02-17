@@ -1,7 +1,7 @@
 #ifndef EXPORT_MAIN_MODULE_H
 #define EXPORT_MAIN_MODULE_H
 
-#include "main_module.h"
+#include "imodule.h"
 
 extern "C"
 gago::gui::modules::IModule * get_module();

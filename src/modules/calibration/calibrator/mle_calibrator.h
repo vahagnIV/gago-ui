@@ -6,7 +6,7 @@
 #define GAGO_UI_SRC_MODULES_CALIBRATION_CALIBRATION_WINDOW_H_
 #include <QDialog>
 #include <QDir>
-#include <QMediaPlayer>
+#include <QSoundEffect>
 #include <QSharedPointer>
 #include <pattern/pattern_estimation_parameters.h>
 #include <settings/mle_calibrator_settings.h>
@@ -44,10 +44,12 @@ class MLECalibrator : public QDialog, public ICalibrator {
   void DisableControlElementsSlot();
   void EnableControlElementsSlot();
   void OnSaveButtonClicked();
+  void PlaySoundFromPath(const QString & path);
 
 signals:
   void DisableControlElements();
   void EnableControlElements();
+  void PlaySound(const QString & path);
  private:
   Ui::MLECalibrationWindow *ui_;
 
@@ -62,10 +64,11 @@ signals:
   long next_capture_time_;
   int last_capture_index_;
   const char format[12] = "%s_%03d.jpg";
-  QMediaPlayer *player;
+  QMap<QString, QSoundEffect *> sound_effects_;
 
   // Calibration
   QList<QStringList> files_;
+  QDir sound_dir_;
 
 };
 

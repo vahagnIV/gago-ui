@@ -8,7 +8,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 file(GLOB MODULE_SOURCES *.h *.cpp)
 
-list(REMOVE_ITEM ${MODULE_SOURCES} test.cpp)
+list(REMOVE_ITEM MODULE_SOURCES test.cpp)
 
 add_library(camera_view_module SHARED ${MODULE_SOURCES} )
 

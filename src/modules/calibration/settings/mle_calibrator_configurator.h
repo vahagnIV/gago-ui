@@ -28,6 +28,7 @@ class MLECalibratorConfigurator : public IConfigurator {
   int CaptureWaitTime() const;
   QDir ImageSaveFolder() const;
   bool FixAspectRatio() const;
+  bool SoundEnabled() const;
  private:
   class MLECalibratorSettings * settings_;
 

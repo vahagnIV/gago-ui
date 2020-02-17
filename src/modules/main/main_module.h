@@ -2,6 +2,7 @@
 #define MAIN_MODULE_H
 
 #include <QMainWindow>
+
 #include "imodule.h"
 #include "view.h"
 #include "menu_tree.h"
@@ -31,7 +32,7 @@ class MainModule : public QMainWindow, public IModule {
   // Main Module
   virtual QMainWindow *MainWindow();
   virtual void RegisterView(View *view);
-  QAction * GetAction(const QString &path);
+  virtual QAction * GetAction(const QString &path);
 
   virtual ~MainModule();
 

@@ -8,6 +8,7 @@
 #include <QString>
 #include <QMenu>
 #include <QAction>
+
 namespace gago {
 namespace gui {
 namespace modules {

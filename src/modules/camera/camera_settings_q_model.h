@@ -7,7 +7,7 @@
 #include <QAbstractListModel>
 #include <QList>
 
-#include <io/video/camera.h>
+#include <io/video/camera_settings.h>
 
 namespace gago {
 namespace gui {

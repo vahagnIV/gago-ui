@@ -3,7 +3,8 @@
 
 #include <QVector>
 
-#include "io/video/linux/v4l_driver.h"
+#include <io/video/linux/v4l_driver.h>
+
 #include "imodule.h"
 #include "modules/settings/iconfigurable.h"
 #include "modules/settings/settings_module.h"

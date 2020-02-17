@@ -14,7 +14,7 @@
 #include <QWidget>
 #include <QListView>
 
-#include "io/video/camera.h"
+#include <io/video/camera_settings.h>
 #include "modules/settings/iconfigurator.h"
 
 namespace gago {
@@ -23,7 +23,6 @@ namespace configuration {
 
 namespace internal {
 struct CameraLayout {
-
   QWidget *main_widget;
   QCheckBox *enabled_checkbx;
   QLineEdit *name_edit;

@@ -1,4 +1,5 @@
 #include "export.h"
+#include "main_module.h"
 
 gago::gui::modules::IModule *get_module() {
   return new gago::gui::modules::MainModule();

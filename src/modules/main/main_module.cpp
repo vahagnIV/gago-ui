@@ -1,7 +1,8 @@
-#include "main_module.h"
 #include <QMenuBar>
 #include <QAction>
 #include <QDebug>
+
+#include "main_module.h"
 #include "ui_main_window.h"
 
 namespace gago {

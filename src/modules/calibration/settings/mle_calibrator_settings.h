@@ -23,13 +23,14 @@ class MLECalibratorSettings : public IConfigurable {
   int CaptureWaitTime() const;
   const QDir & ImageSaveFolder() const;
   bool FixAspectRatio() const;
+  bool SoundEnabled() const;
 
  private:
   const QString name_ = "MLE";
   bool calibrate_cameras_separately_;
   int capture_wait_time_;
   QDir image_save_folder_;
-  bool sounds_enabled_;
+  bool sounds_enabled_ = true;
   bool fix_aspect_ratio_ = false;
 
 };

@@ -44,7 +44,7 @@ bool ModuleManager::LoadModule(const QString & path) {
     qWarning() << "ERROR initlizing module " << path;
     return false;
   }
-  if (QLoaded(container.module_ptr->SystemName())) {
+  if (ModuleLoaded(container.module_ptr->SystemName())) {
     qWarning() << "Module " << container.module_ptr->Name() << " is already loaded. Skipping...";
     container.delete_function(container.module_ptr);
     return false;
@@ -69,7 +69,7 @@ bool ModuleManager::SatisfyRequirements() {
 
     for (const modules::RequiredModuleParams & req_module_param: required_module_params) {
 
-      if (!QLoaded(req_module_param.Name)) {
+      if (!ModuleLoaded(req_module_param.Name)) {
         qWarning() << "Module " << req_module_param.Name << " required by " << container.module_ptr->Name() << "("
                    << container.module_ptr->SystemName() << ")"
                    << " is not loaded. ";
@@ -101,7 +101,7 @@ uint64_t ModuleManager::GetCombinedVersion(uint32_t major, uint32_t minor) const
   return combined;
 }
 
-bool ModuleManager::QLoaded(const QString & module_name) {
+bool ModuleManager::ModuleLoaded(const QString & module_name) {
   return modules_.find(module_name) != modules_.end();
 }
 
