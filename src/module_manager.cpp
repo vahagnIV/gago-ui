@@ -8,6 +8,7 @@
 #include<QDebug>
 
 #include "module_manager.h"
+#include "modules/main/main_module.h"
 
 namespace gago {
 namespace gui {
@@ -110,36 +111,34 @@ modules::IModule *ModuleManager::GetModule(const QString & system_name) const {
 }
 
 ModuleManager::~ModuleManager() {
+  ((MainModule *) (modules_["main"].module_ptr))->DisableAllViews();
 
-  QList<internal::_ModuleContainer *> containers;
-  for (auto & module : modules_.values())
-    containers.append(&module);
+  QList<internal::_ModuleContainer> containers = modules_.values();
+
   qSort(containers.begin(),
         containers.end(),
-        [&](const internal::_ModuleContainer *first, internal::_ModuleContainer *second) {
-          return first->module_ptr->GetWeight() < second->module_ptr->GetWeight();
+        [&](const internal::_ModuleContainer & first, internal::_ModuleContainer & second) {
+          return first.module_ptr->GetDestructorIndex() < second.module_ptr->GetDestructorIndex();
         });
 
-  for (internal::_ModuleContainer *module : containers) {
-    if (module->module_ptr->SystemName() == "main")
+  for (internal::_ModuleContainer & module : containers) {
+    if(module.module_ptr->SystemName() == "main")
       continue;
-    qInfo() << module->module_ptr->SystemName();
-    module->delete_function(module->module_ptr);
-    dlclose(module->handle);
+    qDebug() << "Destroying" << module.module_ptr->SystemName();
+    module.delete_function(module.module_ptr);
+    dlclose(module.handle);
   }
 }
 
 void ModuleManager::Start() {
-  QVector<internal::_ModuleContainer *> containers;
-  for (auto & module : modules_.values())
-    containers.append(&module);
+  QList<internal::_ModuleContainer> containers = modules_.values();
   qSort(containers.begin(),
         containers.end(),
-        [&](const internal::_ModuleContainer *first, internal::_ModuleContainer *second) {
-          return first->module_ptr->GetWeight() > second->module_ptr->GetWeight();
+        [&](const internal::_ModuleContainer & first, internal::_ModuleContainer & second) {
+          return first.module_ptr->GetStartIndexIndex() > second.module_ptr->GetStartIndexIndex();
         });
-  for (auto & module: modules_)
-    module.module_ptr->Start();
+  for (auto & container: containers)
+    container.module_ptr->Start();
 }
 
 }
