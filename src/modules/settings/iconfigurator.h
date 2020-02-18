@@ -17,8 +17,6 @@ class IConfigurator {
   IConfigurator() = default;
   virtual void DrawConfigurationPage(QWidget * widget) = 0;
   virtual void Apply() = 0;
-  /*virtual void GetConfiguration(QJsonObject & out_json) = 0;
-  virtual void SetConfiguration(const QJsonObject & json) = 0;*/
   virtual const QString &ConfigWindowName() const = 0;
   virtual ~IConfigurator()= default;
 };
