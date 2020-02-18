@@ -5,6 +5,7 @@
 #include "settings_window.h"
 #include "ui_settings_window.h"
 #include <QTabWidget>
+
 #include <QDialogButtonBox>
 #include <iostream>
 
@@ -12,7 +13,7 @@ namespace gago {
 namespace gui {
 namespace modules {
 
-SettingsWindow::SettingsWindow(QList<configuration::IConfigurator *> &configurators, QWidget *parent)
+SettingsWindow::SettingsWindow(QList<configuration::IConfigurator *> &configurators, QMainWindow *parent)
     : configurators_(configurators), QDialog(parent), ui(new Ui::SettingsWindow) {
   ui->setupUi(this);
   connect(ui->buttonBox, &QDialogButtonBox::clicked, this, &SettingsWindow::clicked);

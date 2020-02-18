@@ -1,10 +1,8 @@
 #include <QApplication>
 #include <QDir>
 #include <QDebug>
-
 #include "module_manager.h"
 #include "config/configuration.h"
-#include "modules/main/main_module.h"
 #include "modules/settings/settings_module.h"
 
 int main(int argc, char *argv[]) {

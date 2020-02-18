@@ -29,7 +29,7 @@ public:
     virtual void RegisterConfigurable(configuration::IConfigurable *);
     virtual void Configure();
     virtual ~SettingsModule(){};
-  int GetWeight() const override;
+  int GetDestructorIndex() const override;
  private slots:
   void ShowSettings();
  private:

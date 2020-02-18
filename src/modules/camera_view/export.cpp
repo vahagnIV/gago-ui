@@ -5,5 +5,5 @@ gago::gui::modules::IModule *get_module() {
 }
 
 void dispose_module(gago::gui::modules::IModule *module_ptr) {
-  delete (gago::gui::modules::Camera_viewModule *) module_ptr;
+  delete module_ptr;
 }

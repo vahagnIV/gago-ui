@@ -4,6 +4,8 @@
 
 #include "main_module.h"
 #include "ui_main_window.h"
+#include <numeric>
+#include <QtCore/QCoreApplication>
 
 namespace gago {
 namespace gui {
@@ -33,13 +35,12 @@ unsigned int MainModule::MinorVersion() const {
   return 0;
 }
 
-void MainModule::GetRequiredModules(QList<RequiredModuleParams> &out_required_modules) {
+void MainModule::GetRequiredModules(QList<RequiredModuleParams> & out_required_modules) {
 }
 
-void MainModule::SetRequiredModules(const QList<IModule *> &modules) {
+void MainModule::SetRequiredModules(const QList<IModule *> & modules) {
 
 }
-
 
 QMainWindow *MainModule::MainWindow() {
   return (QMainWindow *) this;
@@ -77,8 +78,8 @@ void MainModule::SetCurrentView(int idx) {
   this->current_view_index_ = idx;
 }
 
-int MainModule::GetWeight() const {
-  return 1;
+int MainModule::GetDestructorIndex() const {
+  return std::numeric_limits<int>::max();
 }
 
 void MainModule::Start() {
@@ -93,13 +94,14 @@ void MainModule::Start() {
 }
 
 MainModule::~MainModule() {
+  qApp->processEvents();
   if (current_view_index_ != -1)
     views_[current_view_index_]->StopDrawing();
-  delete ui;
 
+  delete ui;
 }
 
-MenuTreeNode *MainModule::GetMenu(const QStringList &path, int count) {
+MenuTreeNode *MainModule::GetMenu(const QStringList & path, int count) {
   MenuTreeNode *current_node = &menus_;
 
   for (int i = 0; i < std::min(count, path.size()); ++i) {
@@ -117,12 +119,12 @@ MenuTreeNode *MainModule::GetMenu(const QStringList &path, int count) {
   return current_node;
 }
 
-MenuTreeNode *MainModule::GetMenu(const QString &path) {
+MenuTreeNode *MainModule::GetMenu(const QString & path) {
   QStringList split = path.split('/', QString::SkipEmptyParts);
   return GetMenu(split, split.size());
 }
 
-QAction *MainModule::GetAction(const QString &path) {
+QAction *MainModule::GetAction(const QString & path) {
   QStringList split = path.split('/', QString::SkipEmptyParts);
   MenuTreeNode *node = GetMenu(split, split.size() - 1);
   if (!node->ContainsAction(split.back())) {
@@ -131,6 +133,14 @@ QAction *MainModule::GetAction(const QString &path) {
     return action;
   } else
     return node->GetAction(split.back());
+}
+
+void MainModule::DisableAllViews() {
+  if (current_view_index_ != -1) {
+    views_[current_view_index_]->StopDrawing();
+    GetAction("/View/" + views_[current_view_index_]->GetViewName())->setChecked(false);
+    current_view_index_ = -1;
+  }
 }
 
 }

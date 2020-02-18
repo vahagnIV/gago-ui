@@ -13,10 +13,16 @@ namespace gui {
 namespace common {
 
 class VideoPlayer : public QLabel {
+  Q_OBJECT
  public:
   VideoPlayer();
-  void ShowImage(const cv::Mat &image);
   void setText(const std::string & text);
+  void ShowImage(const cv::Mat & image);
+ signals:
+  void NewImageReceived(const cv::Mat & image);
+
+ public slots:
+  void DrawImage(const cv::Mat & image);
  private:
   QImage qimage_;
   QString text_;

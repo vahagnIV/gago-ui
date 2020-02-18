@@ -24,7 +24,7 @@ def create_module(name: str, system_name: str, class_name: str = None):
         include_file.write("""#ifndef {0}_MODULE_H
 #define {0}_MODULE_H
 
-#include "../../imodule.h"
+#include "imodule.h"
 
 namespace gago {{
 namespace gui {{
@@ -97,7 +97,7 @@ extern "C"
 gago::gui::modules::IModule * get_module();
 
 extern "C"
-void dispose_module(gago::gui::modules::{2} * module_ptr);
+void dispose_module(gago::gui::modules::IModule * module_ptr);
 
 #endif // EXPORT_{0}_H""".format(system_name.upper(), module_include_filename, module_class_name))
 
@@ -110,7 +110,7 @@ gago::gui::modules::IModule * get_module()
     return new gago::gui::modules::{0}();
 }}
 
-void dispose_module(gago::gui::modules::{0} * module_ptr)
+void dispose_module(gago::gui::modules::IModule * module_ptr)
 {{
     delete module_ptr;
 }}""".format(module_class_name))
@@ -133,4 +133,4 @@ target_link_libraries({0}_module ${{QT_LIBRARIES}} Qt5::Widgets pthread)""".form
 
 
 if __name__ == '__main__':
-    create_module('Camera', 'camera')
+    create_module('Calibration', 'calibration')

@@ -27,6 +27,7 @@ class IPattern {
 
   virtual const cv::Size & GetSize() const = 0;
   virtual Pattern GetType() const = 0;
+  virtual ~IPattern() = default;
 
 };
 

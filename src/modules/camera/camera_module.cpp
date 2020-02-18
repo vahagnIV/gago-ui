@@ -71,8 +71,8 @@ QVector<const io::video::CameraMeta *> CameraModule::GetCameras() {
   return QVector<const io::video::CameraMeta *>::fromStdVector(driver_.GetCameras());;
 }
 
-int CameraModule::GetWeight() const {
-  return settings_module_->GetWeight() + 1;
+int CameraModule::GetDestructorIndex() const {
+  return settings_module_->GetDestructorIndex() + 1;
 }
 
 CameraModule::~CameraModule() {

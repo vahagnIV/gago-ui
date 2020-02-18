@@ -1,4 +1,5 @@
-#include <QtWidgets/QHBoxLayout>
+#include <QHBoxLayout>
+#include <QDebug>
 #include "camera_view_module.h"
 
 #include "video_player.h"
@@ -70,20 +71,20 @@ void Camera_viewModule::SetCameras(const std::vector<const io::video::CameraMeta
 }
 
 void Camera_viewModule::ClearPlayers() {
-  for (std::pair<std::string, common::VideoPlayer *> player_name_player: players_) {
-    delete player_name_player.second;
-  }
+  for (auto & player:  players_)
+     player.second->deleteLater();
   players_.clear();
   delete draw_widget_->layout();
+
 }
 
 Camera_viewModule::~Camera_viewModule() {
-  //StopDrawing();
+  StopDrawing();
   ClearPlayers();
 }
 
-int Camera_viewModule::GetWeight() const {
-  return main_module_->GetWeight() + camera_module_->GetWeight() + 1;
+int Camera_viewModule::GetDestructorIndex() const {
+  return  1;
 }
 
 }

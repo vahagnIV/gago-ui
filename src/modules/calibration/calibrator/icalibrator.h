@@ -16,6 +16,7 @@ class ICalibrator : public modules::CameraWatcher {
  public:
   virtual int Calibrate() = 0;
   virtual const gago::calibration::CalibrationEstimates &GetEstimates() const = 0;
+  virtual ~ICalibrator() = default;
 };
 
 }

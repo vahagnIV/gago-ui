@@ -40,7 +40,6 @@ void CalibrationModule::Calibrate() {
     save_action_->setEnabled(true);
   }
   camera_module_->UnRegisterWatcher(window.data());
-
 }
 
 void CalibrationModule::GetRequiredModules(QList<RequiredModuleParams> & out_required_modules) {
@@ -49,14 +48,18 @@ void CalibrationModule::GetRequiredModules(QList<RequiredModuleParams> & out_req
                           RequiredModuleParams{Name: "camera", MinMajorVersion: 1, MinMinorVersion: 0}};
 }
 
-void CalibrationModule::SetRequiredModules(const QList<IModule *> &modules) {
+void CalibrationModule::SetRequiredModules(const QList<IModule *> & modules) {
   for (IModule *module: modules) {
     if (module->SystemName() == "main") {
       main_window_ = ((MainModule *) module)->MainWindow();
       QAction *action = ((MainModule *) module)->GetAction("/File/Calibration/Calibrate");
+      QMenu *menu = (QMenu *) action->associatedWidgets()[0];
+      menu->setIcon(QIcon::fromTheme("calibrate"));
       connect(action, &QAction::triggered, this, &CalibrationModule::Calibrate);
+
       save_action_ = ((MainModule *) module)->GetAction("/File/Calibration/Save As/Opencv.yml");
       connect(save_action_, &QAction::triggered, this, &CalibrationModule::SaveParamsToFolder);
+      ((QMenu *) save_action_->associatedWidgets()[0])->setIcon(QIcon::fromTheme("document-save-as"));
       save_action_->setEnabled(false);
 
     } else if (module->SystemName() == "settings") {
@@ -65,7 +68,6 @@ void CalibrationModule::SetRequiredModules(const QList<IModule *> &modules) {
       camera_module_ = (CameraModule *) module;
   }
 }
-
 
 QDir CalibrationModule::GetParamSaveFolder(QVector<const io::video::CameraMeta *> cameras) {
   QStringList l = QStandardPaths::standardLocations(QStandardPaths::HomeLocation);
@@ -88,7 +90,7 @@ QDir CalibrationModule::GetParamSaveFolder(QVector<const io::video::CameraMeta *
             + "\n");
   QDir correct_folder("");
   int last_folder = 0;
-  for (const QString &subfolder: calibration_dir.entryList(QStringList{"calib_*"}, QDir::Dirs)) {
+  for (const QString & subfolder: calibration_dir.entryList(QStringList{"calib_*"}, QDir::Dirs)) {
     QDir folder(subfolder);
     if (!folder.exists("info.txt"))
       continue;
@@ -141,8 +143,8 @@ void CalibrationModule::SaveEstimatesAsOpenCvYml(QDir folder) {
 
 }
 
-int CalibrationModule::GetWeight() const {
-  return camera_module_->GetWeight() + 1;
+int CalibrationModule::GetDestructorIndex() const {
+  return -1;
 }
 
 void CalibrationModule::LoadEstimatesFromOpenCvYml(QDir folder) {
@@ -168,10 +170,9 @@ void CalibrationModule::LoadEstimatesFromOpenCvYml(QDir folder) {
 void CalibrationModule::Start() {
 
   LoadEstimatesFromOpenCvYml(GetParamSaveFolder(camera_module_->GetCameras()));
-  if(!estimates_.R.empty())
+  if (!estimates_.R.empty())
     save_action_->setEnabled(true);
 }
-
 
 }
 }

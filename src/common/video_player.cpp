@@ -4,15 +4,28 @@
 
 #include "video_player.h"
 #include <QPainter>
+
 namespace gago {
 namespace gui {
 namespace common {
+
 VideoPlayer::VideoPlayer() : QLabel("") {
   this->setMinimumSize(1, 1);
+
+  qRegisterMetaType<cv::Mat>("cv::Mat");
+
+  connect(this, &VideoPlayer::NewImageReceived, this, &VideoPlayer::DrawImage);
 }
 
 void VideoPlayer::ShowImage(const cv::Mat & image) {
+  emit NewImageReceived(image);
+}
 
+void VideoPlayer::setText(const std::string & text) {
+  text_ = QString::fromStdString(text);
+}
+
+void VideoPlayer::DrawImage(const cv::Mat & image) {
   QSize size = this->size();
   float scale = 1;
 
@@ -34,11 +47,6 @@ void VideoPlayer::ShowImage(const cv::Mat & image) {
   }
 
   setPixmap(QPixmap::fromImage(qimage_));
-
-}
-
-void VideoPlayer::setText(const std::string & text) {
-  text_ = QString::fromStdString(text);
 }
 
 }

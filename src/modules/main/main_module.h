@@ -26,13 +26,14 @@ class MainModule : public QMainWindow, public IModule {
   unsigned int MinorVersion() const override;
   void GetRequiredModules(QList<RequiredModuleParams> &out_required_modules) override;
   void SetRequiredModules(const QList<IModule *> &modules) override;
-  int GetWeight() const override;
+  int GetDestructorIndex() const override;
   void Start() override;
 
   // Main Module
   virtual QMainWindow *MainWindow();
   virtual void RegisterView(View *view);
   virtual QAction * GetAction(const QString &path);
+  virtual void DisableAllViews();
 
   virtual ~MainModule();
 

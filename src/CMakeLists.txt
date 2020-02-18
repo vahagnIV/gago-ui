@@ -10,6 +10,7 @@ file(GLOB SOURCES *.h *.cpp config/*.h)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
+
 qt5_wrap_ui(GagoUI)
 qt5_wrap_cpp(GagoCPP)
 

@@ -25,7 +25,7 @@ class CalibrationModule : public QObject,  public IModule {
   unsigned int MinorVersion() const override;
   void GetRequiredModules(QList<RequiredModuleParams> & out_required_modules) override;
   void SetRequiredModules(const QList<IModule *> & modules) override;
-  int GetWeight() const override;
+  int GetDestructorIndex() const override;
   void Start() override ;
 
   // CalibrationModule
@@ -37,9 +37,6 @@ class CalibrationModule : public QObject,  public IModule {
   void SaveEstimatesAsOpenCvYml(QDir folder);
   void LoadEstimatesFromOpenCvYml(QDir folder);
   gago::calibration::CalibrationEstimates estimates_;
-  // Since we can plug and unplug different calibration patterns and calibrators,
-  // and we want to remeber the configurations even for unused patterns, we have
-  // to keep the configuration loaded
 
   QWidget * main_window_;
   CameraModule * camera_module_;

@@ -1,7 +1,6 @@
 FIND_PATH (Gago_INCLUDE_DIR
-        NAMES gago.h
-        PATH_SUFFIXES src
-        HINTS /usr/include/gago /usr/local/include/gao
+        NAMES io
+        HINTS /usr/include/gago/ /usr/local/include/gago/
         DOC "The Gago include directory" )
 
 FIND_LIBRARY (Gago_LIBRARIES

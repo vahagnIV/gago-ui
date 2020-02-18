@@ -7,16 +7,13 @@
 #include <QStandardPaths>
 #include <QMediaPlayer>
 #include <QPainter>
-#include <QColormap>
-#include <QAudioFormat>
-#include <QSoundEffect>
 #include <QDebug>
+#include <QHBoxLayout>
 
 #include "mle_calibrator.h"
 #include "ui_mle_calibration_window.h"
 #include "common/video_player.h"
 #include "open_cv_mle.h"
-#include <QHBoxLayout>
 #include <chrono>
 
 namespace gago {
@@ -38,16 +35,15 @@ MLECalibrator::MLECalibrator(QWidget *parent,
   connect(ui_->captureButton, &QPushButton::pressed, this, &MLECalibrator::CaptureRequested);
   connect(ui_->calibrateButton, &QPushButton::pressed, this, &MLECalibrator::OnCalibrateButtonClicked);
   connect(ui_->saveButton, &QPushButton::pressed, this, &MLECalibrator::OnSaveButtonClicked);
-  qDebug() << QSoundEffect::supportedMimeTypes();
 
   connect(this, &MLECalibrator::DisableControlElements, this, &MLECalibrator::DisableControlElementsSlot);
   connect(this, &MLECalibrator::EnableControlElements, this, &MLECalibrator::EnableControlElementsSlot);
   connect(this, &MLECalibrator::PlaySound, this, &MLECalibrator::PlaySoundFromPath);
 
-  sound_effects_["capture"] = new QSoundEffect(this);
-  sound_effects_["capture"]->setSource(QUrl::fromLocalFile(sound_dir_.filePath("stereo/screen-capture.oga")));
-  sound_effects_["error"] = new QSoundEffect(this);
-  sound_effects_["error"]->setSource(QUrl::fromLocalFile(sound_dir_.filePath("stereo/dialog-error.oga")));
+  sound_effects_["capture"] = new QMediaPlayer(this);
+  sound_effects_["capture"]->setMedia(QUrl::fromLocalFile(sound_dir_.filePath("stereo/screen-capture.oga")));
+  sound_effects_["error"] = new QMediaPlayer(this);
+  sound_effects_["error"]->setMedia(QUrl::fromLocalFile(sound_dir_.filePath("stereo/dialog-error.oga")));
 
   ui_->listView->setAutoFillBackground(true);
 }

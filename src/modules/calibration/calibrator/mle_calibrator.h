@@ -6,7 +6,7 @@
 #define GAGO_UI_SRC_MODULES_CALIBRATION_CALIBRATION_WINDOW_H_
 #include <QDialog>
 #include <QDir>
-#include <QSoundEffect>
+#include <QMediaPlayer>
 #include <QSharedPointer>
 #include <pattern/pattern_estimation_parameters.h>
 #include <settings/mle_calibrator_settings.h>
@@ -64,7 +64,7 @@ signals:
   long next_capture_time_;
   int last_capture_index_;
   const char format[12] = "%s_%03d.jpg";
-  QMap<QString, QSoundEffect *> sound_effects_;
+  QMap<QString, QMediaPlayer *> sound_effects_;
 
   // Calibration
   QList<QStringList> files_;

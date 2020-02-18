@@ -7,6 +7,7 @@
 
 #include <QDialog>
 #include <QAbstractButton>
+#include <QMainWindow>
 #include "iconfigurator.h"
 
 namespace Ui {
@@ -26,7 +27,7 @@ class SettingsWindow : public QDialog {
   friend class modules::SettingsModule;
  Q_OBJECT
  public:
-  explicit SettingsWindow(QList<configuration::IConfigurator *> & configurators, QWidget *parent = 0);
+  explicit SettingsWindow(QList<configuration::IConfigurator *> & configurators, QMainWindow *parent = 0);
   virtual ~SettingsWindow();
  public slots:
   void clicked(QAbstractButton *btn);

@@ -30,7 +30,7 @@ class Camera_viewModule : public IModule, public View, public CameraWatcher {
   void Notify(const std::shared_ptr<std::vector<io::video::Capture>> & ptr) override;
   void SetCameras(const std::vector<const io::video::CameraMeta *> & vector) override;
   virtual ~Camera_viewModule();
-  int GetWeight() const override;
+  int GetDestructorIndex() const override;
  private:
   void ClearPlayers();
   const QString view_name_ = "Raw Cameras";

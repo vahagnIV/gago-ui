@@ -59,7 +59,7 @@ void SettingsModule::Configure() {
   }
 }
 
-int SettingsModule::GetWeight() const {
+int SettingsModule::GetDestructorIndex() const {
   return 2;
 }
 
