@@ -34,7 +34,7 @@ class IModule {
   virtual void GetRequiredModules(QList<RequiredModuleParams> & out_required_modules) = 0;
   virtual void SetRequiredModules(const QList<IModule *> & modules) = 0;
   virtual int GetDestructorIndex() const { return 0; }
-  virtual int GetStartIndexIndex() const { return 0; }
+  virtual int GetStartIndex() const { return 0; }
   virtual void Start() {};
   virtual ~IModule() = default;
  protected:

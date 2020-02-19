@@ -6,7 +6,6 @@
 #define GAGO_UI_SRC_CONFIG_CONFIGURATION_H_
 
 #include <QString>
-#include "external/nlohmann/json.hpp"
 
 
 namespace gago {
@@ -17,11 +16,11 @@ class Configuration {
  public:
 
   bool Load(const QString & filename);
-  void GetModulePaths(QStringList & out_paths);
-  void GetModuleDirs(QStringList & out_paths);
+  QStringList & GetModulePaths();
+  QStringList & GetModuleDirs();
  private:
-  void GetArray(QStringList & out_array, const QString & json_name);
-  nlohmann::json json_;
+  QStringList  module_paths_;
+  QStringList  module_dirs_;
   static const QString JSON_MODULE_PATHS;
   static const QString JSON_MODULE_DIRS;
 };

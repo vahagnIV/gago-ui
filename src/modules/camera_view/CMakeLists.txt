@@ -14,5 +14,23 @@ add_library(camera_view_module SHARED ${MODULE_SOURCES} )
 
 target_link_libraries(camera_view_module gagocommon ${QT_LIBRARIES} Qt5::Widgets pthread)
 
-#add_executable(test_cam_view ${MODULE_SOURCES} test.cpp)
-#target_link_libraries(test_cam_view ${Gago_LIBRARIES} ${QT_LIBRARIES} Qt5::Widgets pthread  ${Boost_LIBRARIES})
+set(GagoUICameraViewModule 1.0.0)
+
+set_property(TARGET camera_view_module PROPERTY VERSION ${GagoUICameraViewModule_VERSION})
+set_property(TARGET camera_view_module PROPERTY SOVERSION 1)
+set_property(TARGET camera_view_module PROPERTY INTERFACE_GagoUICameraViewModule_MAJOR_VERSION 1)
+set_property(TARGET camera_view_module APPEND PROPERTY
+        COMPATIBLE_INTERFACE_STRING GagoUICameraViewModule_MAJOR_VERSION)
+
+install(TARGETS camera_view_module
+        EXPORT gagoCameraViewTargets
+        LIBRARY
+        DESTINATION ${GagoUI_MODULE_PATH}
+        PUBLIC_HEADER
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/include/gago/ui/modules/camera_view
+        CONFIGURATIONS Release)
+
+install(FILES
+        camera_view_module.h
+        DESTINATION
+        ${CMAKE_INSTALL_PREFIX}/include/gago/ui/modules/camera_view)

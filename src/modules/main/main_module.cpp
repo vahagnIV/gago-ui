@@ -17,10 +17,9 @@ MainModule::MainModule() : QMainWindow(nullptr),
                            menus_(nullptr),
                            current_view_index_(-1) {
   ui->setupUi(this);
-
-  GetMenu({QString("File")}, 1);
-  GetMenu({"Edit"}, 1);
-  GetMenu({"View"}, 1);
+  GetMenu("File");
+  GetMenu("Edit");
+  GetMenu("View");
 }
 
 ModuleInitializationResult MainModule::Initalize() {

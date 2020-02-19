@@ -4,7 +4,10 @@
 
 #include <QFile>
 #include "configuration.h"
-#include <fstream>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QVariant>
 
 namespace gago {
 namespace gui {
@@ -13,26 +16,30 @@ namespace configuration {
 const QString Configuration::JSON_MODULE_PATHS = "ModulePaths";
 const QString Configuration::JSON_MODULE_DIRS = "ModuleDirs";
 
-bool Configuration::Load(const QString &filename) {
+bool Configuration::Load(const QString & filename) {
   if (!QFile::exists(filename))
     return false;
-  std::ifstream file(filename.toStdString());
-  json_ = nlohmann::json::parse(file);
+  QFile json_file(filename);
+  json_file.open(QFile::ReadOnly);
+
+  QJsonDocument document = QJsonDocument::fromJson(json_file.readAll());
+  if (document.object().contains(JSON_MODULE_PATHS)) {
+    for (QVariant & var: document.object()[JSON_MODULE_PATHS].toArray().toVariantList())
+      module_paths_.append(var.toString());
+  }
+
+  if (document.object().contains(JSON_MODULE_DIRS)) {
+    for (QVariant & var: document.object()[JSON_MODULE_DIRS].toArray().toVariantList())
+      module_dirs_.append(var.toString());
+  }
   return true;
 }
 
-void Configuration::GetModulePaths(QStringList &out_paths) {
-  GetArray(out_paths, JSON_MODULE_PATHS);
+QStringList & Configuration::GetModulePaths() {
+  return module_paths_;
 }
-void Configuration::GetModuleDirs(QStringList &out_paths) {
-  GetArray(out_paths, JSON_MODULE_DIRS);
-}
-
-void Configuration::GetArray(QStringList &out_array, const QString &json_name) {
-  if (json_.find(json_name.toStdString()) != json_.end())
-    for (auto &json_p: json_[json_name.toStdString()]) {
-      out_array.push_back(QString::fromStdString(json_p));
-    }
+QStringList & Configuration::GetModuleDirs() {
+  return module_dirs_;
 }
 
 }

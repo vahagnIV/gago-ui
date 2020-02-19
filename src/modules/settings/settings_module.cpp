@@ -2,12 +2,12 @@
 #include <QJsonDocument>
 #include <QAction>
 #include <QDebug>
+#include <numeric>
+
 #include "settings_module.h"
-#include "../main/main_module.h"
+#include "modules/main/main_module.h"
 #include "settings_window.h"
-#include <fstream>
 #include <QtWidgets/QDialogButtonBox>
-#include <iostream>
 
 namespace gago {
 namespace gui {
@@ -83,7 +83,14 @@ void SettingsModule::ShowSettings() {
   for (int i = 0; i < configurators.size(); ++i) {
     configurables_[i]->DisposeConfigurator(configurators[i]);
   }
+}
 
+int SettingsModule::GetStartIndex() const {
+  return std::numeric_limits<int>::min();
+}
+
+void SettingsModule::Start() {
+  Configure();
 }
 
 }
