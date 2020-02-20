@@ -133,13 +133,18 @@ void CalibrationModule::SaveParamsToFolder() {
 void CalibrationModule::SaveEstimatesAsOpenCvYml(QDir folder) {
   cv::FileStorage
       extrinsics_file_storage(folder.filePath("extrinsics.yml").toStdString(), cv::FileStorage::WRITE);
-  extrinsics_file_storage << "R" << estimates_.R << "F" << estimates_.F << "T" << estimates_.T << "E" << estimates_.E;
+  extrinsics_file_storage << "R" << estimates_.R << "F" << estimates_.F << "T" << estimates_.T << "E" << estimates_.E
+                          << "RMS" << estimates_.rms;
   cv::FileStorage
       intrinsics_file_storage(folder.filePath("intrinsics.yml").toStdString(), cv::FileStorage::WRITE);
   intrinsics_file_storage << "P1" << estimates_.intrinsic_parameters[0].camera_matrix << "D1"
-                          << estimates_.intrinsic_parameters[0].distortion_coefficients << "P2"
+                          << estimates_.intrinsic_parameters[0].distortion_coefficients << "RPE1"
+                          << estimates_.intrinsic_parameters[0].rms << "Size1"
+                          << estimates_.intrinsic_parameters[0].image_size << "P2"
                           << estimates_.intrinsic_parameters[1].camera_matrix << "D2"
-                          << estimates_.intrinsic_parameters[1].distortion_coefficients;
+                          << estimates_.intrinsic_parameters[1].distortion_coefficients << "RPE2"
+                          << estimates_.intrinsic_parameters[0].rms<< "Size2"
+                          << estimates_.intrinsic_parameters[0].image_size;
 
 }
 
@@ -156,14 +161,22 @@ void CalibrationModule::LoadEstimatesFromOpenCvYml(QDir folder) {
   estimates_.T = extrinsics_file_storage["T"].mat();
   estimates_.F = extrinsics_file_storage["F"].mat();
   estimates_.E = extrinsics_file_storage["E"].mat();
+  estimates_.rms = extrinsics_file_storage["RMS"];
 
   cv::FileStorage
       intrinsics_file_storage(folder.filePath("intrinsics.yml").toStdString(), cv::FileStorage::READ);
 
   estimates_.intrinsic_parameters[0].camera_matrix = intrinsics_file_storage["P1"].mat();
   estimates_.intrinsic_parameters[0].distortion_coefficients = intrinsics_file_storage["D1"].mat();
+  estimates_.intrinsic_parameters[0].rms = intrinsics_file_storage["RPE1"];
+  estimates_.intrinsic_parameters[0].image_size.width  = intrinsics_file_storage["Size1"][0];
+  estimates_.intrinsic_parameters[0].image_size.height  = intrinsics_file_storage["Size1"][1];
+
   estimates_.intrinsic_parameters[1].camera_matrix = intrinsics_file_storage["P2"].mat();
   estimates_.intrinsic_parameters[1].distortion_coefficients = intrinsics_file_storage["P2"].mat();
+  estimates_.intrinsic_parameters[1].rms = intrinsics_file_storage["RPE2"];
+  estimates_.intrinsic_parameters[1].image_size.width  = intrinsics_file_storage["Size2"][0];
+  estimates_.intrinsic_parameters[1].image_size.height  = intrinsics_file_storage["Size2"][1];
 
 }
 

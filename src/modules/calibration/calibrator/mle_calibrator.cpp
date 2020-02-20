@@ -157,12 +157,14 @@ void MLECalibrator::OnCalibrateButtonClicked() {
 
   // Reset the state if it was calibrated previously
   for (gago::calibration::BatchCalibrationResult & image_batch: batches) {
-    if (image_batch.state == gago::calibration::PES_Calibrated)
-      image_batch.state = gago::calibration::PES_Unestimated;
+    image_batch.state = gago::calibration::PES_Unestimated;
 
-    for (gago::calibration::PatternEstimationParameters & param : image_batch.pattern_params)
-      if (param.state == gago::calibration::PES_Calibrated)
+    for (gago::calibration::PatternEstimationParameters & param : image_batch.pattern_params) {
+      if (param.state == gago::calibration::PES_Disabled)
+        image_batch.state = gago::calibration::PES_Disabled;
+      else
         param.state = gago::calibration::PES_Unestimated;
+    }
   }
 
   if (0 == mle.Calibrate(batches, estimates_)) {

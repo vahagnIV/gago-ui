@@ -56,16 +56,17 @@ int OpenCvMLE::GetImagePoints(QList<BatchCalibrationResult> & out_batch_calibrat
       cv::Mat image = cv::imread(image_path.toStdString(), cv::IMREAD_GRAYSCALE);
       image_batch.pattern_params[cam_idx].image_size = image.size();
 
-      if(EstimationState::PES_Unestimated == image_batch.pattern_params[cam_idx].state) {
-        if (pattern_->Extract(image, out_image_points[cam_idx][batch_idx], true))
-          image_batch.pattern_params[cam_idx].state = EstimationState::PES_Extracted;
-        else {
+      if (EstimationState::PES_Unestimated == image_batch.pattern_params[cam_idx].state
+          || EstimationState::PES_Disabled == image_batch.pattern_params[cam_idx].state) {
+
+        if (pattern_->Extract(image, out_image_points[cam_idx][batch_idx], true)) {
+          if (EstimationState::PES_Unestimated == image_batch.pattern_params[cam_idx].state)
+            image_batch.pattern_params[cam_idx].state = EstimationState::PES_Extracted;
+        } else {
           image_batch.pattern_params[cam_idx].state = EstimationState::PES_Broken;
           image_batch.state = PES_Broken;
         }
       }
-      else if(PES_Disabled == image_batch.pattern_params[cam_idx].state )
-        image_batch.state = PES_Disabled;
     }
 
     if (image_batch.state == PES_Unestimated)
@@ -103,7 +104,11 @@ int OpenCvMLE::Calibrate(QList<BatchCalibrationResult> & out_batch_calibration_r
   if (std::any_of(out_batch_calibration_results.begin(),
                   out_batch_calibration_results.end(),
                   [&](const BatchCalibrationResult & image_batch) { return image_batch.pattern_params.size() >= 2; }))
-    return Calibrate2Cameras(out_batch_calibration_results, image_points, pattern_->GetSize(), out_estimates);
+    return Calibrate2Cameras(out_batch_calibration_results,
+                             image_points,
+                             pattern_->GetSize(),
+                             calibrate_cameras_separately_,
+                             out_estimates);
 
   return 0;
 }
@@ -165,35 +170,45 @@ int OpenCvMLE::CalibrateSingleCamera(QList<BatchCalibrationResult> & out_batch_c
     return 1;
   out_intrinsic_parameters.total_average_error = out_intrinsic_parameters.rms;
 
-  int valid_id = 0;
+
+  // Calculate per image reprojection error
+  int valid_id = -1;
   for (int batch_id = 0; batch_id < out_batch_calibration_results.size(); ++batch_id) {
     BatchCalibrationResult & image_batch = out_batch_calibration_results[batch_id];
-    if (image_batch.pattern_params.size() <= cam_idx || image_batch.pattern_params[cam_idx].state != PES_Extracted)
+    if (image_batch.pattern_params.size() <= cam_idx || PES_Broken == image_batch.pattern_params[cam_idx].state)
       continue;
-    image_batch.pattern_params[cam_idx].state = PES_Calibrated;
-    image_batch.pattern_params[cam_idx].rotation_vectors = rvecs[valid_id];
-    image_batch.pattern_params[cam_idx].translation_vectors = tvecs[valid_id];
-    ComputeSingleCamReprojectionError(object_points[valid_id],
+
+    if (PES_Extracted == image_batch.pattern_params[cam_idx].state) {
+      ++valid_id;
+      image_batch.pattern_params[cam_idx].state = PES_Calibrated;
+      image_batch.pattern_params[cam_idx].rotation_vectors = rvecs[valid_id];
+      image_batch.pattern_params[cam_idx].translation_vectors = tvecs[valid_id];
+    } else if (PES_Disabled == image_batch.pattern_params[cam_idx].state) {
+      cv::solvePnP(object_points[0],
+                   image_points[cam_idx][batch_id],
+                   out_intrinsic_parameters.camera_matrix,
+                   out_intrinsic_parameters.distortion_coefficients,
+                   image_batch.pattern_params[cam_idx].rotation_vectors,
+                   image_batch.pattern_params[cam_idx].translation_vectors);
+    }
+    ComputeSingleCamReprojectionError(object_points[PES_Extracted != image_batch.pattern_params[cam_idx].state ? 0
+                                                                                                              : valid_id],
                                       image_points[cam_idx][batch_id],
                                       out_intrinsic_parameters,
                                       image_batch.pattern_params[cam_idx]);
-    ++valid_id;
+
   }
 
-  std::cout << out_intrinsic_parameters.camera_matrix << std::endl;
-  std::cout << out_intrinsic_parameters.distortion_coefficients << std::endl;
-  std::cout << out_intrinsic_parameters.total_average_error << std::endl;
-  std::cout << std::endl;
   return 0;
 }
 
 int OpenCvMLE::Calibrate2Cameras(QList<BatchCalibrationResult> & out_batch_calibration_results,
                                  const std::vector<std::vector<std::vector<cv::Point2f>>> & image_points,
                                  const cv::Size & boardSize,
+                                 bool fix_intrinsic,
                                  CalibrationEstimates & out_estimates) {
   std::vector<std::vector<std::vector<cv::Point2f>>> filtered_image_points(2);
   std::vector<std::vector<cv::Point3f>> object_points(2);
-  bool all_calibrated = true;
   for (int batch_id = 0; batch_id < out_batch_calibration_results.size(); ++batch_id) {
     BatchCalibrationResult & image_batch = out_batch_calibration_results[batch_id];
     // Only one image in batch
@@ -201,7 +216,6 @@ int OpenCvMLE::Calibrate2Cameras(QList<BatchCalibrationResult> & out_batch_calib
       continue;
 
     if (image_batch.state == PES_Extracted) {
-      all_calibrated = false;
       if (image_batch.pattern_params[0].image_size != image_batch.pattern_params[1].image_size)
         return 5;// TODO: log that if the cameras are not calibrated then the sizes of images should be equal
     }
@@ -227,45 +241,57 @@ int OpenCvMLE::Calibrate2Cameras(QList<BatchCalibrationResult> & out_batch_calib
                                           out_estimates.T,
                                           out_estimates.E,
                                           out_estimates.F,
-                                          all_calibrated ? cv::CALIB_FIX_INTRINSIC : 0);
+                                          fix_intrinsic ? cv::CALIB_FIX_INTRINSIC : 0);
 
-  int valid_idx = 0;
+  int valid_idx = -1;
   // We should calculate the reprojection errors
-  if (!all_calibrated) {
+  if (!fix_intrinsic) {
     for (int batch_id = 0; batch_id < out_batch_calibration_results.size(); ++batch_id) {
       BatchCalibrationResult & image_batch = out_batch_calibration_results[batch_id];
-      if (image_batch.state != PES_Extracted)
+      if (image_batch.state == PES_Broken)
         continue;
+
+      if (image_batch.state == PES_Extracted)
+        ++valid_idx;
+
       for (int cam_idx = 0; cam_idx < filtered_image_points.size(); ++cam_idx) {
-        image_batch.pattern_params[cam_idx].state = PES_Calibrated;
-        cv::solvePnP(object_points[valid_idx],
+        if (PES_Extracted == image_batch.pattern_params[cam_idx].state)
+          image_batch.pattern_params[cam_idx].state = PES_Calibrated;
+
+        int obj_point_idx = PES_Extracted != image_batch.pattern_params[cam_idx].state ? 0
+                                                                                       : valid_idx;
+
+        cv::solvePnP(object_points[obj_point_idx],
                      image_points[cam_idx][batch_id],
                      out_estimates.intrinsic_parameters[cam_idx].camera_matrix,
                      out_estimates.intrinsic_parameters[cam_idx].distortion_coefficients,
                      image_batch.pattern_params[cam_idx].rotation_vectors,
                      image_batch.pattern_params[cam_idx].translation_vectors);
 
-        ComputeSingleCamReprojectionError(object_points[valid_idx],
-                                          filtered_image_points[cam_idx][valid_idx],
+        ComputeSingleCamReprojectionError(object_points[obj_point_idx],
+                                          image_points[cam_idx][batch_id],
                                           out_estimates.intrinsic_parameters[cam_idx],
                                           image_batch.pattern_params[cam_idx]);
       }
-      ++valid_idx;
+
     }
   }
 
-  valid_idx = 0;
+  valid_idx = -1;
   for (int batch_id = 0; batch_id < out_batch_calibration_results.size(); ++batch_id) {
     BatchCalibrationResult & image_batch = out_batch_calibration_results[batch_id];
-    if (image_batch.pattern_params.size() != 2 || image_batch.state != PES_Extracted)
+    if (image_batch.pattern_params.size() != 2 || PES_Broken == image_batch.state)
       continue;
-    image_batch.state = PES_Calibrated;
-    ComputeStereoRigReprojectionError(object_points[valid_idx],
+    if (image_batch.state == PES_Extracted) {
+      image_batch.state = PES_Calibrated;
+      ++valid_idx;
+    }
+    ComputeStereoRigReprojectionError(object_points[PES_Extracted != image_batch.state ? 0 : valid_idx],
                                       std::vector<std::vector<cv::Point2f>>{image_points[0][batch_id],
                                                                             image_points[1][batch_id]},
                                       out_estimates,
                                       image_batch);
-    ++valid_idx;
+
   }
   return 0;
 }

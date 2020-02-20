@@ -42,7 +42,7 @@ class OpenCvMLE {
                             std::vector<cv::Point3f> & newObjPoints);
   int Calibrate2Cameras(QList<BatchCalibrationResult> & out_batch_calibration_results,
                         const std::vector<std::vector<std::vector<cv::Point2f>>> & image_points,
-                        const cv::Size & boardSize, CalibrationEstimates & out_estimates);
+                        const cv::Size & boardSize, bool fix_intrinsic, CalibrationEstimates & out_estimates);
 
   /*!
    * Finds the intrinsic parameters of a single camera
