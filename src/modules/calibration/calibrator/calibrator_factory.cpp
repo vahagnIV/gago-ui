@@ -15,7 +15,7 @@ namespace gui {
 namespace calibration {
 
 QSharedPointer<calibration::ICalibrator> CalibratorFactory::Create(configuration::CalibrationSettings *settings,
-                                                                   QWidget *main_window) {
+                                                                   QWidget *main_window, const QDir & cache_folder) {
   configuration::CalibrationPatternType pattern_type = settings->GetCalibrationPatternType();
   QSharedPointer<gago::calibration::pattern::IPattern> pattern = nullptr;
   if (configuration::Checkerboard == pattern_type) {
@@ -32,7 +32,7 @@ QSharedPointer<calibration::ICalibrator> CalibratorFactory::Create(configuration
   if (configuration::MLE_Calibrator == calibrator_type) {
     QSharedPointer<gago::gui::configuration::MLECalibratorSettings> calibrator_settings =
         settings->CalibratorSettings(calibrator_type).staticCast<gago::gui::configuration::MLECalibratorSettings>();
-    return QSharedPointer<MLECalibrator>::create(main_window, pattern, calibrator_settings);
+    return QSharedPointer<MLECalibrator>::create(main_window, pattern, calibrator_settings, cache_folder);
   }
 
   return nullptr;

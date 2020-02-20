@@ -5,14 +5,16 @@
 #include <QJsonDocument>
 
 #include "module_manager.h"
-#include "config/configuration.h"
+#include "common/configuration.h"
 
 int main(int argc, char *argv[]) {
 
   QApplication a(argc, argv);
   a.setWindowIcon(QIcon(":/icons/icon-large.png"));
-  gago::gui::configuration::Configuration config;
-  if (!config.Load("config.json")) {
+
+
+
+  if (!gago::gui::configuration::Configuration::Instance().Load("config.json")) {
     qWarning() << "Could not load config.json";
     QDir dir(GagoUI_MODULE_PATH);
     for (const QString & module_path: dir.entryList({"*.so"})) {
@@ -20,8 +22,8 @@ int main(int argc, char *argv[]) {
     }
   } else {
     QStringList module_paths, module_dirs;
-    module_paths = config.GetModulePaths();
-    module_dirs = config.GetModuleDirs();
+    module_paths = gago::gui::configuration::Configuration::Instance().GetModulePaths();
+    module_dirs = gago::gui::configuration::Configuration::Instance().GetModuleDirs();
 
     for (const QString & module_path: module_paths)
       gago::gui::modules::ModuleManager::Instance().LoadModule(module_path);

@@ -13,7 +13,11 @@ file(GLOB SOURCES *.h *.cpp config/*.h)
 
 INCLUDE_DIRECTORIES(include ${Qt5Widgets_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR} ${LibGago_INCLUDE_DIRS})
 
-add_executable(Gago ${SOURCES} ${GagoUI} ${GagoCPP} resources.qrc module_manager.cpp module_manager.h imodule.h config/configuration.cpp config/configuration.h)
+
+add_subdirectory(common)
+add_subdirectory(modules)
+
+add_executable(Gago ${SOURCES} ${GagoUI} ${GagoCPP} resources.qrc module_manager.cpp module_manager.h imodule.h common/configuration.cpp common/configuration.h)
 
 target_link_libraries(Gago
         ${QT_LIBRARIES}
@@ -21,6 +25,7 @@ target_link_libraries(Gago
         ${Boost_FILESYSTEM_LIBRARY}
         ${Gago_LIBRARIES}
         Qt5::Widgets
+        gagocommon
         dl)
 
 add_custom_command(
@@ -35,8 +40,7 @@ add_custom_command(
 add_custom_target(gago_config DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/config.json)
 
 add_dependencies(Gago gago_config)
-add_subdirectory(common)
-add_subdirectory(modules)
+
 
 # Installation
 

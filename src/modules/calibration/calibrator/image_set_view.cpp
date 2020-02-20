@@ -2,12 +2,13 @@
 // Created by vahagn on 2/1/20.
 //
 
-#include "image_set_view.h"
 #include <QMenu>
+#include <QDebug>
 #include <QListWidgetItem>
 #include <QStandardItemModel>
 #include <QPainter>
 #include <QtWidgets/QColormap>
+#include "image_set_view.h"
 
 namespace gago {
 namespace calibration {
@@ -71,6 +72,27 @@ void ImageSetView::ShowRectified() {
   rectifiedImageViewWindow_->exec();
 }
 
+void ImageSetView::Append(const BatchCalibrationResult & result) {
+  parameters_.append(result);
+  QList<QImage> images = GetImages(parameters_.back());
+  QList<QStandardItem *> items;
+  for (int cam_idx = 0; cam_idx < images.size(); ++cam_idx) {
+    QImage & image = images[cam_idx];
+    QPixmap pixmap = QPixmap::fromImage(image);
+    QStandardItem *item = new QStandardItem();
+    item->setIcon(pixmap);
+    item->setCheckable(true);
+    item->setCheckState(result.pattern_params[cam_idx].state != PES_Disabled ? Qt::Checked : Qt::Unchecked);
+    items.append(item);
+    setColumnWidth(cam_idx, 130);
+  }
+  model_->appendRow(items);
+
+  int height = (int) std::round(100. / images[0].width() * images[0].height());
+  setRowHeight(model_->rowCount() - 1, height);
+  setIconSize(QSize(130, height - 10));
+}
+
 void ImageSetView::Append(const QStringList & filenames) {
   parameters_.append(BatchCalibrationResult(filenames));
   QList<QImage> images = GetImages(parameters_.back());
@@ -121,6 +143,7 @@ void ImageSetView::Update() {
       else
         model_->setData(model_->index(batch_idx, cam_idx), QVariant(), Qt::BackgroundRole);
       QStandardItem *item = model_->itemFromIndex(model_->index(batch_idx, cam_idx));
+
       QImage & image = images[cam_idx];
 
       QColor color = result.pattern_params[cam_idx].state != PES_Broken
@@ -149,6 +172,9 @@ void ImageSetView::Update() {
 void gago::calibration::ImageSetView::ItemChanged(QStandardItem *item) {
   int batch_idx = model_->indexFromItem(item).row();
   int column_idx = model_->indexFromItem(item).column();
+  if (!((item->checkState() == Qt::Checked)
+      ^ (parameters_[batch_idx].pattern_params[column_idx].state != PES_Disabled)))
+    return;
   switch (item->checkState()) {
     case Qt::Unchecked:
       parameters_[batch_idx].pattern_params[column_idx].state = PES_Disabled;

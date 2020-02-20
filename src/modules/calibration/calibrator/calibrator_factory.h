@@ -15,9 +15,13 @@ namespace calibration {
 
 class CalibratorFactory {
  public:
-  static QSharedPointer<calibration::ICalibrator> Create(configuration::CalibrationSettings * settings, QWidget * main_window);
+  static QSharedPointer<calibration::ICalibrator> Create(configuration::CalibrationSettings *settings,
+                                                         QWidget *main_window,
+                                                         const QDir & cache_folder);
 
 };
 
-}}}
+}
+}
+}
 #endif //GAGO_UI_SRC_MODULES_CALIBRATION_CALIBRATOR_CALIBRATOR_FACTORY_H_

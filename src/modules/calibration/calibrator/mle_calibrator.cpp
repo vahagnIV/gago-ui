@@ -22,12 +22,14 @@ namespace calibration {
 
 MLECalibrator::MLECalibrator(QWidget *parent,
                              const QSharedPointer<gago::calibration::pattern::IPattern> & pattern,
-                             const QSharedPointer<gago::gui::configuration::MLECalibratorSettings> & settings)
+                             const QSharedPointer<gago::gui::configuration::MLECalibratorSettings> & settings,
+                             const QDir & cache_folder)
     : QDialog(parent),
       ui_(new Ui::MLECalibrationWindow()),
       pattern_(pattern),
       settings_(settings),
       last_capture_index_(0),
+      cache_folder_(cache_folder),
       sound_dir_("/usr/share/sounds/freedesktop/"),
       next_capture_time_(std::numeric_limits<typeof(next_capture_time_)>::max()) {
   ui_->setupUi(this);
@@ -76,7 +78,7 @@ void MLECalibrator::Notify(const std::shared_ptr<std::vector<io::video::Capture>
       }
 
       QStringList filenames;
-      files_.push_back(QStringList());
+
       for (const io::video::Capture & capture: *ptr) {
         QString filename = QString::asprintf(format, capture.camera->GetName().c_str(), last_capture_index_);
 
@@ -88,9 +90,8 @@ void MLECalibrator::Notify(const std::shared_ptr<std::vector<io::video::Capture>
         QImageWriter writer(settings_->ImageSaveFolder().filePath(filename));
         writer.write(image);
         filenames.append(filename);
-        files_.back().push_back(settings_->ImageSaveFolder().filePath(filename));
       }
-      ui_->listView->Append(files_.back());
+      ui_->listView->Append(filenames);
 
       ++last_capture_index_;
     } else {
@@ -136,9 +137,7 @@ void MLECalibrator::SetCameras(const std::vector<const io::video::CameraMeta *> 
 
   RestoreFilenames(format, cam_names);
 
-  for (QStringList & filenames: files_) {
-    ui_->listView->Append(filenames);
-  }
+
   emit EnableControlElements();
 }
 
@@ -187,6 +186,19 @@ void MLECalibrator::OnCalibrateButtonClicked() {
 }
 
 void MLECalibrator::RestoreFilenames(const char *format, QStringList cameras_) {
+  QFile params_file(cache_folder_.filePath("params.csv"));
+  params_file.open(QFile::ReadOnly);
+  QTextStream stream(&params_file);
+  QMap<QString, QStringList> param_map;
+  while (!stream.atEnd()) {
+    QStringList values = stream.readLine().split(',');
+    QString batch_key;
+    for (int i = 6; i < values.size(); i += 5) {
+      batch_key += values[i];
+    }
+    param_map[batch_key] = values;
+  }
+
   last_capture_index_ = 0;
 
   QStringList filters = {QString(format).replace("%s", cameras_[0]).replace("%03d", "*")};
@@ -200,12 +212,26 @@ void MLECalibrator::RestoreFilenames(const char *format, QStringList cameras_) {
       if (settings_->ImageSaveFolder().exists(cam_filename))
         idx_files.push_back(settings_->ImageSaveFolder().filePath(cam_filename));
     }
+    if (idx_files.size() != cameras_.size())
+      continue;
 
-    if (idx_files.size() == cameras_.size()) {
-      files_.push_back(idx_files);
-      last_capture_index_ = std::max(last_capture_index_, idx);
+    QString batch_key = idx_files.join("");
+    gago::calibration::BatchCalibrationResult image_batch(idx_files);
+    if (param_map.contains(batch_key)) {
+      QStringList & str_params = param_map[batch_key];
+      try_parse(str_params[1], image_batch.state);
+      image_batch.rms = str_params[0].toFloat();
+      for (int cam_idx = 0; cam_idx < idx_files.size(); ++cam_idx) {
+        image_batch.pattern_params[cam_idx].reprojection_error = str_params[3 + 5 * cam_idx].toFloat();
+        try_parse(str_params[2 + 5 * cam_idx], image_batch.pattern_params[cam_idx].state);
+      }
     }
+    ui_->listView->Append(image_batch);
+
+    last_capture_index_ = std::max(last_capture_index_, idx);
+
   }
+  ui_->listView->Update();
 }
 
 void MLECalibrator::DisableControlElementsSlot() {
@@ -234,6 +260,7 @@ void MLECalibrator::DisableControlElementsSlot() {
 void MLECalibrator::EnableControlElementsSlot() {
   if (control_disable_bit_mask_ & 1)
     ui_->captureButton->setEnabled(true);
+
   if (control_disable_bit_mask_ & 2)
     ui_->calibrateButton->setEnabled(true);
 
@@ -242,6 +269,7 @@ void MLECalibrator::EnableControlElementsSlot() {
 
   if (control_disable_bit_mask_ & 8)
     ui_->saveButton->setEnabled(true);
+
   qApp->processEvents();
 }
 
@@ -250,6 +278,21 @@ const gago::calibration::CalibrationEstimates & MLECalibrator::GetEstimates() co
 }
 
 void MLECalibrator::OnSaveButtonClicked() {
+  QList<gago::calibration::BatchCalibrationResult> & image_batches = ui_->listView->GetBatchCalibrationResults();
+  QFile params_file(cache_folder_.filePath("params.csv"));
+  params_file.open(QFile::WriteOnly);
+  QTextStream stream(&params_file);
+  for (gago::calibration::BatchCalibrationResult & image_batch: image_batches) {
+    stream << image_batch.rms << "," << to_string(image_batch.state);
+    for (gago::calibration::PatternEstimationParameters & params: image_batch.pattern_params) {
+      stream << "," << to_string(params.state) << "," << params.reprojection_error << "," << params.image_size.width
+             << ","
+             << params.image_size.height << "," << params.filename;
+
+    }
+    stream << "\n";
+  }
+
   accept();
 }
 

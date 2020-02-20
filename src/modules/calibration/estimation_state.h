@@ -4,6 +4,9 @@
 
 #ifndef GAGO_UI_ESTIMATION_STATE_H
 #define GAGO_UI_ESTIMATION_STATE_H
+
+#include <QString>
+
 namespace gago {
 namespace calibration {
 
@@ -14,6 +17,10 @@ enum EstimationState {
   PES_Broken = 4,
   PES_Disabled = 5
 };
+
+QString to_string(EstimationState state);
+
+bool try_parse(const QString & state_str, EstimationState & out_state);
 
 }
 }

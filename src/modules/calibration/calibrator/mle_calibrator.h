@@ -29,7 +29,8 @@ class MLECalibrator : public QDialog, public ICalibrator {
  public:
   MLECalibrator(QWidget *parent,
                 const QSharedPointer<gago::calibration::pattern::IPattern> & pattern,
-                const QSharedPointer<gago::gui::configuration::MLECalibratorSettings> & settings);
+                const QSharedPointer<gago::gui::configuration::MLECalibratorSettings> & settings,
+                const QDir & cache_folder);
   virtual ~MLECalibrator();
   int Calibrate() override;
   void Notify(const std::shared_ptr<std::vector<io::video::Capture>> & ptr) override;
@@ -67,8 +68,8 @@ signals:
   QMap<QString, QMediaPlayer *> sound_effects_;
 
   // Calibration
-  QList<QStringList> files_;
   QDir sound_dir_;
+  QDir cache_folder_;
 
 };
 

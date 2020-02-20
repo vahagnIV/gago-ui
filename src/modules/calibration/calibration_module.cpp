@@ -8,6 +8,7 @@
 #include "modules/main/main_module.h"
 #include "settings/calibration_configurator.h"
 #include "calibrator/calibrator_factory.h"
+#include "configuration.h"
 
 namespace gago {
 namespace gui {
@@ -30,13 +31,14 @@ unsigned int CalibrationModule::MinorVersion() const {
 }
 
 void CalibrationModule::Calibrate() {
-  QSharedPointer<calibration::ICalibrator> window = calibration::CalibratorFactory::Create(&settings_, main_window_);
+  QVector<const io::video::CameraMeta *> cameras = camera_module_->GetCameras();
+  QDir cache_folder = GetParamSaveFolder(cameras);
+  QSharedPointer<calibration::ICalibrator>
+      window = calibration::CalibratorFactory::Create(&settings_, main_window_, cache_folder);
   camera_module_->RegisterWatcher(window.data());
   if (QDialog::Accepted == window->Calibrate()) {
     estimates_ = window->GetEstimates();
-    QVector<const io::video::CameraMeta *> cameras = camera_module_->GetCameras();
-    QDir param__save_folder = GetParamSaveFolder(cameras);
-    SaveEstimatesAsOpenCvYml(param__save_folder);
+    SaveEstimatesAsOpenCvYml(cache_folder);
     save_action_->setEnabled(true);
   }
   camera_module_->UnRegisterWatcher(window.data());
@@ -70,14 +72,7 @@ void CalibrationModule::SetRequiredModules(const QList<IModule *> & modules) {
 }
 
 QDir CalibrationModule::GetParamSaveFolder(QVector<const io::video::CameraMeta *> cameras) {
-  QStringList l = QStandardPaths::standardLocations(QStandardPaths::HomeLocation);
-
-  // TODO: implement cross platform
-  QDir home_dir = l.isEmpty() ? QDir("/tmp") : QDir(l[0]);
-  // TODO: implement global
-  if (!home_dir.exists(".gago"))
-    home_dir.mkdir(".gago");
-  QDir gago_dir(home_dir.filePath(".gago"));
+  QDir gago_dir = configuration::Configuration::Instance().GetCacheFolderPath();
 
   if (!gago_dir.exists("calibration"))
     gago_dir.mkdir("calibration");
@@ -143,7 +138,7 @@ void CalibrationModule::SaveEstimatesAsOpenCvYml(QDir folder) {
                           << estimates_.intrinsic_parameters[0].image_size << "P2"
                           << estimates_.intrinsic_parameters[1].camera_matrix << "D2"
                           << estimates_.intrinsic_parameters[1].distortion_coefficients << "RPE2"
-                          << estimates_.intrinsic_parameters[0].rms<< "Size2"
+                          << estimates_.intrinsic_parameters[0].rms << "Size2"
                           << estimates_.intrinsic_parameters[0].image_size;
 
 }
@@ -169,14 +164,14 @@ void CalibrationModule::LoadEstimatesFromOpenCvYml(QDir folder) {
   estimates_.intrinsic_parameters[0].camera_matrix = intrinsics_file_storage["P1"].mat();
   estimates_.intrinsic_parameters[0].distortion_coefficients = intrinsics_file_storage["D1"].mat();
   estimates_.intrinsic_parameters[0].rms = intrinsics_file_storage["RPE1"];
-  estimates_.intrinsic_parameters[0].image_size.width  = intrinsics_file_storage["Size1"][0];
-  estimates_.intrinsic_parameters[0].image_size.height  = intrinsics_file_storage["Size1"][1];
+  estimates_.intrinsic_parameters[0].image_size.width = intrinsics_file_storage["Size1"][0];
+  estimates_.intrinsic_parameters[0].image_size.height = intrinsics_file_storage["Size1"][1];
 
   estimates_.intrinsic_parameters[1].camera_matrix = intrinsics_file_storage["P2"].mat();
   estimates_.intrinsic_parameters[1].distortion_coefficients = intrinsics_file_storage["P2"].mat();
   estimates_.intrinsic_parameters[1].rms = intrinsics_file_storage["RPE2"];
-  estimates_.intrinsic_parameters[1].image_size.width  = intrinsics_file_storage["Size2"][0];
-  estimates_.intrinsic_parameters[1].image_size.height  = intrinsics_file_storage["Size2"][1];
+  estimates_.intrinsic_parameters[1].image_size.width = intrinsics_file_storage["Size2"][0];
+  estimates_.intrinsic_parameters[1].image_size.height = intrinsics_file_storage["Size2"][1];
 
 }
 

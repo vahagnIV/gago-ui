@@ -19,6 +19,7 @@ class ImageSetView : public QTableView {
  public:
   ImageSetView(QWidget *parent = nullptr);
   void Append(const QStringList & filenames);
+  void Append(const BatchCalibrationResult & result);
   QList<BatchCalibrationResult> & GetBatchCalibrationResults();
   const  QList<BatchCalibrationResult> & GetBatchCalibrationResults() const;
   void ActiveBatchChanges(int batch_idx);
