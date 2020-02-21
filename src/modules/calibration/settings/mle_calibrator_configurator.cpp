@@ -15,7 +15,8 @@ namespace gago {
 namespace gui {
 namespace configuration {
 
-MLECalibratorConfigurator::MLECalibratorConfigurator(MLECalibratorSettings *settings) : settings_(settings) {
+MLECalibratorConfigurator::MLECalibratorConfigurator(MLECalibratorSettings *settings)
+    : QObject(nullptr), settings_(settings) {
 
 }
 
@@ -43,6 +44,7 @@ void MLECalibratorConfigurator::DrawConfigurationPage(QWidget *widget) {
   wait_time_spinbox_ = new QSpinBox();
   wait_time_spinbox_->setValue(settings_->CaptureWaitTime());
   layout->addWidget(wait_time_spinbox_, 2, 1, 1, 3);
+  connect(wait_time_spinbox_, SIGNAL(valueChanged(int)), this, SLOT(ValidateWaitTime(int)));
 
   sound_enabled_chkbx_ = new QCheckBox("Sound enabled:");
   sound_enabled_chkbx_->setChecked(settings_->SoundEnabled());
@@ -51,7 +53,12 @@ void MLECalibratorConfigurator::DrawConfigurationPage(QWidget *widget) {
   loop_capture_chkbx_ = new QCheckBox("Loop capture:");
   loop_capture_chkbx_->setChecked(settings_->LoopCapture());
   layout->addWidget(loop_capture_chkbx_, 4, 0, 1, 4);
+  connect(loop_capture_chkbx_, SIGNAL(stateChanged(int)), this, SLOT(ValidateWaitTime(int)));
+}
 
+void MLECalibratorConfigurator::ValidateWaitTime(int value) {
+  if (loop_capture_chkbx_->isChecked())
+    wait_time_spinbox_->setValue(std::max(1, wait_time_spinbox_->value()));
 }
 
 void MLECalibratorConfigurator::Apply() {

@@ -353,7 +353,8 @@ void MLECalibrator::SetNextCaptureTime() {
   if (!capture_in_progress_)
     return;
 
-  timer_->start();
+  if (settings_->LoopCapture() != 0)
+    timer_->start();
   next_capture_time_ = (std::chrono::high_resolution_clock::now()
       + std::chrono::seconds(settings_->CaptureWaitTime()));
 }

@@ -18,9 +18,10 @@ namespace configuration {
 
 class MLECalibratorSettings;
 
-class MLECalibratorConfigurator : public IConfigurator {
+class MLECalibratorConfigurator : public QObject, public IConfigurator {
+ Q_OBJECT
  public:
-  MLECalibratorConfigurator(class MLECalibratorSettings * settings);
+  MLECalibratorConfigurator(class MLECalibratorSettings *settings);
   void DrawConfigurationPage(QWidget *widget) override;
   void Apply() override;
   const QString & ConfigWindowName() const override;
@@ -30,8 +31,10 @@ class MLECalibratorConfigurator : public IConfigurator {
   bool FixAspectRatio() const;
   bool SoundEnabled() const;
   bool LoopCapture() const;
+ private slots:
+  void ValidateWaitTime(int value = 0);
  private:
-  class MLECalibratorSettings * settings_;
+  class MLECalibratorSettings *settings_;
 
   QCheckBox *camera_first_chkbx_;
   QLineEdit *folder_line_edit_;
