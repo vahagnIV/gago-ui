@@ -1,9 +1,7 @@
 find_package(Qt5Core REQUIRED)
 find_package(Qt5Widgets CONFIG REQUIRED)
-set(CUDA_TOOLKIT_ROOT_DIR /usr/local/cuda-10.1)
 find_package(OpenCV REQUIRED)
 find_package(LibGago REQUIRED)
-
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)

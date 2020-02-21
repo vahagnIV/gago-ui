@@ -3,7 +3,6 @@ find_package(Qt5Core REQUIRED)
 find_package(Qt5Network REQUIRED)
 find_package(Qt5Widgets CONFIG REQUIRED)
 find_package(Qt5Multimedia REQUIRED)
-set(CUDA_TOOLKIT_ROOT_DIR /usr/local/cuda-10.1)
 find_package(OpenCV REQUIRED)
 
 set(CMAKE_AUTOUIC ON)
@@ -11,7 +10,12 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 file(GLOB MODULE_SOURCES *.h *.cpp pattern/*.h pattern/*.cpp calibrator/*.h calibrator/*.cpp settings/*.cpp settings/*.h)
 
-qt5_wrap_cpp(QtCPPSources settings/calibration_configurator.h calibrator/mle_calibrator.h calibrator/image_set_view.h calibration_module.h calibrator/rectified_image_view_window.h)
+qt5_wrap_cpp(QtCPPSources settings/calibration_configurator.h
+        calibrator/mle_calibrator.h
+        calibrator/image_set_view.h
+        calibration_module.h
+        calibrator/rectified_image_view_window.h
+        settings/mle_calibrator_configurator.h )
 qt5_wrap_ui(QtUISources calibrator/mle_calibration_window.ui calibrator/rectified_image_view_window.ui)
 
 message(${Qt5Multimedia_LIBRARIES})
