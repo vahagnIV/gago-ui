@@ -340,12 +340,13 @@ void MLECalibrator::PlaySoundFromPath(const QString & path) {
 void MLECalibrator::TimerElapsed() {
   auto time_remaining = next_capture_time_ - std::chrono::system_clock::now();
   long remaining_time_in_seconds = std::chrono::duration_cast<std::chrono::seconds>(time_remaining).count();
-  if (remaining_time_in_seconds > 0)
-    PlaySoundFromPath("tick");
-
   if (next_capture_time_ != next_capture_time_.max())
     ui_->captureButton->setText(QString::asprintf(capture_button_format_,
                                                   remaining_time_in_seconds));
+  qApp->processEvents();
+  if (remaining_time_in_seconds > 0)
+    PlaySoundFromPath("tick");
+
 
 }
 
