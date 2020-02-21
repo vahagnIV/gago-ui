@@ -89,26 +89,28 @@ void MLECalibrator::Notify(const std::shared_ptr<std::vector<io::video::Capture>
 
     next_capture_time_ = next_capture_time_.max();
     if (found) {
-
+      ++last_capture_index_;
       emit PlaySound("capture");
 
       QStringList filenames;
 
       for (const io::video::Capture & capture: *ptr) {
         QString filename = QString::asprintf(format, capture.camera->GetName().c_str(), last_capture_index_);
+        filename = settings_->ImageSaveFolder().filePath(filename);
 
         QImage image(capture.data.data,
                      capture.data.cols,
                      capture.data.rows,
                      capture.data.cols * capture.data.channels(),
                      QImage::Format_RGB888);
-        QImageWriter writer(settings_->ImageSaveFolder().filePath(filename));
+        QImageWriter writer(filename);
         writer.write(image);
         filenames.append(filename);
       }
 
       ui_->listView->Append(filenames);
-      ++last_capture_index_;
+      ui_->listView->update();
+
     } else
         emit PlaySound("error");
 
@@ -346,7 +348,6 @@ void MLECalibrator::TimerElapsed() {
   qApp->processEvents();
   if (remaining_time_in_seconds > 0)
     PlaySoundFromPath("tick");
-
 
 }
 

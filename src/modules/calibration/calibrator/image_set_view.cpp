@@ -94,25 +94,8 @@ void ImageSetView::Append(const PatternBatch & result) {
 }
 
 void ImageSetView::Append(const QStringList & filenames) {
-  parameters_.append(PatternBatch(filenames));
-  QList<QImage> images = GetImages(parameters_.back());
-  QList<QStandardItem *> items;
-  for (int cam_idx = 0; cam_idx < images.size(); ++cam_idx) {
-    QImage & image = images[cam_idx];
-    QPixmap pixmap = QPixmap::fromImage(image);
-    QStandardItem *item = new QStandardItem();
-    item->setIcon(pixmap);
-    item->setCheckable(true);
-    item->setCheckState(Qt::CheckState::Checked);
-    items.append(item);
-    setColumnWidth(cam_idx, 130);
-  }
-  model_->appendRow(items);
-
-  int height = (int) std::round(100. / images[0].width() * images[0].height());
-  setRowHeight(model_->rowCount() - 1, height);
-  setIconSize(QSize(130, height - 10));
-
+  PatternBatch batch(filenames);
+  Append(batch);
 }
 
 QList<QImage> ImageSetView::GetImages(const PatternBatch & image_batch) {
