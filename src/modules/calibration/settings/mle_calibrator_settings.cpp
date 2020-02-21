@@ -21,11 +21,13 @@ void MLECalibratorSettings::ApplyConfiguration(QSettings & settings, IConfigurat
   image_save_folder_ = cfg->ImageSaveFolder();
   fix_aspect_ratio_ = cfg->FixAspectRatio();
   sounds_enabled_ = cfg->SoundEnabled();
+  loop_capture_ = cfg->LoopCapture();
   settings.setValue("calibrate_cameras_separately", calibrate_cameras_separately_);
   settings.setValue("capture_wait_time", capture_wait_time_);
   settings.setValue("image_save_folder", image_save_folder_.path());
   settings.setValue("fix_aspect_ratio", fix_aspect_ratio_);
   settings.setValue("sound_enabled", sounds_enabled_);
+  settings.setValue("loop_capture", loop_capture_);
 }
 void MLECalibratorSettings::Configure(QSettings & settings) {
   if (settings.contains("calibrate_cameras_separately"))
@@ -42,6 +44,9 @@ void MLECalibratorSettings::Configure(QSettings & settings) {
 
   if (settings.contains("sound_enabled"))
     sounds_enabled_ = settings.value("sound_enabled").toBool();
+
+  if (settings.contains("loop_capture"))
+    loop_capture_ = settings.value("loop_capture").toBool();
 }
 
 const QString & MLECalibratorSettings::GetName() const {
@@ -66,6 +71,10 @@ bool MLECalibratorSettings::FixAspectRatio() const {
 
 bool MLECalibratorSettings::SoundEnabled() const {
   return sounds_enabled_;
+}
+
+bool MLECalibratorSettings::LoopCapture() const {
+  return loop_capture_;
 }
 
 }

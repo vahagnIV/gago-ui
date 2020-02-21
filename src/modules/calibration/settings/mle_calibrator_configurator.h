@@ -29,6 +29,7 @@ class MLECalibratorConfigurator : public IConfigurator {
   QDir ImageSaveFolder() const;
   bool FixAspectRatio() const;
   bool SoundEnabled() const;
+  bool LoopCapture() const;
  private:
   class MLECalibratorSettings * settings_;
 
@@ -36,6 +37,7 @@ class MLECalibratorConfigurator : public IConfigurator {
   QLineEdit *folder_line_edit_;
   QSpinBox *wait_time_spinbox_;
   QCheckBox *sound_enabled_chkbx_;
+  QCheckBox *loop_capture_chkbx_;
 
   const QString window_name_ = "MLE";
 

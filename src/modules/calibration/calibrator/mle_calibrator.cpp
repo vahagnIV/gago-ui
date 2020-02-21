@@ -31,27 +31,42 @@ MLECalibrator::MLECalibrator(QWidget *parent,
       last_capture_index_(0),
       cache_folder_(cache_folder),
       sound_dir_("/usr/share/sounds/freedesktop/"),
-      next_capture_time_(std::numeric_limits<typeof(next_capture_time_)>::max()) {
+      capture_button_format_(settings->LoopCapture() ? "Stop Capturing (%ld)" : "Capture: (%ld)"),
+      timer_(new QTimer(this)),
+      next_capture_time_(next_capture_time_.max()) {
   ui_->setupUi(this);
 
-  connect(ui_->captureButton, &QPushButton::pressed, this, &MLECalibrator::CaptureRequested);
+  connect(ui_->captureButton, &QPushButton::pressed, this, &MLECalibrator::OnCaptureButtonClicked);
+
   connect(ui_->calibrateButton, &QPushButton::pressed, this, &MLECalibrator::OnCalibrateButtonClicked);
   connect(ui_->saveButton, &QPushButton::pressed, this, &MLECalibrator::OnSaveButtonClicked);
 
   connect(this, &MLECalibrator::DisableControlElements, this, &MLECalibrator::DisableControlElementsSlot);
   connect(this, &MLECalibrator::EnableControlElements, this, &MLECalibrator::EnableControlElementsSlot);
   connect(this, &MLECalibrator::PlaySound, this, &MLECalibrator::PlaySoundFromPath);
+  connect(timer_, SIGNAL(timeout()), this, SLOT(TimerElapsed()));
+
+  connect(this, SIGNAL(PictureTaken()), timer_, SLOT(stop()));
+
+  if (settings_->LoopCapture()) {
+    connect(this, SIGNAL(PictureTaken()), this, SLOT(SetNextCaptureTime()));
+    ui_->captureButton->setText("Start capturing");
+  }
 
   sound_effects_["capture"] = new QMediaPlayer(this);
   sound_effects_["capture"]->setMedia(QUrl::fromLocalFile(sound_dir_.filePath("stereo/screen-capture.oga")));
   sound_effects_["error"] = new QMediaPlayer(this);
   sound_effects_["error"]->setMedia(QUrl::fromLocalFile(sound_dir_.filePath("stereo/dialog-error.oga")));
+  sound_effects_["tick"] = new QMediaPlayer(this);
+  sound_effects_["tick"]->setMedia(QUrl::fromLocalFile("/usr/share/sounds/ubuntu/notifications/Slick.ogg"));
 
   ui_->listView->setAutoFillBackground(true);
 }
 
 MLECalibrator::~MLECalibrator() {
   delete ui_;
+  if (timer_)
+    delete timer_;
 }
 
 void MLECalibrator::Close() {
@@ -69,13 +84,13 @@ void MLECalibrator::Notify(const std::shared_ptr<std::vector<io::video::Capture>
   }
   std::vector<std::vector<cv::Point2f>> pts;
   bool found = pattern_->Extract(images, pts);
-  long now = std::chrono::high_resolution_clock::now().time_since_epoch().count();
-  if (next_capture_time_ < now) {
-    next_capture_time_ = std::numeric_limits<typeof(next_capture_time_)>::max();
+
+  if (next_capture_time_ < std::chrono::high_resolution_clock::now()) {
+
+    next_capture_time_ = next_capture_time_.max();
     if (found) {
-      if (settings_->SoundEnabled()) {
-        emit PlaySound("capture");
-      }
+
+      emit PlaySound("capture");
 
       QStringList filenames;
 
@@ -91,15 +106,21 @@ void MLECalibrator::Notify(const std::shared_ptr<std::vector<io::video::Capture>
         writer.write(image);
         filenames.append(filename);
       }
-      ui_->listView->Append(filenames);
 
+      ui_->listView->Append(filenames);
       ++last_capture_index_;
-    } else {
-      if (settings_->SoundEnabled()) {
+    } else
         emit PlaySound("error");
-      }
+
+    if (!settings_->LoopCapture()) {
+      capture_in_progress_ = false;
+      ResetNextCaptureTime();
+      ui_->captureButton->setText("Capture");
+      emit EnableControlElements();
     }
-    emit EnableControlElements();
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    emit PictureTaken();
   }
 
   for (int i = 0; i < ptr->size(); ++i) {
@@ -141,10 +162,27 @@ void MLECalibrator::SetCameras(const std::vector<const io::video::CameraMeta *> 
   emit EnableControlElements();
 }
 
-void MLECalibrator::CaptureRequested() {
-  DisableControlElements();
-  next_capture_time_ = (std::chrono::high_resolution_clock::now().time_since_epoch()
-      + std::chrono::seconds(settings_->CaptureWaitTime())).count();
+void MLECalibrator::OnCaptureButtonClicked() {
+
+  if (settings_->LoopCapture()) {
+    if (capture_in_progress_) {
+      capture_in_progress_ = false;
+      timer_->stop();
+      ResetNextCaptureTime();
+      ui_->captureButton->setText("Start capturing");
+      EnableControlElementsSlot();
+    } else {
+      DisableControlElementsSlot();
+      capture_in_progress_ = true;
+      SetNextCaptureTime();
+      ui_->captureButton->setEnabled(true);
+    }
+  } else {
+    DisableControlElementsSlot();
+    capture_in_progress_ = true;
+    SetNextCaptureTime();
+  }
+
 }
 
 void MLECalibrator::OnCalibrateButtonClicked() {
@@ -190,7 +228,7 @@ void MLECalibrator::RestoreFilenames(const char *format, QStringList cameras_) {
     while (!stream.atEnd()) {
       QStringList values = stream.readLine().split(',');
       QString batch_key;
-      for (int i = 6; i < values.size(); i += 5) {
+      for (int i = 6; i < values.size(); i += 6) {
         batch_key += values[i];
       }
       param_map[batch_key] = values;
@@ -219,8 +257,9 @@ void MLECalibrator::RestoreFilenames(const char *format, QStringList cameras_) {
       try_parse(str_params[1], image_batch.state);
       image_batch.rms = str_params[0].toFloat();
       for (int cam_idx = 0; cam_idx < idx_files.size(); ++cam_idx) {
-        image_batch.pattern_params[cam_idx].reprojection_error = str_params[3 + 5 * cam_idx].toFloat();
-        try_parse(str_params[2 + 5 * cam_idx], image_batch.pattern_params[cam_idx].state);
+        image_batch.pattern_params[cam_idx].reprojection_error = str_params[3 + 6 * cam_idx].toFloat();
+        try_parse(str_params[2 + 6 * cam_idx], image_batch.pattern_params[cam_idx].state);
+        image_batch.pattern_params[cam_idx].enabled = str_params[7 + 6 * cam_idx] == "true";
       }
     }
     ui_->listView->Append(image_batch);
@@ -284,7 +323,7 @@ void MLECalibrator::OnSaveButtonClicked() {
     for (gago::calibration::Pattern & params: image_batch.pattern_params) {
       stream << "," << to_string(params.state) << "," << params.reprojection_error << "," << params.image_size.width
              << ","
-             << params.image_size.height << "," << params.filename;
+             << params.image_size.height << "," << params.filename << "," << (params.enabled ? "true" : "false");
 
     }
     stream << "\n";
@@ -294,7 +333,33 @@ void MLECalibrator::OnSaveButtonClicked() {
 }
 
 void MLECalibrator::PlaySoundFromPath(const QString & path) {
-  sound_effects_[path]->play();
+  if (settings_->SoundEnabled())
+    sound_effects_[path]->play();
+}
+
+void MLECalibrator::TimerElapsed() {
+  auto time_remaining = next_capture_time_ - std::chrono::system_clock::now();
+  long remaining_time_in_seconds = std::chrono::duration_cast<std::chrono::seconds>(time_remaining).count();
+  if (remaining_time_in_seconds > 0)
+    PlaySoundFromPath("tick");
+
+  if (next_capture_time_ != next_capture_time_.max())
+    ui_->captureButton->setText(QString::asprintf(capture_button_format_,
+                                                  remaining_time_in_seconds));
+
+}
+
+void MLECalibrator::SetNextCaptureTime() {
+  if (!capture_in_progress_)
+    return;
+
+  timer_->start();
+  next_capture_time_ = (std::chrono::high_resolution_clock::now()
+      + std::chrono::seconds(settings_->CaptureWaitTime()));
+}
+
+void MLECalibrator::ResetNextCaptureTime() {
+  next_capture_time_ = next_capture_time_.max();
 }
 
 }

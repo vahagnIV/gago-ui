@@ -226,7 +226,7 @@ int OpenCvMLE::Calibrate2Cameras(QList<PatternBatch> & out_batch_calibration_res
   std::vector<std::vector<cv::Point3f>> object_points(2);
   for (int batch_id = 0; batch_id < out_batch_calibration_results.size(); ++batch_id) {
     PatternBatch & image_batch = out_batch_calibration_results[batch_id];
-    EstimationState image_batch_state = image_batch.PatternState();
+    EstimationState image_batch_state = image_batch.CombinedPatternState();
     // Only one image in batch
     if (image_batch.pattern_params.size() != 2) continue;
 
@@ -270,7 +270,7 @@ int OpenCvMLE::Calibrate2Cameras(QList<PatternBatch> & out_batch_calibration_res
   if (!fix_intrinsic) {
     for (int batch_id = 0; batch_id < out_batch_calibration_results.size(); ++batch_id) {
       PatternBatch & image_batch = out_batch_calibration_results[batch_id];
-      EstimationState image_batch_state = image_batch.PatternState();
+      EstimationState image_batch_state = image_batch.CombinedPatternState();
       if (PES_Broken == image_batch_state)
         continue;
 

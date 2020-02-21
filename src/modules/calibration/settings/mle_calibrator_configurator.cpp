@@ -48,6 +48,10 @@ void MLECalibratorConfigurator::DrawConfigurationPage(QWidget *widget) {
   sound_enabled_chkbx_->setChecked(settings_->SoundEnabled());
   layout->addWidget(sound_enabled_chkbx_, 3, 0, 1, 4);
 
+  loop_capture_chkbx_ = new QCheckBox("Loop capture:");
+  loop_capture_chkbx_->setChecked(settings_->LoopCapture());
+  layout->addWidget(loop_capture_chkbx_, 4, 0, 1, 4);
+
 }
 
 void MLECalibratorConfigurator::Apply() {
@@ -75,6 +79,10 @@ bool MLECalibratorConfigurator::FixAspectRatio() const {
 
 bool MLECalibratorConfigurator::SoundEnabled() const {
   return sound_enabled_chkbx_->checkState() == Qt::Checked;
+}
+
+bool MLECalibratorConfigurator::LoopCapture() const {
+  return loop_capture_chkbx_->checkState() == Qt::Checked;
 }
 
 }

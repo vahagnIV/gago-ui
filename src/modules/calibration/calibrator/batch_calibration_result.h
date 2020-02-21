@@ -24,7 +24,7 @@ struct PatternBatch {
     return std::all_of(pattern_params.begin(), pattern_params.end(), [](const Pattern & pattern) { return pattern.enabled; });
   }
 
-  EstimationState PatternState() {
+  EstimationState CombinedPatternState() {
     if (pattern_params.isEmpty())
       return PES_Broken;
 
