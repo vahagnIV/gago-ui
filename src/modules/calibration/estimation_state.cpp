@@ -13,8 +13,6 @@ QString to_string(EstimationState state) {
       return "Extracted";
     case EstimationState::PES_Broken:
       return "Broken";
-    case EstimationState::PES_Disabled:
-      return "Disabled";
     case EstimationState::PES_Unestimated:
       return "Unestimated";
     case EstimationState::PES_Calibrated:
@@ -29,9 +27,6 @@ bool try_parse(const QString & state_str, EstimationState & out_state) {
     return true;
   } else if (0 == state_str.compare("Broken", Qt::CaseInsensitive)) {
     out_state = EstimationState::PES_Broken;
-    return true;
-  } else if (0 == state_str.compare("Disabled", Qt::CaseInsensitive)) {
-    out_state = EstimationState::PES_Disabled;
     return true;
   } else if (0 == state_str.compare("Unestimated", Qt::CaseInsensitive)) {
     out_state = EstimationState::PES_Unestimated;

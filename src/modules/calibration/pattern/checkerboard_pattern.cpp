@@ -54,7 +54,7 @@ const cv::Size & CheckerboardPattern::GetSize() const {
   return pattern_size_;
 }
 
-Pattern CheckerboardPattern::GetType() const {
+PatternType CheckerboardPattern::GetType() const {
   return CHESSBOARD;
 }
 

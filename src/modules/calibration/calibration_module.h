@@ -3,7 +3,7 @@
 
 #include <QDir>
 #include "imodule.h"
-#include "pattern/ipattern.h"
+#include "pattern/ipattern_extractor.h"
 #include "modules/settings/iconfigurable.h"
 #include "modules/camera/camera_module.h"
 #include "calibration_estimates.h"

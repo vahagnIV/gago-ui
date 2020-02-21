@@ -15,7 +15,6 @@ enum EstimationState {
   PES_Extracted = 2,
   PES_Calibrated = 3,
   PES_Broken = 4,
-  PES_Disabled = 5
 };
 
 QString to_string(EstimationState state);

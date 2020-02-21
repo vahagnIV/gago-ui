@@ -17,7 +17,7 @@ namespace calibration {
 QSharedPointer<calibration::ICalibrator> CalibratorFactory::Create(configuration::CalibrationSettings *settings,
                                                                    QWidget *main_window, const QDir & cache_folder) {
   configuration::CalibrationPatternType pattern_type = settings->GetCalibrationPatternType();
-  QSharedPointer<gago::calibration::pattern::IPattern> pattern = nullptr;
+  QSharedPointer<gago::calibration::pattern::IPatternExtractor> pattern = nullptr;
   if (configuration::Checkerboard == pattern_type) {
     QSharedPointer<gago::gui::configuration::CheckerboardPatternSettings>
         checkerboard_settings =

@@ -8,10 +8,10 @@
 #include <QDir>
 #include <QMediaPlayer>
 #include <QSharedPointer>
-#include <pattern/pattern_estimation_parameters.h>
+#include <pattern/pattern.h>
 #include <settings/mle_calibrator_settings.h>
 #include "icalibrator.h"
-#include "pattern/ipattern.h"
+#include "pattern/ipattern_extractor.h"
 #include "common/video_player.h"
 #include "calibration_estimates.h"
 #include "rectified_image_view_window.h"
@@ -28,7 +28,7 @@ class MLECalibrator : public QDialog, public ICalibrator {
  Q_OBJECT
  public:
   MLECalibrator(QWidget *parent,
-                const QSharedPointer<gago::calibration::pattern::IPattern> & pattern,
+                const QSharedPointer<gago::calibration::pattern::IPatternExtractor> & pattern,
                 const QSharedPointer<gago::gui::configuration::MLECalibratorSettings> & settings,
                 const QDir & cache_folder);
   virtual ~MLECalibrator();
@@ -56,7 +56,7 @@ signals:
 
   QList<common::VideoPlayer *> players_;
   QList<QLabel *> cam_labels_;
-  QSharedPointer<gago::calibration::pattern::IPattern> pattern_;
+  QSharedPointer<gago::calibration::pattern::IPatternExtractor> pattern_;
   int control_disable_bit_mask_;
 
   QSharedPointer<gago::gui::configuration::MLECalibratorSettings> settings_;

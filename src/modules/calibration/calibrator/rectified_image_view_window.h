@@ -17,7 +17,7 @@ class RectifiedImageViewWindow : public QDialog {
   explicit RectifiedImageViewWindow(QWidget *parent = 0);
 
   void SetCalibrationEstimates(const gago::calibration::CalibrationEstimates & estimates,
-                               const QList<gago::calibration::BatchCalibrationResult> & results);
+                               const QList<gago::calibration::PatternBatch> & results);
 
 
   ~RectifiedImageViewWindow();
@@ -35,7 +35,7 @@ class RectifiedImageViewWindow : public QDialog {
   QImage CreateRectifiedImage(const QList<cv::Mat> & images);
   Ui::RectifiedImageViewWindow *ui;
   gago::calibration::CalibrationEstimates estimates_;
-  QList<gago::calibration::BatchCalibrationResult> batch_calib_results_;
+  QList<gago::calibration::PatternBatch> batch_calib_results_;
 
   int current_selected_idx_;
 

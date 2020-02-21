@@ -21,7 +21,7 @@ namespace gui {
 namespace calibration {
 
 MLECalibrator::MLECalibrator(QWidget *parent,
-                             const QSharedPointer<gago::calibration::pattern::IPattern> & pattern,
+                             const QSharedPointer<gago::calibration::pattern::IPatternExtractor> & pattern,
                              const QSharedPointer<gago::gui::configuration::MLECalibratorSettings> & settings,
                              const QDir & cache_folder)
     : QDialog(parent),
@@ -152,18 +152,14 @@ void MLECalibrator::OnCalibrateButtonClicked() {
 
   gago::calibration::OpenCvMLE mle(pattern_, settings_->CalibrateCamerasSeparately());
 
-  QList<gago::calibration::BatchCalibrationResult> & batches = ui_->listView->GetBatchCalibrationResults();
+  QList<gago::calibration::PatternBatch> & batches = ui_->listView->GetBatchCalibrationResults();
 
   // Reset the state if it was calibrated previously
-  for (gago::calibration::BatchCalibrationResult & image_batch: batches) {
+  for (gago::calibration::PatternBatch & image_batch: batches) {
     image_batch.state = gago::calibration::PES_Unestimated;
 
-    for (gago::calibration::PatternEstimationParameters & param : image_batch.pattern_params) {
-      if (param.state == gago::calibration::PES_Disabled)
-        image_batch.state = gago::calibration::PES_Disabled;
-      else
-        param.state = gago::calibration::PES_Unestimated;
-    }
+    for (gago::calibration::Pattern & param : image_batch.pattern_params)
+      param.state = gago::calibration::PES_Unestimated;
   }
 
   if (0 == mle.Calibrate(batches, estimates_)) {
@@ -187,18 +183,19 @@ void MLECalibrator::OnCalibrateButtonClicked() {
 
 void MLECalibrator::RestoreFilenames(const char *format, QStringList cameras_) {
   QFile params_file(cache_folder_.filePath("params.csv"));
-  params_file.open(QFile::ReadOnly);
-  QTextStream stream(&params_file);
   QMap<QString, QStringList> param_map;
-  while (!stream.atEnd()) {
-    QStringList values = stream.readLine().split(',');
-    QString batch_key;
-    for (int i = 6; i < values.size(); i += 5) {
-      batch_key += values[i];
+  if (params_file.exists()) {
+    params_file.open(QFile::ReadOnly);
+    QTextStream stream(&params_file);
+    while (!stream.atEnd()) {
+      QStringList values = stream.readLine().split(',');
+      QString batch_key;
+      for (int i = 6; i < values.size(); i += 5) {
+        batch_key += values[i];
+      }
+      param_map[batch_key] = values;
     }
-    param_map[batch_key] = values;
   }
-
   last_capture_index_ = 0;
 
   QStringList filters = {QString(format).replace("%s", cameras_[0]).replace("%03d", "*")};
@@ -216,7 +213,7 @@ void MLECalibrator::RestoreFilenames(const char *format, QStringList cameras_) {
       continue;
 
     QString batch_key = idx_files.join("");
-    gago::calibration::BatchCalibrationResult image_batch(idx_files);
+    gago::calibration::PatternBatch image_batch(idx_files);
     if (param_map.contains(batch_key)) {
       QStringList & str_params = param_map[batch_key];
       try_parse(str_params[1], image_batch.state);
@@ -278,13 +275,13 @@ const gago::calibration::CalibrationEstimates & MLECalibrator::GetEstimates() co
 }
 
 void MLECalibrator::OnSaveButtonClicked() {
-  QList<gago::calibration::BatchCalibrationResult> & image_batches = ui_->listView->GetBatchCalibrationResults();
+  QList<gago::calibration::PatternBatch> & image_batches = ui_->listView->GetBatchCalibrationResults();
   QFile params_file(cache_folder_.filePath("params.csv"));
   params_file.open(QFile::WriteOnly);
   QTextStream stream(&params_file);
-  for (gago::calibration::BatchCalibrationResult & image_batch: image_batches) {
+  for (gago::calibration::PatternBatch & image_batch: image_batches) {
     stream << image_batch.rms << "," << to_string(image_batch.state);
-    for (gago::calibration::PatternEstimationParameters & params: image_batch.pattern_params) {
+    for (gago::calibration::Pattern & params: image_batch.pattern_params) {
       stream << "," << to_string(params.state) << "," << params.reprojection_error << "," << params.image_size.width
              << ","
              << params.image_size.height << "," << params.filename;

@@ -72,7 +72,7 @@ QImage RectifiedImageViewWindow::CreateRectifiedImage(const QList<cv::Mat> & ima
 
 QList<cv::Mat> RectifiedImageViewWindow::LoadFiles(int batch_idx) {
   QList<cv::Mat> result;
-  for (const gago::calibration::PatternEstimationParameters & params : batch_calib_results_[batch_idx].pattern_params) {
+  for (const gago::calibration::Pattern & params : batch_calib_results_[batch_idx].pattern_params) {
     result.append(cv::imread(params.filename.toStdString()));
   }
   return result;
@@ -88,7 +88,7 @@ void RectifiedImageViewWindow::SetActiveBatch(int batch_idx) {
 }
 
 void RectifiedImageViewWindow::SetCalibrationEstimates(const gago::calibration::CalibrationEstimates & estimates,
-                                                       const QList<gago::calibration::BatchCalibrationResult> & results) {
+                                                       const QList<gago::calibration::PatternBatch> & results) {
   estimates_ = estimates;
   batch_calib_results_ = results;
   if (results.isEmpty())

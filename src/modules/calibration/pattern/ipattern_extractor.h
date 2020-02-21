@@ -2,18 +2,18 @@
 // Created by vahagn on 1/18/20.
 //
 
-#ifndef LIBGAGO_SRC_CALIBRATION_PATTERN_I_PATTERN_H_
-#define LIBGAGO_SRC_CALIBRATION_PATTERN_I_PATTERN_H_
+#ifndef LIBGAGO_SRC_CALIBRATION_PATTERN_I_PATTERN_EXTRACTOR_H_
+#define LIBGAGO_SRC_CALIBRATION_PATTERN_I_PATTERN_EXTRACTOR_H_
 
 #include <opencv2/opencv.hpp>
 
 namespace gago {
 namespace calibration {
-enum Pattern { CHESSBOARD, CIRCLES_GRID, ASYMMETRIC_CIRCLES_GRID };
+enum PatternType { CHESSBOARD, CIRCLES_GRID, ASYMMETRIC_CIRCLES_GRID };
 
 namespace pattern {
 
-class IPattern {
+class IPatternExtractor {
  public:
   virtual bool Extract(const std::vector<cv::Mat> & image,
                        std::vector<std::vector<cv::Point2f>> & out_detected_points, bool subpix = false) const = 0;
@@ -26,8 +26,8 @@ class IPattern {
   virtual void DrawPattern(cv::Mat & out_matrix, const std::vector<cv::Point2f> & points) const = 0;
 
   virtual const cv::Size & GetSize() const = 0;
-  virtual Pattern GetType() const = 0;
-  virtual ~IPattern() = default;
+  virtual PatternType GetType() const = 0;
+  virtual ~IPatternExtractor() = default;
 
 };
 

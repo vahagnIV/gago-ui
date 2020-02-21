@@ -19,9 +19,9 @@ class ImageSetView : public QTableView {
  public:
   ImageSetView(QWidget *parent = nullptr);
   void Append(const QStringList & filenames);
-  void Append(const BatchCalibrationResult & result);
-  QList<BatchCalibrationResult> & GetBatchCalibrationResults();
-  const  QList<BatchCalibrationResult> & GetBatchCalibrationResults() const;
+  void Append(const PatternBatch & result);
+  QList<PatternBatch> & GetBatchCalibrationResults();
+  const  QList<PatternBatch> & GetBatchCalibrationResults() const;
   void ActiveBatchChanges(int batch_idx);
   void Update();
   virtual ~ImageSetView();
@@ -34,11 +34,11 @@ class ImageSetView : public QTableView {
   void ShowRectified();
   void ItemChanged(QStandardItem *item);
  private:
-  QList<QImage> GetImages(const BatchCalibrationResult &image_batch);
+  QList<QImage> GetImages(const PatternBatch &image_batch);
   QColor GetColor(float rms);
 
   QStandardItemModel *model_;
-  QList<BatchCalibrationResult> parameters_;
+  QList<PatternBatch> parameters_;
   RectifiedImageViewWindow *rectifiedImageViewWindow_;
 
 

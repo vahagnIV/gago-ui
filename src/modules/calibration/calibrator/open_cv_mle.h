@@ -8,9 +8,9 @@
 #include <QSharedPointer>
 
 #include <opencv2/opencv.hpp>
-#include "pattern/ipattern.h"
+#include "pattern/ipattern_extractor.h"
 #include "intrinsic_parameters.h"
-#include "pattern/pattern_estimation_parameters.h"
+#include "pattern/pattern.h"
 #include "batch_calibration_result.h"
 
 namespace gago {
@@ -20,17 +20,17 @@ enum { DETECTION = 0, CAPTURING = 1, CALIBRATED = 2 };
 
 class OpenCvMLE {
  public:
-  OpenCvMLE(const QSharedPointer<pattern::IPattern> & pattern,
+  OpenCvMLE(const QSharedPointer<pattern::IPatternExtractor> & pattern,
             bool calibrate_cameras_separately);
 
-  int Calibrate(QList<BatchCalibrationResult> & out_batch_calibration_results, CalibrationEstimates & out_estimates);
+  int Calibrate(QList<PatternBatch> & out_batch_calibration_results, CalibrationEstimates & out_estimates);
 
  protected:
 
-  int GetImagePoints(QList<BatchCalibrationResult> & out_batch_calibration_results,
+  int GetImagePoints(QList<PatternBatch> & out_batch_calibration_results,
                      std::vector<std::vector<std::vector<cv::Point2f>>> & out_image_points);
 
-  int CalibrateSingleCamera(QList<BatchCalibrationResult> & out_batch_calibration_results,
+  int CalibrateSingleCamera(QList<PatternBatch> & out_batch_calibration_results,
                             int cam_idx,
                             const std::vector<std::vector<std::vector<cv::Point2f>>> & image_points,
                             const cv::Size & boardSize,
@@ -40,7 +40,7 @@ class OpenCvMLE {
                             int flags,
                             IntrinsicParameters & out_intrinsic_parameters,
                             std::vector<cv::Point3f> & newObjPoints);
-  int Calibrate2Cameras(QList<BatchCalibrationResult> & out_batch_calibration_results,
+  int Calibrate2Cameras(QList<PatternBatch> & out_batch_calibration_results,
                         const std::vector<std::vector<std::vector<cv::Point2f>>> & image_points,
                         const cv::Size & boardSize, bool fix_intrinsic, CalibrationEstimates & out_estimates);
 
@@ -65,14 +65,14 @@ class OpenCvMLE {
   void ComputeSingleCamReprojectionError(const std::vector<cv::Point3f> & object_points,
                                          const std::vector<cv::Point2f> & image_points,
                                          const IntrinsicParameters & intrinsic_parameters,
-                                         PatternEstimationParameters & out_pattern_params);
+                                         Pattern & out_pattern_params);
 
   void ComputeStereoRigReprojectionError(const std::vector<cv::Point3f> & object_points,
                                          const std::vector<std::vector<cv::Point2f>> & image_points,
                                          const CalibrationEstimates & estimates,
-                                         BatchCalibrationResult & out_result);
+                                         PatternBatch & out_result);
 
-  QSharedPointer<pattern::IPattern> pattern_;
+  QSharedPointer<pattern::IPatternExtractor> pattern_;
   bool calibrate_cameras_separately_;
 
 };

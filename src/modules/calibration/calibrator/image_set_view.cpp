@@ -51,9 +51,9 @@ void ImageSetView::ShowContextMenu(const QPoint & pos) {
 
 void ImageSetView::DeleteItem() {
   for (int i = 0; i < this->selectedIndexes().size(); ++i) {
-    BatchCalibrationResult & res = parameters_[selectedIndexes()[i].row()];
+    PatternBatch & res = parameters_[selectedIndexes()[i].row()];
     // Get curent item on selected row
-    for (const PatternEstimationParameters & params: parameters_[this->selectedIndexes()[i].row()].pattern_params) {
+    for (const Pattern & params: parameters_[this->selectedIndexes()[i].row()].pattern_params) {
       std::string mm = params.filename.toStdString();
       if (QFile::exists(params.filename))
         QFile::remove(params.filename);
@@ -72,7 +72,7 @@ void ImageSetView::ShowRectified() {
   rectifiedImageViewWindow_->exec();
 }
 
-void ImageSetView::Append(const BatchCalibrationResult & result) {
+void ImageSetView::Append(const PatternBatch & result) {
   parameters_.append(result);
   QList<QImage> images = GetImages(parameters_.back());
   QList<QStandardItem *> items;
@@ -82,7 +82,7 @@ void ImageSetView::Append(const BatchCalibrationResult & result) {
     QStandardItem *item = new QStandardItem();
     item->setIcon(pixmap);
     item->setCheckable(true);
-    item->setCheckState(result.pattern_params[cam_idx].state != PES_Disabled ? Qt::Checked : Qt::Unchecked);
+    item->setCheckState(result.pattern_params[cam_idx].enabled ? Qt::Checked : Qt::Unchecked);
     items.append(item);
     setColumnWidth(cam_idx, 130);
   }
@@ -94,7 +94,7 @@ void ImageSetView::Append(const BatchCalibrationResult & result) {
 }
 
 void ImageSetView::Append(const QStringList & filenames) {
-  parameters_.append(BatchCalibrationResult(filenames));
+  parameters_.append(PatternBatch(filenames));
   QList<QImage> images = GetImages(parameters_.back());
   QList<QStandardItem *> items;
   for (int cam_idx = 0; cam_idx < images.size(); ++cam_idx) {
@@ -115,9 +115,9 @@ void ImageSetView::Append(const QStringList & filenames) {
 
 }
 
-QList<QImage> ImageSetView::GetImages(const BatchCalibrationResult & image_batch) {
+QList<QImage> ImageSetView::GetImages(const PatternBatch & image_batch) {
   QList<QImage> images;
-  for (const PatternEstimationParameters & pattern_params: image_batch.pattern_params)
+  for (const Pattern & pattern_params: image_batch.pattern_params)
     images.append(QImage(pattern_params.filename));
   return images;
 }
@@ -132,39 +132,47 @@ QColor ImageSetView::GetColor(float rms) {
 }
 
 void ImageSetView::Update() {
-  for (int batch_idx = 0; batch_idx < parameters_.size(); ++batch_idx) {
-    BatchCalibrationResult & result = parameters_[batch_idx];
-    QColor backgroun_color = GetColor(result.rms);
 
-    QList<QImage> images = GetImages(result);
-    for (int cam_idx = 0; cam_idx < result.pattern_params.size(); ++cam_idx) {
-      if (result.state != PES_Broken)
-        model_->setData(model_->index(batch_idx, cam_idx), backgroun_color, Qt::BackgroundRole);
-      else
-        model_->setData(model_->index(batch_idx, cam_idx), QVariant(), Qt::BackgroundRole);
+  for (int batch_idx = 0; batch_idx < parameters_.size(); ++batch_idx) {
+    PatternBatch & image_batch = parameters_[batch_idx];
+    if (PES_Unestimated == image_batch.state)
+      continue;
+
+    QColor background_color = PES_Broken == image_batch.state ? QColor(128, 128, 128) : GetColor(image_batch.rms);
+
+    QList<QImage> images = GetImages(image_batch);
+
+    for (int cam_idx = 0; cam_idx < image_batch.pattern_params.size(); ++cam_idx) {
+      Pattern & pattern = image_batch.pattern_params[cam_idx];
       QStandardItem *item = model_->itemFromIndex(model_->index(batch_idx, cam_idx));
 
+      model_->setData(model_->index(batch_idx, cam_idx), background_color, Qt::BackgroundRole);
       QImage & image = images[cam_idx];
 
-      QColor color = result.pattern_params[cam_idx].state != PES_Broken
-                     ? GetColor(result.pattern_params[cam_idx].reprojection_error) : QColor(128, 128, 128);
+      QColor color = PES_Broken == pattern.state ?
+                     QColor(128, 128, 128) : GetColor(pattern.reprojection_error);
 
       QPainter painter(&image);
       QPen pen(color, 50);
       painter.setPen(pen);
       painter.drawLine(0, 0, 0, image.height());
       item->setIcon(QPixmap::fromImage(image));
-      if (PES_Broken != result.pattern_params[cam_idx].state) {
-        QString tool_tip = QString::asprintf("Calibration error: %.4f",
-                                             result.pattern_params[cam_idx].reprojection_error);
-        if (result.pattern_params.size() == 2)
-          tool_tip += QString::asprintf("\nStereo Calibration Error: %.4f", result.rms);
-
-        item->setToolTip(tool_tip);
+      QString tool_tip;
+      if (PES_Calibrated == image_batch.pattern_params[cam_idx].state) {
+        tool_tip = QString::asprintf("Calibration error: %.4f",
+                                     pattern.reprojection_error);
 
       } else {
-        item->setToolTip("");
+        tool_tip = "Not calibrated: " + to_string(pattern.state);
       }
+      if (image_batch.pattern_params.size() == 2)
+        if (PES_Calibrated == image_batch.state)
+          tool_tip += QString::asprintf("\nStereo Calibration Error: %.4f", image_batch.rms);
+        else
+          tool_tip += "\nStereo not calibrated: " + to_string(image_batch.state);
+      if (!pattern.enabled)
+        tool_tip += "\nNot included in the calibration process.";
+      item->setToolTip(tool_tip);
     }
   }
 }
@@ -172,33 +180,14 @@ void ImageSetView::Update() {
 void gago::calibration::ImageSetView::ItemChanged(QStandardItem *item) {
   int batch_idx = model_->indexFromItem(item).row();
   int column_idx = model_->indexFromItem(item).column();
-  if (!((item->checkState() == Qt::Checked)
-      ^ (parameters_[batch_idx].pattern_params[column_idx].state != PES_Disabled)))
-    return;
-  switch (item->checkState()) {
-    case Qt::Unchecked:
-      parameters_[batch_idx].pattern_params[column_idx].state = PES_Disabled;
-      parameters_[batch_idx].state = PES_Disabled;
-      break;
-    default:
-      if (parameters_[batch_idx].pattern_params[column_idx].state == PES_Disabled) {
-        parameters_[batch_idx].pattern_params[column_idx].state = PES_Unestimated;
-        if (std::any_of(parameters_[batch_idx].pattern_params.begin(),
-                        parameters_[batch_idx].pattern_params.begin(),
-                        [](const PatternEstimationParameters & param) { return param.state == PES_Disabled; })) {
-          parameters_[batch_idx].state = PES_Disabled;
-        } else
-          parameters_[batch_idx].state = PES_Unestimated;
-      }
-      break;
-  }
+  parameters_[batch_idx].pattern_params[column_idx].enabled = item->checkState() == Qt::Checked;
 }
 
-QList<BatchCalibrationResult> & ImageSetView::GetBatchCalibrationResults() {
+QList<PatternBatch> & ImageSetView::GetBatchCalibrationResults() {
   return parameters_;
 }
 
-const QList<BatchCalibrationResult> & ImageSetView::GetBatchCalibrationResults() const {
+const QList<PatternBatch> & ImageSetView::GetBatchCalibrationResults() const {
   return parameters_;
 }
 
