@@ -21,9 +21,9 @@ namespace gui {
 namespace calibration {
 
 MLECalibrator::MLECalibrator(QWidget *parent,
-                             const QSharedPointer<gago::calibration::pattern::IPatternExtractor> & pattern,
-                             const QSharedPointer<gago::gui::configuration::MLECalibratorSettings> & settings,
-                             const QDir & cache_folder)
+                             const QSharedPointer<gago::calibration::pattern::IPatternExtractor> &pattern,
+                             const QSharedPointer<gago::gui::configuration::MLECalibratorSettings> &settings,
+                             const QDir &cache_folder)
     : QDialog(parent),
       ui_(new Ui::MLECalibrationWindow()),
       pattern_(pattern),
@@ -35,6 +35,11 @@ MLECalibrator::MLECalibrator(QWidget *parent,
       timer_(new QTimer(this)),
       next_capture_time_(next_capture_time_.max()) {
   ui_->setupUi(this);
+
+  connect(this,
+          &MLECalibrator::NewImagesArrived,
+          ui_->listView,
+          static_cast<void (gago::calibration::ImageSetView::*)(const QStringList &)>(&gago::calibration::ImageSetView::Append));
 
   connect(ui_->captureButton, &QPushButton::pressed, this, &MLECalibrator::OnCaptureButtonClicked);
 
@@ -57,6 +62,7 @@ MLECalibrator::MLECalibrator(QWidget *parent,
   sound_effects_["capture"]->setMedia(QUrl::fromLocalFile(sound_dir_.filePath("stereo/screen-capture.oga")));
   sound_effects_["error"] = new QMediaPlayer(this);
   sound_effects_["error"]->setMedia(QUrl::fromLocalFile(sound_dir_.filePath("stereo/dialog-error.oga")));
+
   sound_effects_["tick"] = new QMediaPlayer(this);
   sound_effects_["tick"]->setMedia(QUrl::fromLocalFile("/usr/share/sounds/ubuntu/notifications/Slick.ogg"));
 
@@ -77,7 +83,7 @@ int MLECalibrator::Calibrate() {
   return exec();
 }
 
-void MLECalibrator::Notify(const std::shared_ptr<std::vector<io::video::Capture>> & ptr) {
+void MLECalibrator::Notify(const std::shared_ptr<std::vector<io::video::Capture>> &ptr) {
   std::vector<cv::Mat> images;
   for (int j = 0; j < ptr->size(); ++j) {
     images.push_back((*ptr)[j].data);
@@ -94,7 +100,7 @@ void MLECalibrator::Notify(const std::shared_ptr<std::vector<io::video::Capture>
 
       QStringList filenames;
 
-      for (const io::video::Capture & capture: *ptr) {
+      for (const io::video::Capture &capture: *ptr) {
         QString filename = QString::asprintf(format, capture.camera->GetName().c_str(), last_capture_index_);
         filename = settings_->ImageSaveFolder().filePath(filename);
 
@@ -107,9 +113,7 @@ void MLECalibrator::Notify(const std::shared_ptr<std::vector<io::video::Capture>
         writer.write(image);
         filenames.append(filename);
       }
-
-      ui_->listView->Append(filenames);
-      ui_->listView->update();
+      emit NewImagesArrived(filenames);
 
     } else
         emit PlaySound("error");
@@ -132,7 +136,7 @@ void MLECalibrator::Notify(const std::shared_ptr<std::vector<io::video::Capture>
 
 }
 
-void MLECalibrator::SetCameras(const std::vector<const io::video::CameraMeta *> & vector) {
+void MLECalibrator::SetCameras(const std::vector<const io::video::CameraMeta *> &vector) {
   emit DisableControlElements();
 
   QStringList cam_names;
@@ -192,13 +196,13 @@ void MLECalibrator::OnCalibrateButtonClicked() {
 
   gago::calibration::OpenCvMLE mle(pattern_, settings_->CalibrateCamerasSeparately());
 
-  QList<gago::calibration::PatternBatch> & batches = ui_->listView->GetBatchCalibrationResults();
+  QList<gago::calibration::PatternBatch> &batches = ui_->listView->GetBatchCalibrationResults();
 
   // Reset the state if it was calibrated previously
-  for (gago::calibration::PatternBatch & image_batch: batches) {
+  for (gago::calibration::PatternBatch &image_batch: batches) {
     image_batch.state = gago::calibration::PES_Unestimated;
 
-    for (gago::calibration::Pattern & param : image_batch.pattern_params)
+    for (gago::calibration::Pattern &param : image_batch.pattern_params)
       param.state = gago::calibration::PES_Unestimated;
   }
 
@@ -239,9 +243,9 @@ void MLECalibrator::RestoreFilenames(const char *format, QStringList cameras_) {
   last_capture_index_ = 0;
 
   QStringList filters = {QString(format).replace("%s", cameras_[0]).replace("%03d", "*")};
-  for (const QString & filename: settings_->ImageSaveFolder().entryList(filters,
-                                                                        QDir::NoFilter,
-                                                                        QDir::SortFlag::Name)) {
+  for (const QString &filename: settings_->ImageSaveFolder().entryList(filters,
+                                                                       QDir::NoFilter,
+                                                                       QDir::SortFlag::Name)) {
     int idx = filename.right(7).left(3).toInt();
     QStringList idx_files = {settings_->ImageSaveFolder().filePath(filename)};
     for (int i = 1; i < cameras_.size(); ++i) {
@@ -255,7 +259,7 @@ void MLECalibrator::RestoreFilenames(const char *format, QStringList cameras_) {
     QString batch_key = idx_files.join("");
     gago::calibration::PatternBatch image_batch(idx_files);
     if (param_map.contains(batch_key)) {
-      QStringList & str_params = param_map[batch_key];
+      QStringList &str_params = param_map[batch_key];
       try_parse(str_params[1], image_batch.state);
       image_batch.rms = str_params[0].toFloat();
       for (int cam_idx = 0; cam_idx < idx_files.size(); ++cam_idx) {
@@ -311,18 +315,18 @@ void MLECalibrator::EnableControlElementsSlot() {
   qApp->processEvents();
 }
 
-const gago::calibration::CalibrationEstimates & MLECalibrator::GetEstimates() const {
+const gago::calibration::CalibrationEstimates &MLECalibrator::GetEstimates() const {
   return estimates_;
 }
 
 void MLECalibrator::OnSaveButtonClicked() {
-  QList<gago::calibration::PatternBatch> & image_batches = ui_->listView->GetBatchCalibrationResults();
+  QList<gago::calibration::PatternBatch> &image_batches = ui_->listView->GetBatchCalibrationResults();
   QFile params_file(cache_folder_.filePath("params.csv"));
   params_file.open(QFile::WriteOnly);
   QTextStream stream(&params_file);
-  for (gago::calibration::PatternBatch & image_batch: image_batches) {
+  for (gago::calibration::PatternBatch &image_batch: image_batches) {
     stream << image_batch.rms << "," << to_string(image_batch.state);
-    for (gago::calibration::Pattern & params: image_batch.pattern_params) {
+    for (gago::calibration::Pattern &params: image_batch.pattern_params) {
       stream << "," << to_string(params.state) << "," << params.reprojection_error << "," << params.image_size.width
              << ","
              << params.image_size.height << "," << params.filename << "," << (params.enabled ? "true" : "false");
@@ -334,7 +338,7 @@ void MLECalibrator::OnSaveButtonClicked() {
   accept();
 }
 
-void MLECalibrator::PlaySoundFromPath(const QString & path) {
+void MLECalibrator::PlaySoundFromPath(const QString &path) {
   if (settings_->SoundEnabled())
     sound_effects_[path]->play();
 }

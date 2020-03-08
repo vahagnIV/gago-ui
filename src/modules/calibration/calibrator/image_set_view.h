@@ -18,8 +18,6 @@ class ImageSetView : public QTableView {
  Q_OBJECT
  public:
   ImageSetView(QWidget *parent = nullptr);
-  void Append(const QStringList & filenames);
-  void Append(const PatternBatch & result);
   QList<PatternBatch> & GetBatchCalibrationResults();
   const  QList<PatternBatch> & GetBatchCalibrationResults() const;
   void ActiveBatchChanges(int batch_idx);
@@ -28,6 +26,8 @@ class ImageSetView : public QTableView {
   void SetCalibrationEstimates(const gago::calibration::CalibrationEstimates & estimates);
   void SetCameraNames(const QStringList & cam_names);
  public slots:
+  void Append(const QStringList & filenames);
+  void Append(const PatternBatch & result);
   void ShowContextMenu(const QPoint &pos);
   void DeleteItem();
  private slots:

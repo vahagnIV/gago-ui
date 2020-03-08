@@ -56,6 +56,7 @@ class MLECalibrator : public QDialog, public ICalibrator {
   void EnableControlElements();
   void PlaySound(const QString & path);
   void PictureTaken();
+  void NewImagesArrived(const QStringList & filenames);
  private:
 
   void ResetNextCaptureTime();
