@@ -26,6 +26,7 @@ class CalibrationModule : public QObject,  public IModule {
   void GetRequiredModules(QList<RequiredModuleParams> & out_required_modules) override;
   void SetRequiredModules(const QList<IModule *> & modules) override;
   int GetDestructorIndex() const override;
+  int GetStartIndex() const override ;
   void Start() override ;
 
   // CalibrationModule

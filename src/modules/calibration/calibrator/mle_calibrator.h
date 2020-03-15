@@ -31,6 +31,7 @@ class MLECalibrator : public QDialog, public ICalibrator {
   MLECalibrator(QWidget *parent,
                 const QSharedPointer<gago::calibration::pattern::IPatternExtractor> & pattern,
                 const QSharedPointer<gago::gui::configuration::MLECalibratorSettings> & settings,
+                const gago::calibration::CalibrationEstimates & current_estimates,
                 const QDir & cache_folder);
   virtual ~MLECalibrator();
   int Calibrate() override;
@@ -60,6 +61,7 @@ class MLECalibrator : public QDialog, public ICalibrator {
  private:
 
   void ResetNextCaptureTime();
+  void SetLabelText();
 
   Ui::MLECalibrationWindow *ui_;
 

@@ -23,9 +23,11 @@ namespace calibration {
 MLECalibrator::MLECalibrator(QWidget *parent,
                              const QSharedPointer<gago::calibration::pattern::IPatternExtractor> &pattern,
                              const QSharedPointer<gago::gui::configuration::MLECalibratorSettings> &settings,
+                             const gago::calibration::CalibrationEstimates & current_estimates,
                              const QDir &cache_folder)
     : QDialog(parent),
       ui_(new Ui::MLECalibrationWindow()),
+      estimates_(current_estimates),
       pattern_(pattern),
       settings_(settings),
       last_capture_index_(0),
@@ -163,6 +165,8 @@ void MLECalibrator::SetCameras(const std::vector<const io::video::CameraMeta *> 
   ui_->listView->SetCameraNames(cam_names);
 
   RestoreFilenames(format, cam_names);
+  if(!estimates_.intrinsic_parameters.empty())
+    SetLabelText();
 
 
   emit EnableControlElements();
@@ -208,21 +212,25 @@ void MLECalibrator::OnCalibrateButtonClicked() {
 
   if (0 == mle.Calibrate(batches, estimates_)) {
     ui_->listView->Update();
-    if (!estimates_.R.empty()) {
-      ui_->listView->SetCalibrationEstimates(estimates_);
-      ui_->multiviewInfoLabel->setText(QString::asprintf("Stereo Calibration Error: %.4f", estimates_.rms));
-    }
-
-    for (int cam_idx = 0; cam_idx < batches[0].pattern_params.size(); ++cam_idx) {
-      QString label_text = QString::asprintf("Average error: %.4f", estimates_.intrinsic_parameters[cam_idx].rms);
-
-      cam_labels_[cam_idx]->setText(label_text);
-    }
+    SetLabelText();
     ui_->saveButton->setEnabled(true);
   }
 
 
   emit EnableControlElements();
+}
+
+void MLECalibrator::SetLabelText() {
+  if (!estimates_.R.empty()) {
+    ui_->listView->SetCalibrationEstimates(estimates_);
+    ui_->multiviewInfoLabel->setText(QString::asprintf("Stereo Calibration Error: %.4f", estimates_.rms));
+  }
+
+  for (int cam_idx = 0; cam_idx < estimates_.intrinsic_parameters.size(); ++cam_idx) {
+    QString label_text = QString::asprintf("Average error: %.4f", estimates_.intrinsic_parameters[cam_idx].rms);
+
+    cam_labels_[cam_idx]->setText(label_text);
+  }
 }
 
 void MLECalibrator::RestoreFilenames(const char *format, QStringList cameras_) {

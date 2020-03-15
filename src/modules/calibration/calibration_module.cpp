@@ -34,7 +34,7 @@ void CalibrationModule::Calibrate() {
   QVector<const io::video::CameraMeta *> cameras = camera_module_->GetCameras();
   QDir cache_folder = GetParamSaveFolder(cameras);
   QSharedPointer<calibration::ICalibrator>
-      window = calibration::CalibratorFactory::Create(&settings_, main_window_, cache_folder);
+      window = calibration::CalibratorFactory::Create(settings_, estimates_, main_window_, cache_folder);
   camera_module_->RegisterWatcher(window.data());
   if (QDialog::Accepted == window->Calibrate()) {
     estimates_ = window->GetEstimates();
@@ -44,13 +44,13 @@ void CalibrationModule::Calibrate() {
   camera_module_->UnRegisterWatcher(window.data());
 }
 
-void CalibrationModule::GetRequiredModules(QList<RequiredModuleParams> & out_required_modules) {
+void CalibrationModule::GetRequiredModules(QList<RequiredModuleParams> &out_required_modules) {
   out_required_modules = {RequiredModuleParams{Name: "main", MinMajorVersion: 1, MinMinorVersion: 0},
                           RequiredModuleParams{Name: "settings", MinMajorVersion: 1, MinMinorVersion: 0},
                           RequiredModuleParams{Name: "camera", MinMajorVersion: 1, MinMinorVersion: 0}};
 }
 
-void CalibrationModule::SetRequiredModules(const QList<IModule *> & modules) {
+void CalibrationModule::SetRequiredModules(const QList<IModule *> &modules) {
   for (IModule *module: modules) {
     if (module->SystemName() == "main") {
       main_window_ = ((MainModule *) module)->MainWindow();
@@ -85,8 +85,8 @@ QDir CalibrationModule::GetParamSaveFolder(QVector<const io::video::CameraMeta *
             + "\n");
   QDir correct_folder("");
   int last_folder = 0;
-  for (const QString & subfolder: calibration_dir.entryList(QStringList{"calib_*"}, QDir::Dirs)) {
-    QDir folder(subfolder);
+  for (const QString &subfolder: calibration_dir.entryList(QStringList{"calib_*"}, QDir::Dirs)) {
+    QDir folder(calibration_dir.filePath(subfolder));
     if (!folder.exists("info.txt"))
       continue;
 
@@ -95,15 +95,16 @@ QDir CalibrationModule::GetParamSaveFolder(QVector<const io::video::CameraMeta *
       last_folder = idx;
 
     QFile file(folder.filePath("info.txt"));
+    file.open(QFile::ReadOnly);
     QTextStream fstream(&file);
     QString content = fstream.readAll();
     if (content == id_string) {
-      correct_folder = subfolder;
+      correct_folder = folder;
       break;
     }
   }
   if (correct_folder == QDir("")) {
-    QString folder_name = QString("calib_") + QString::number(last_folder + 1).leftJustified(3, '0');
+    QString folder_name = QString("calib_") + QString::number(last_folder + 1).rightJustified(3, '0');
     calibration_dir.mkdir(folder_name);
     correct_folder.setPath(calibration_dir.filePath(folder_name));
     QFile file(correct_folder.filePath("info.txt"));
@@ -126,52 +127,69 @@ void CalibrationModule::SaveParamsToFolder() {
 }
 
 void CalibrationModule::SaveEstimatesAsOpenCvYml(QDir folder) {
-  cv::FileStorage
-      extrinsics_file_storage(folder.filePath("extrinsics.yml").toStdString(), cv::FileStorage::WRITE);
-  extrinsics_file_storage << "R" << estimates_.R << "F" << estimates_.F << "T" << estimates_.T << "E" << estimates_.E
-                          << "RMS" << estimates_.rms;
+  if (estimates_.intrinsic_parameters.size() == 2) {
+    cv::FileStorage
+        extrinsics_file_storage(folder.filePath("extrinsics.yml").toStdString(), cv::FileStorage::WRITE);
+    extrinsics_file_storage << "R" << estimates_.R << "F" << estimates_.F << "T" << estimates_.T << "E" << estimates_.E
+                            << "RMS" << estimates_.rms;
+  }
   cv::FileStorage
       intrinsics_file_storage(folder.filePath("intrinsics.yml").toStdString(), cv::FileStorage::WRITE);
-  intrinsics_file_storage << "P1" << estimates_.intrinsic_parameters[0].camera_matrix << "D1"
-                          << estimates_.intrinsic_parameters[0].distortion_coefficients << "RPE1"
-                          << estimates_.intrinsic_parameters[0].rms << "Size1"
-                          << estimates_.intrinsic_parameters[0].image_size << "P2"
-                          << estimates_.intrinsic_parameters[1].camera_matrix << "D2"
-                          << estimates_.intrinsic_parameters[1].distortion_coefficients << "RPE2"
-                          << estimates_.intrinsic_parameters[0].rms << "Size2"
-                          << estimates_.intrinsic_parameters[0].image_size;
+  for (int cam_idx = 0; cam_idx < estimates_.intrinsic_parameters.size(); ++cam_idx) {
+    gago::calibration::IntrinsicParameters &intrinsics = estimates_.intrinsic_parameters[cam_idx];
+    std::string camera_matrix_name = "P" + std::to_string(cam_idx);
+    std::string distortion_coefficients_name = "D" + std::to_string(cam_idx);
+    std::string rpe_name = "RPE" + std::to_string(cam_idx);
+    std::string size_name = "Size" + std::to_string(cam_idx);
+    intrinsics_file_storage << camera_matrix_name << estimates_.intrinsic_parameters[0].camera_matrix
+                            << distortion_coefficients_name
+                            << estimates_.intrinsic_parameters[0].distortion_coefficients << rpe_name
+                            << estimates_.intrinsic_parameters[0].rms << size_name
+                            << estimates_.intrinsic_parameters[0].image_size;
 
+  }
 }
 
 int CalibrationModule::GetDestructorIndex() const {
   return -1;
 }
 
+int CalibrationModule::GetStartIndex() const {
+  return camera_module_->GetStartIndex() + 100;
+}
+
 void CalibrationModule::LoadEstimatesFromOpenCvYml(QDir folder) {
-  if (!folder.exists("extrinsics.yml"))
-    return;
-  cv::FileStorage
-      extrinsics_file_storage(folder.filePath("extrinsics.yml").toStdString(), cv::FileStorage::READ);
-  estimates_.R = extrinsics_file_storage["R"].mat();
-  estimates_.T = extrinsics_file_storage["T"].mat();
-  estimates_.F = extrinsics_file_storage["F"].mat();
-  estimates_.E = extrinsics_file_storage["E"].mat();
-  estimates_.rms = extrinsics_file_storage["RMS"];
+  const int camera_count = camera_module_->GetCameras().size();
+
+  if (camera_count == 2) {
+    if (!folder.exists("extrinsics.yml"))
+      return;
+    cv::FileStorage
+        extrinsics_file_storage(folder.filePath("extrinsics.yml").toStdString(), cv::FileStorage::READ);
+    estimates_.R = extrinsics_file_storage["R"].mat();
+    estimates_.T = extrinsics_file_storage["T"].mat();
+    estimates_.F = extrinsics_file_storage["F"].mat();
+    estimates_.E = extrinsics_file_storage["E"].mat();
+    estimates_.rms = extrinsics_file_storage["RMS"];
+  }
 
   cv::FileStorage
       intrinsics_file_storage(folder.filePath("intrinsics.yml").toStdString(), cv::FileStorage::READ);
+  for (int cam_idx = 0; cam_idx < camera_count; ++cam_idx) {
+    gago::calibration::IntrinsicParameters intrinsics;
 
-  estimates_.intrinsic_parameters[0].camera_matrix = intrinsics_file_storage["P1"].mat();
-  estimates_.intrinsic_parameters[0].distortion_coefficients = intrinsics_file_storage["D1"].mat();
-  estimates_.intrinsic_parameters[0].rms = intrinsics_file_storage["RPE1"];
-  estimates_.intrinsic_parameters[0].image_size.width = intrinsics_file_storage["Size1"][0];
-  estimates_.intrinsic_parameters[0].image_size.height = intrinsics_file_storage["Size1"][1];
+    std::string camera_matrix_name = "P" + std::to_string(cam_idx);
+    std::string distortion_coefficients_name = "D" + std::to_string(cam_idx);
+    std::string rpe_name = "RPE" + std::to_string(cam_idx);
+    std::string size_name = "Size" + std::to_string(cam_idx);
 
-  estimates_.intrinsic_parameters[1].camera_matrix = intrinsics_file_storage["P2"].mat();
-  estimates_.intrinsic_parameters[1].distortion_coefficients = intrinsics_file_storage["P2"].mat();
-  estimates_.intrinsic_parameters[1].rms = intrinsics_file_storage["RPE2"];
-  estimates_.intrinsic_parameters[1].image_size.width = intrinsics_file_storage["Size2"][0];
-  estimates_.intrinsic_parameters[1].image_size.height = intrinsics_file_storage["Size2"][1];
+    intrinsics.camera_matrix = intrinsics_file_storage[camera_matrix_name].mat();
+    intrinsics.distortion_coefficients = intrinsics_file_storage[distortion_coefficients_name].mat();
+    intrinsics.rms = intrinsics_file_storage[rpe_name];
+    intrinsics.image_size.width = intrinsics_file_storage[size_name][0];
+    intrinsics.image_size.height = intrinsics_file_storage[size_name][1];
+    estimates_.intrinsic_parameters.push_back(intrinsics);
+  }
 
 }
 

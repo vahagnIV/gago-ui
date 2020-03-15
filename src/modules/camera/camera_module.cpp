@@ -97,8 +97,8 @@ void CameraModule::Configure(QSettings & settings) {
     int idx = uid_to_index[uid];
     cam_settings[idx].config.name = settings.value("name").toString().toStdString();
     cam_settings[idx].config.format_index = settings.value("format").toInt();
-    cam_settings[idx].config.format_index = settings.value("resolution").toInt();
-    try_parse(settings.value("format").toString().toStdString(), cam_settings[idx].config.status);
+    cam_settings[idx].config.resolution_index = settings.value("resolution").toInt();
+    try_parse(settings.value("status").toString().toStdString(), cam_settings[idx].config.status);
 
   }
   settings.endArray();

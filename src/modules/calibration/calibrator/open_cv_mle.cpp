@@ -87,6 +87,10 @@ int OpenCvMLE::Calibrate(QList<PatternBatch> & out_batch_calibration_results,
   if (result != 0)
     return result;
 
+  out_estimates.intrinsic_parameters.clear();
+  for (int i = 0; i < image_points.size(); ++i)
+    out_estimates.intrinsic_parameters.push_back(IntrinsicParameters());
+
   if (calibrate_cameras_separately_)
     for (int cam_idx = 0; cam_idx < image_points.size(); ++cam_idx) {
       if (0 == CalibrateSingleCamera(out_batch_calibration_results,

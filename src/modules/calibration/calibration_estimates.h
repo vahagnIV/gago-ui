@@ -5,12 +5,13 @@
 #ifndef GAGO_UI_CALIBRATION_ESTIMATES_H
 #define GAGO_UI_CALIBRATION_ESTIMATES_H
 #include "intrinsic_parameters.h"
+#include <QList>
 
 namespace gago {
 namespace calibration {
 
 struct CalibrationEstimates {
-  IntrinsicParameters intrinsic_parameters[2];
+  QList<IntrinsicParameters> intrinsic_parameters;
 
   cv::Mat R; // Rotation matrix
   cv::Mat T; // Translation vector

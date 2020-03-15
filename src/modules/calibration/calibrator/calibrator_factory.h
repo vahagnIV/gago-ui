@@ -15,7 +15,8 @@ namespace calibration {
 
 class CalibratorFactory {
  public:
-  static QSharedPointer<calibration::ICalibrator> Create(configuration::CalibrationSettings *settings,
+  static QSharedPointer<calibration::ICalibrator> Create(const configuration::CalibrationSettings &settings,
+                                                         const gago::calibration::CalibrationEstimates & current_estimates_,
                                                          QWidget *main_window,
                                                          const QDir & cache_folder);
 
