@@ -135,7 +135,7 @@ void ModuleManager::Start() {
   qSort(containers.begin(),
         containers.end(),
         [&](const internal::_ModuleContainer & first, internal::_ModuleContainer & second) {
-          return first.module_ptr->GetStartIndex() > second.module_ptr->GetStartIndex();
+          return first.module_ptr->GetStartIndex() < second.module_ptr->GetStartIndex();
         });
   for (auto & container: containers)
     container.module_ptr->Start();
