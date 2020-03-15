@@ -96,9 +96,9 @@ void RectifiedImageViewWindow::SetCalibrationEstimates(const gago::calibration::
   int first_valid_idx = 0;
   while (results[first_valid_idx].pattern_params.isEmpty())
     ++first_valid_idx;
-  cv::Size imsize = batch_calib_results_[first_valid_idx].pattern_params[0].image_size;
+
   // TODO: remove this line in future
-  image_size = imsize;
+  image_size = estimates_.intrinsic_parameters[0].image_size;
 
   stereoRectify(estimates_.intrinsic_parameters[0].camera_matrix,
                 estimates_.intrinsic_parameters[0].distortion_coefficients,
@@ -114,7 +114,7 @@ void RectifiedImageViewWindow::SetCalibrationEstimates(const gago::calibration::
                 Q,
                 cv::CALIB_ZERO_DISPARITY,
                 1,
-                imsize,
+                image_size ,
                 &validRoi[0],
                 &validRoi[1]);
 
@@ -130,7 +130,7 @@ void RectifiedImageViewWindow::SetCalibrationEstimates(const gago::calibration::
                           estimates_.intrinsic_parameters[1].distortion_coefficients,
                           R2,
                           P2,
-                          imsize,
+                          image_size ,
                           CV_16SC2,
                           rmap[1][0],
                           rmap[1][1]);

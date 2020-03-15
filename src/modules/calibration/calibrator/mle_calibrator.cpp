@@ -51,6 +51,7 @@ MLECalibrator::MLECalibrator(QWidget *parent,
   connect(this, &MLECalibrator::DisableControlElements, this, &MLECalibrator::DisableControlElementsSlot);
   connect(this, &MLECalibrator::EnableControlElements, this, &MLECalibrator::EnableControlElementsSlot);
   connect(this, &MLECalibrator::PlaySound, this, &MLECalibrator::PlaySoundFromPath);
+  connect(this, &MLECalibrator::CamerasSet, this, &MLECalibrator::SetLabelText);
   connect(timer_, SIGNAL(timeout()), this, SLOT(TimerElapsed()));
 
   connect(this, SIGNAL(PictureTaken()), timer_, SLOT(stop()));
@@ -166,7 +167,7 @@ void MLECalibrator::SetCameras(const std::vector<const io::video::CameraMeta *> 
 
   RestoreFilenames(format, cam_names);
   if(!estimates_.intrinsic_parameters.empty())
-    SetLabelText();
+    emit CamerasSet();
 
 
   emit EnableControlElements();

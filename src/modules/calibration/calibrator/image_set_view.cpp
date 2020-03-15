@@ -75,6 +75,9 @@ void ImageSetView::ShowRectified() {
 void ImageSetView::Append(const PatternBatch & result) {
   parameters_.append(result);
   QList<QImage> images = GetImages(parameters_.back());
+  setMaximumWidth(images.size() == 2 ? 280 : 140);
+  setMinimumWidth(images.size() == 2 ? 280 : 140);
+
   QList<QStandardItem *> items;
   for (int cam_idx = 0; cam_idx < images.size(); ++cam_idx) {
     QImage & image = images[cam_idx];

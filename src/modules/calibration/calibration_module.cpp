@@ -32,6 +32,7 @@ unsigned int CalibrationModule::MinorVersion() const {
 
 void CalibrationModule::Calibrate() {
   QVector<const io::video::CameraMeta *> cameras = camera_module_->GetCameras();
+  LoadEstimatesFromOpenCvYml(GetParamSaveFolder(cameras));
   QDir cache_folder = GetParamSaveFolder(cameras);
   QSharedPointer<calibration::ICalibrator>
       window = calibration::CalibratorFactory::Create(settings_, estimates_, main_window_, cache_folder);
@@ -172,7 +173,14 @@ void CalibrationModule::LoadEstimatesFromOpenCvYml(QDir folder) {
     estimates_.E = extrinsics_file_storage["E"].mat();
     estimates_.rms = extrinsics_file_storage["RMS"];
   }
+  else{
+    estimates_.R = cv::Mat();
+    estimates_.T = cv::Mat();
+    estimates_.E = cv::Mat();
+    estimates_.F = cv::Mat();
+  }
 
+  estimates_.intrinsic_parameters.clear();
   cv::FileStorage
       intrinsics_file_storage(folder.filePath("intrinsics.yml").toStdString(), cv::FileStorage::READ);
   for (int cam_idx = 0; cam_idx < camera_count; ++cam_idx) {

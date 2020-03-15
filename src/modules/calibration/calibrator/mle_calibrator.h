@@ -50,6 +50,7 @@ class MLECalibrator : public QDialog, public ICalibrator {
   void PlaySoundFromPath(const QString & path);
   void TimerElapsed();
   void SetNextCaptureTime();
+  void SetLabelText();
 
 
  signals:
@@ -58,10 +59,10 @@ class MLECalibrator : public QDialog, public ICalibrator {
   void PlaySound(const QString & path);
   void PictureTaken();
   void NewImagesArrived(const QStringList & filenames);
+  void CamerasSet();
  private:
 
   void ResetNextCaptureTime();
-  void SetLabelText();
 
   Ui::MLECalibrationWindow *ui_;
 
