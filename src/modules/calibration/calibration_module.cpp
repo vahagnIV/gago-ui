@@ -142,11 +142,11 @@ void CalibrationModule::SaveEstimatesAsOpenCvYml(QDir folder) {
     std::string distortion_coefficients_name = "D" + std::to_string(cam_idx);
     std::string rpe_name = "RPE" + std::to_string(cam_idx);
     std::string size_name = "Size" + std::to_string(cam_idx);
-    intrinsics_file_storage << camera_matrix_name << estimates_.intrinsic_parameters[0].camera_matrix
+    intrinsics_file_storage << camera_matrix_name << estimates_.intrinsic_parameters[cam_idx].camera_matrix
                             << distortion_coefficients_name
-                            << estimates_.intrinsic_parameters[0].distortion_coefficients << rpe_name
-                            << estimates_.intrinsic_parameters[0].rms << size_name
-                            << estimates_.intrinsic_parameters[0].image_size;
+                            << estimates_.intrinsic_parameters[cam_idx].distortion_coefficients << rpe_name
+                            << estimates_.intrinsic_parameters[cam_idx].rms << size_name
+                            << estimates_.intrinsic_parameters[cam_idx].image_size;
 
   }
 }
