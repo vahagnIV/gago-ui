@@ -2,6 +2,8 @@
 #include <QStandardPaths>
 #include <QTextStream>
 #include <QFileDialog>
+#include <QMessageBox>
+#include <regex>
 
 #include "modules/settings/settings_module.h"
 #include "calibration_module.h"
@@ -32,6 +34,15 @@ unsigned int CalibrationModule::MinorVersion() const {
 
 void CalibrationModule::Calibrate() {
   QVector<const io::video::CameraMeta *> cameras = camera_module_->GetCameras();
+
+  if(cameras.size() > 2) {
+    QMessageBox mbox;
+    mbox.setText("Currently the mle calibrator can calibrate up to 2 cameras. Go to settings and disable some cameras to proceed.");
+    mbox.exec();
+    return;
+  }
+
+
   LoadEstimatesFromOpenCvYml(GetParamSaveFolder(cameras));
   QDir cache_folder = GetParamSaveFolder(cameras);
   QSharedPointer<calibration::ICalibrator>
