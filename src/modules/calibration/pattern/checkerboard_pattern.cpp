@@ -33,6 +33,8 @@ bool CheckerboardPattern::Extract(const std::vector<cv::Mat> & image,
   out_detected_points.resize(image.size());
   for (int i = 0; i < image.size(); ++i) {
     out_detected_points[i].resize(0);
+    if(image[i].empty())
+      return false;
 
     if (!cv::findChessboardCorners(image[i], pattern_size_, out_detected_points[i]))
       return false;
