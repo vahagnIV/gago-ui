@@ -56,6 +56,7 @@ void CameraModule::ApplyConfiguration(QSettings & settings, configuration::IConf
     settings.setValue("resolution", cam_setting.config.resolution_index);
     settings.setValue("status", QString::fromStdString(to_string(cam_setting.config.status)));
     settings.setValue("uniqueId", QString::fromStdString(cam_setting.camera->GetUniqueId()));
+    settings.setValue("vflipped", cam_setting.config.vertical_flip);
   }
   settings.endArray();
 }
@@ -96,6 +97,7 @@ void CameraModule::Configure(QSettings & settings) {
       continue;
     int idx = uid_to_index[uid];
     cam_settings[idx].config.name = settings.value("name").toString().toStdString();
+    cam_settings[idx].config.vertical_flip = settings.value("vflipped").toBool();
     cam_settings[idx].config.format_index = settings.value("format").toInt();
     cam_settings[idx].config.resolution_index = settings.value("resolution").toInt();
     try_parse(settings.value("status").toString().toStdString(), cam_settings[idx].config.status);

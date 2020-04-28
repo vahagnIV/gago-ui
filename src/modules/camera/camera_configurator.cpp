@@ -27,13 +27,12 @@ void CameraConfigurator::Apply() {
     current_settings_[i].config.resolution_index = camera_layouts_[i].cam_resolution_combo->currentIndex();
     current_settings_[i].config.format_index = camera_layouts_[i].cam_format_combo->currentIndex();
     current_settings_[i].config.name = camera_layouts_[i].name_edit->text().toStdString();
+    current_settings_[i].config.vertical_flip = camera_layouts_[i].vflip_checkbx->isChecked();
     current_settings_[i].config.status =
         camera_layouts_[i].enabled_checkbx->checkState() == 0 ? io::video::Disabled : io::video::Enabled;
   }
   camera_list_view->setFocus();
 }
-
-
 
 const QString & CameraConfigurator::ConfigWindowName() const {
   return window_name;
@@ -49,6 +48,7 @@ void CameraConfigurator::InitControlElements() {
 
     // Create elements
     layout.enabled_checkbx = new QCheckBox("Enabled");
+    layout.vflip_checkbx = new QCheckBox("Vertical Flip");
     layout.name_edit = new QLineEdit();
     layout.cam_format_combo = new QComboBox();
     layout.cam_resolution_combo = new QComboBox();
@@ -77,7 +77,9 @@ void CameraConfigurator::InitControlElements() {
                                                     + QString::number(device_info.camera->GetResolutions()[index][i].height));
       }
       layout.cam_resolution_combo->setCurrentIndex(
-          device_info.config.resolution_index < device_info.camera->GetResolutions()[device_info.config.format_index].size() ? device_info.config.resolution_index : 0);
+          device_info.config.resolution_index
+              < device_info.camera->GetResolutions()[device_info.config.format_index].size()
+          ? device_info.config.resolution_index : 0);
 
     });
 
@@ -95,6 +97,7 @@ void CameraConfigurator::InitControlElements() {
 
     layout.enabled_checkbx->setChecked(io::video::Enabled == device_info.config.status);
     layout.enabled_checkbx->stateChanged(io::video::Enabled == device_info.config.status);
+    layout.vflip_checkbx->setChecked(device_info.config.vertical_flip);
 
     camera_layouts_.push_back(layout);
   }
@@ -164,6 +167,8 @@ void CameraConfigurator::DrawOnWidget(QWidget *widget) {
     settings_group_box_layout->addWidget(camera_resolution_label, 3, 0, 1, 1);
 
     settings_group_box_layout->addWidget(layout.cam_resolution_combo, 3, 1, 1, 2);
+
+    settings_group_box_layout->addWidget(layout.vflip_checkbx, 4, 0, 1, 2);
 
 
     // Details

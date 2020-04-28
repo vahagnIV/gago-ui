@@ -36,6 +36,14 @@ void VideoPlayer::DrawImage(const cv::Mat & image) {
 
   qimage_ = qimage_.scaled(scale * qimage_.width(), scale * qimage_.height()).copy();
 
+  QPainter painter;
+  if (!painter.begin(&qimage_)) return;
+  for (int i = 16; i < qimage_.height(); i += 16) {
+    painter.setPen(QPen(Qt::green));
+    painter.drawLine(QPoint(0, i), QPoint(qimage_.width(), i));
+  }
+  painter.end();
+
   if (!text_.isEmpty()) {
     QPainter p;
     if (!p.begin(&qimage_)) return;

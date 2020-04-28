@@ -25,6 +25,7 @@ namespace internal {
 struct CameraLayout {
   QWidget *main_widget;
   QCheckBox *enabled_checkbx;
+  QCheckBox *vflip_checkbx;
   QLineEdit *name_edit;
   QComboBox *cam_format_combo;
   QComboBox *cam_resolution_combo;
