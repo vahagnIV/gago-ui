@@ -40,6 +40,10 @@ Gago
 
 from your terminal.
 
+## Camera Name
+
+Do not forget to change the camera names, i.e. Go to Edit > Settings > Camera and set proper names ( alphanumeric and  "_" ) to the camera names. E.g. "Left", "Right", "camera" etc.
+
 ## Calibration
 
 Gago's calibration is just a Qt wrapper around OpenCV's calibration framework. Hence, for calibration you will need a printed flat pattern.
