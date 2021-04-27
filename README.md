@@ -25,7 +25,7 @@ Finally
 ```bash
 git clone git@github.com:vahagnIV/gago-ui.git
 cd gago-ui
-mkdir build && cd build
+mkdir release && cd release
 cmake -DCMAKE_BUILD_TYPE=Release ..
 make -j 5
 sudo make install
