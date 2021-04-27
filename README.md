@@ -16,7 +16,7 @@ First install LibGago from [here](https://github.com/vahagnIV/libgago).
 Next install the dependencies
 
 ```bash
-sudo apt-get install -y libopencv-dev qtdeclarative5-dev libqt5multimedia5-plugins
+sudo apt-get install -y libopencv-dev qtdeclarative5-dev qtmultimedia5-dev libqt5multimedia5-plugins
 ```
 
 Finally 
