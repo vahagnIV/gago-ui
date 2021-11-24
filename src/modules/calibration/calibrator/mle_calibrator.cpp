@@ -90,7 +90,7 @@ void MLECalibrator::Notify(const std::shared_ptr<std::vector<io::video::Capture>
   std::vector<cv::Mat> images;
   for (int j = 0; j < ptr->size(); ++j) {
     cv::Mat mat((*ptr)[j].height, (*ptr)[j].width, CV_8UC3,(void *)(*ptr)[j].data.data());
-    images.push_back(mat);
+    images.push_back(mat.clone());
   }
   std::vector<std::vector<cv::Point2f>> pts;
   bool found = pattern_->Extract(images, pts);
@@ -134,7 +134,7 @@ void MLECalibrator::Notify(const std::shared_ptr<std::vector<io::video::Capture>
   }
 
   for (int i = 0; i < ptr->size(); ++i) {
-    cv::Mat mat((*ptr)[i].height, (*ptr)[i].width, CV_8UC3, (void *)(*ptr)[i].data.data());
+    cv::Mat mat = cv::Mat((*ptr)[i].height, (*ptr)[i].width, CV_8UC3, (void *)(*ptr)[i].data.data()).clone();
     pattern_->DrawPattern(mat, pts[i]);
     players_[i]->ShowImage(mat);
   }

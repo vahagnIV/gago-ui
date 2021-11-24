@@ -58,10 +58,10 @@ void Camera_viewModule::Notify(const std::shared_ptr<std::vector<io::video::Capt
       std::cerr << "Got empty image" << std::endl;
       continue;
     }
-    std::cout << capture.height << std::endl ;
-    std::cout << capture.width << std::endl ;
-
-    players_[capture.camera->GetUniqueId()]->ShowImage(cv::Mat(capture.height, capture.width, CV_8UC3, (void *)capture.data.data()));
+    players_[capture.camera->GetUniqueId()]->ShowImage(cv::Mat(capture.height,
+                                                               capture.width,
+                                                               CV_8UC3,
+                                                               (void *) capture.data.data()).clone());
   }
 }
 

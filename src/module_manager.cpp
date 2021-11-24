@@ -94,6 +94,7 @@ bool ModuleManager::SatisfyRequirements() {
     }
     container.module_ptr->SetRequiredModules(required_modules);
   }
+  return true;
 }
 
 uint64_t ModuleManager::GetCombinedVersion(uint32_t major, uint32_t minor) const {

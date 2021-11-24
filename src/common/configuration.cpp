@@ -9,7 +9,6 @@
 #include <QJsonArray>
 #include <QVariant>
 #include <QStandardPaths>
-
 namespace gago {
 namespace gui {
 namespace configuration {
@@ -31,6 +30,7 @@ Configuration::Configuration() {
 const QDir & Configuration::GetCacheFolderPath() const {
   return cache_folder_;
 }
+
 
 bool Configuration::Load(const QString & filename) {
   if (!QFile::exists(filename))
