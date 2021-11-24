@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 find_package(Qt5Core REQUIRED)
 find_package(Qt5Network REQUIRED)
 find_package(Qt5Widgets CONFIG REQUIRED)
+find_package(OpenCV REQUIRED)
 
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -12,12 +13,12 @@ list(REMOVE_ITEM MODULE_SOURCES test.cpp)
 
 add_library(camera_module SHARED ${MODULE_SOURCES} )
 
-message(${LibGago_LIBRARIES})
+message(${OpenCV_LIBRARIES})
 
-target_link_libraries(camera_module ${QT_LIBRARIES} Qt5::Widgets pthread ${LibGago_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(camera_module ${QT_LIBRARIES} Qt5::Widgets pthread ${LibGago_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBRARIES})
 
 add_executable(test_cam ${MODULE_SOURCES} test.cpp)
-target_link_libraries(test_cam ${LibGago_LIBRARIES} ${QT_LIBRARIES} Qt5::Widgets pthread  ${Boost_LIBRARIES})
+target_link_libraries(test_cam ${LibGago_LIBRARIES} ${QT_LIBRARIES} Qt5::Widgets pthread  ${Boost_LIBRARIES} ${OpenCV_LIBRARIES})
 
 
 set(GagoUICameraModule 1.0.0)

@@ -54,7 +54,14 @@ const QString & Camera_viewModule::GetViewName() const {
 
 void Camera_viewModule::Notify(const std::shared_ptr<std::vector<io::video::Capture>> & ptr) {
   for (const io::video::Capture & capture: *ptr) {
-    players_[capture.camera->GetUniqueId()]->ShowImage(capture.data);
+    if(capture.data.empty()) {
+      std::cerr << "Got empty image" << std::endl;
+      continue;
+    }
+    std::cout << capture.height << std::endl ;
+    std::cout << capture.width << std::endl ;
+
+    players_[capture.camera->GetUniqueId()]->ShowImage(cv::Mat(capture.height, capture.width, CV_8UC3, (void *)capture.data.data()));
   }
 }
 

@@ -1,0 +1,1 @@
+set(GagoUIMainModule_LIBRARY_DIR ${CMAKE_INSTALL_PREFIX}/lib/libmain_module.so)

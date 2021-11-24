@@ -89,7 +89,8 @@ int MLECalibrator::Calibrate() {
 void MLECalibrator::Notify(const std::shared_ptr<std::vector<io::video::Capture>> &ptr) {
   std::vector<cv::Mat> images;
   for (int j = 0; j < ptr->size(); ++j) {
-    images.push_back((*ptr)[j].data);
+    cv::Mat mat((*ptr)[j].height, (*ptr)[j].width, CV_8UC3,(void *)(*ptr)[j].data.data());
+    images.push_back(mat);
   }
   std::vector<std::vector<cv::Point2f>> pts;
   bool found = pattern_->Extract(images, pts);
@@ -107,10 +108,10 @@ void MLECalibrator::Notify(const std::shared_ptr<std::vector<io::video::Capture>
         QString filename = QString::asprintf(format, capture.camera->GetName().c_str(), last_capture_index_);
         filename = settings_->ImageSaveFolder().filePath(filename);
 
-        QImage image(capture.data.data,
-                     capture.data.cols,
-                     capture.data.rows,
-                     capture.data.cols * capture.data.channels(),
+        QImage image(capture.data.data(),
+                     capture.width,
+                     capture.height,
+                     capture.width * capture.channels,
                      QImage::Format_RGB888);
         QImageWriter writer(filename);
         writer.write(image);
@@ -133,8 +134,9 @@ void MLECalibrator::Notify(const std::shared_ptr<std::vector<io::video::Capture>
   }
 
   for (int i = 0; i < ptr->size(); ++i) {
-    pattern_->DrawPattern((*ptr)[i].data, pts[i]);
-    players_[i]->ShowImage((*ptr)[i].data);
+    cv::Mat mat((*ptr)[i].height, (*ptr)[i].width, CV_8UC3, (void *)(*ptr)[i].data.data());
+    pattern_->DrawPattern(mat, pts[i]);
+    players_[i]->ShowImage(mat);
   }
 
 }
