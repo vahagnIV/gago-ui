@@ -154,7 +154,8 @@ void MLECalibrator::SetCameras(const std::vector<const io::video::CameraMeta *> 
     this->ui_->videoLayout->addLayout(player_layout);
     players_[i]->setMinimumWidth(200);
     players_[i]->setMinimumHeight(200);
-    player_layout->addWidget(players_[i], 0, Qt::AlignHCenter);
+
+    player_layout->addWidget(players_[i]);
     QLabel *cam_label = new QLabel("Uncalibrated");
     QFont font;
     font.setPointSize(12);
@@ -162,7 +163,8 @@ void MLECalibrator::SetCameras(const std::vector<const io::video::CameraMeta *> 
     font.setWeight(75);
     cam_label->setFont(font);
     cam_labels_.append(cam_label);
-    player_layout->addStretch(1);
+    cam_label->setMaximumHeight(50);
+    cam_label->setFixedHeight(50);
     player_layout->addWidget(cam_label);
   }
   ui_->listView->SetCameraNames(cam_names);
