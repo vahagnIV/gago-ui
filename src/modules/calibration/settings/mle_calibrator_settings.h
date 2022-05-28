@@ -11,12 +11,17 @@ namespace gago {
 namespace gui {
 namespace configuration {
 
+enum DistModel {
+  BARREL5,
+  KANNALA_BRANDT
+};
+
 class MLECalibratorSettings : public IConfigurable {
  public:
   // IConfigurable
-  IConfigurator *GetConfigurator() override;
-  void DisposeConfigurator(IConfigurator *configurator) override;
-  void ApplyConfiguration(QSettings & settings, IConfigurator *configurator) override;
+  IConfigurator * GetConfigurator() override;
+  void DisposeConfigurator(IConfigurator * configurator) override;
+  void ApplyConfiguration(QSettings & settings, IConfigurator * configurator) override;
   void Configure(QSettings & settings) override;
   const QString & GetName() const override;
   bool CalibrateCamerasSeparately() const;
@@ -25,6 +30,7 @@ class MLECalibratorSettings : public IConfigurable {
   bool FixAspectRatio() const;
   bool SoundEnabled() const;
   bool LoopCapture() const;
+  DistModel DistortionModel() const;
 
  private:
   const QString name_ = "MLE";
@@ -34,6 +40,7 @@ class MLECalibratorSettings : public IConfigurable {
   bool sounds_enabled_ = true;
   bool fix_aspect_ratio_ = false;
   bool loop_capture_ = false;
+  DistModel distortion_model_;
 
 };
 

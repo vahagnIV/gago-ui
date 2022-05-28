@@ -15,13 +15,17 @@ namespace gago {
 namespace gui {
 namespace configuration {
 
-MLECalibratorConfigurator::MLECalibratorConfigurator(MLECalibratorSettings *settings)
+MLECalibratorConfigurator::MLECalibratorConfigurator(MLECalibratorSettings * settings)
     : QObject(nullptr), settings_(settings) {
 
 }
 
-void MLECalibratorConfigurator::DrawConfigurationPage(QWidget *widget) {
-  QGridLayout *layout = new QGridLayout();
+const QMap<QString, DistModel>
+    DistortionModelStr = {{QString("Barrel (5)"), BARREL5}, {QString("Kannala Brandt"), KANNALA_BRANDT}};
+const QStringList DistortionModels = {QString("Barrel (5)"), QString("Kannala Brandt")};
+
+void MLECalibratorConfigurator::DrawConfigurationPage(QWidget * widget) {
+  QGridLayout * layout = new QGridLayout();
   widget->setLayout(layout);
 
   camera_first_chkbx_ = new QCheckBox("Calibrate cameras separately:");
@@ -30,9 +34,9 @@ void MLECalibratorConfigurator::DrawConfigurationPage(QWidget *widget) {
   folder_line_edit_ = new QLineEdit(settings_->ImageSaveFolder().path());
   layout->addWidget(new QLabel("Image folder:"), 1, 0, 1, 1);
   layout->addWidget(folder_line_edit_, 1, 1, 1, 2);
-  QPushButton *pick_folder_btn = new QPushButton("Choose");
+  QPushButton * pick_folder_btn = new QPushButton("Choose");
   QObject::connect(pick_folder_btn, &QPushButton::pressed, [=]() {
-    QFileDialog *dialog = new QFileDialog(widget);
+    QFileDialog * dialog = new QFileDialog(widget);
     dialog->setOption(QFileDialog::ShowDirsOnly);
     dialog->setFileMode(QFileDialog::Directory);
     if (dialog->exec() == QFileDialog::Accepted)
@@ -54,6 +58,27 @@ void MLECalibratorConfigurator::DrawConfigurationPage(QWidget *widget) {
   loop_capture_chkbx_->setChecked(settings_->LoopCapture());
   layout->addWidget(loop_capture_chkbx_, 4, 0, 1, 4);
   connect(loop_capture_chkbx_, SIGNAL(stateChanged(int)), this, SLOT(ValidateWaitTime(int)));
+
+  distortion_model_combo_ = new QComboBox();
+  int selected_distortion_model_i = 0;
+  for (int i = 0; i < DistortionModels.size(); ++i) {
+    distortion_model_combo_->insertItem(i, DistortionModels[i]);
+    if (settings_->DistortionModel() == DistortionModels[i]) {
+      selected_distortion_model_i = i;
+    }
+  }
+  layout->addWidget(distortion_model_combo_, 4, 0, 1, 4);
+  distortion_model_combo_->setCurrentIndex(selected_distortion_model_i);
+  distortion_model_combo_->activated(selected_distortion_model_i);
+  QObject::connect(distortion_model_combo_,
+                   QOverload<int>::of(&QComboBox::activated),
+                   this,
+                   &MLECalibratorConfigurator::DistortionModelChanged);
+
+}
+
+void MLECalibratorConfigurator::DistortionModelChanged(int idx) {
+  settings_->Set
 }
 
 void MLECalibratorConfigurator::ValidateWaitTime(int value) {
