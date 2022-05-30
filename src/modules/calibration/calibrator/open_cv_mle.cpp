@@ -9,7 +9,7 @@
 namespace gago {
 namespace calibration {
 
-OpenCvMLE::OpenCvMLE(const QSharedPointer<pattern::IPatternExtractor> & pattern,
+OpenCvMLE::OpenCvMLE(const QSharedPointer<pattern::IPatternExtractor> &pattern,
                      bool calibrate_cameras_separately,
                      gui::configuration::DistModel distortion_model)
     : pattern_(pattern),
@@ -23,23 +23,34 @@ enum CalibrationErrors {
   EmptyList = 2
 };
 
-void OpenCvMLE::ComputeSingleCamReprojectionError(const std::vector<cv::Point3f> & object_points,
-                                                  const std::vector<cv::Point2f> & image_points,
-                                                  const IntrinsicParameters & intrinsic_parameters,
-                                                  Pattern & out_pattern_params
+void OpenCvMLE::ComputeSingleCamReprojectionError(const std::vector<cv::Point3f> &object_points,
+                                                  const std::vector<cv::Point2f> &image_points,
+                                                  const IntrinsicParameters &intrinsic_parameters,
+                                                  Pattern &out_pattern_params
 ) {
 
   std::vector<cv::Point2f> imagePoints2;
-
-  cv::projectPoints(cv::Mat(object_points), out_pattern_params.rotation_vectors, out_pattern_params.translation_vectors,
-                    intrinsic_parameters.camera_matrix, intrinsic_parameters.distortion_coefficients, imagePoints2);
+  if (distortion_model_ == gui::configuration::DistModel::BARREL5)
+    cv::projectPoints(cv::Mat(object_points),
+                      out_pattern_params.rotation_vectors,
+                      out_pattern_params.translation_vectors,
+                      intrinsic_parameters.camera_matrix,
+                      intrinsic_parameters.distortion_coefficients,
+                      imagePoints2);
+  else
+    cv::fisheye::projectPoints(cv::Mat(object_points),
+                               imagePoints2,
+                               out_pattern_params.rotation_vectors,
+                               out_pattern_params.translation_vectors,
+                               intrinsic_parameters.camera_matrix,
+                               intrinsic_parameters.distortion_coefficients);
 
   float err = norm(cv::Mat(image_points), cv::Mat(imagePoints2), cv::NORM_L2);
   out_pattern_params.reprojection_error = std::sqrt(err * err / object_points.size());
 }
 
-int OpenCvMLE::GetImagePoints(QList<PatternBatch> & out_batch_calibration_results,
-                              std::vector<std::vector<std::vector<cv::Point2f>>> & out_image_points) {
+int OpenCvMLE::GetImagePoints(QList<PatternBatch> &out_batch_calibration_results,
+                              std::vector<std::vector<std::vector<cv::Point2f>>> &out_image_points) {
   if (out_batch_calibration_results.isEmpty())
     return EmptyList;
 
@@ -51,11 +62,11 @@ int OpenCvMLE::GetImagePoints(QList<PatternBatch> & out_batch_calibration_result
     out_image_points[i].resize(out_batch_calibration_results.size());
 
   for (int batch_idx = 0; batch_idx < out_batch_calibration_results.size(); ++batch_idx) {
-    PatternBatch & image_batch = out_batch_calibration_results[batch_idx];
+    PatternBatch &image_batch = out_batch_calibration_results[batch_idx];
     std::vector<cv::Mat> images;
     std::vector<std::vector<cv::Point2f>> pts;
     for (int cam_idx = 0; cam_idx < image_batch.pattern_params.size(); ++cam_idx) {
-      const QString & image_path = image_batch.pattern_params[cam_idx].filename;
+      const QString &image_path = image_batch.pattern_params[cam_idx].filename;
       cv::Mat image = cv::imread(image_path.toStdString(), cv::IMREAD_GRAYSCALE);
       image_batch.pattern_params[cam_idx].image_size = image.size();
 
@@ -78,8 +89,8 @@ int OpenCvMLE::GetImagePoints(QList<PatternBatch> & out_batch_calibration_result
   return 0;
 }
 
-int OpenCvMLE::Calibrate(QList<PatternBatch> & out_batch_calibration_results,
-                         CalibrationEstimates & out_estimates) {
+int OpenCvMLE::Calibrate(QList<PatternBatch> &out_batch_calibration_results,
+                         CalibrationEstimates &out_estimates) {
 
   std::vector<std::vector<std::vector<cv::Point2f>>> image_points;
   std::vector<std::vector<cv::Point3f> > object_points;
@@ -109,7 +120,7 @@ int OpenCvMLE::Calibrate(QList<PatternBatch> & out_batch_calibration_results,
 
   if (std::any_of(out_batch_calibration_results.begin(),
                   out_batch_calibration_results.end(),
-                  [&](const PatternBatch & image_batch) { return image_batch.pattern_params.size() >= 2; }))
+                  [&](const PatternBatch &image_batch) { return image_batch.pattern_params.size() >= 2; }))
     return Calibrate2Cameras(out_batch_calibration_results,
                              image_points,
                              pattern_->GetSize(),
@@ -119,25 +130,25 @@ int OpenCvMLE::Calibrate(QList<PatternBatch> & out_batch_calibration_results,
   return 0;
 }
 
-int OpenCvMLE::CalibrateSingleCamera(QList<PatternBatch> & out_batch_calibration_results,
+int OpenCvMLE::CalibrateSingleCamera(QList<PatternBatch> &out_batch_calibration_results,
                                      int cam_idx,
-                                     const std::vector<std::vector<std::vector<cv::Point2f>>> & image_points,
-                                     const cv::Size & boardSize,
+                                     const std::vector<std::vector<std::vector<cv::Point2f>>> &image_points,
+                                     const cv::Size &boardSize,
                                      float aspectRatio,
                                      bool release_object,
                                      int flags,
-                                     IntrinsicParameters & out_intrinsic_parameters,
-                                     std::vector<cv::Point3f> & newObjPoints) {
+                                     IntrinsicParameters &out_intrinsic_parameters,
+                                     std::vector<cv::Point3f> &newObjPoints) {
 
   std::vector<std::vector<cv::Point2f>> filtered_image_points;
   std::vector<std::vector<cv::Point3f>> object_points;
 
   for (int batch_id = 0; batch_id < out_batch_calibration_results.size(); ++batch_id) {
-    PatternBatch & image_batch = out_batch_calibration_results[batch_id];
+    PatternBatch &image_batch = out_batch_calibration_results[batch_id];
     if (image_batch.pattern_params.size() <= cam_idx)
       continue;
 
-    Pattern & pattern = image_batch.pattern_params[cam_idx];
+    Pattern &pattern = image_batch.pattern_params[cam_idx];
     if (pattern.state != PES_Extracted)
       continue;
 
@@ -158,7 +169,6 @@ int OpenCvMLE::CalibrateSingleCamera(QList<PatternBatch> & out_batch_calibration
   pattern_->GetObjectPoints(object_points, filtered_image_points.size());
 
   out_intrinsic_parameters.camera_matrix = cv::Mat::eye(3, 3, CV_64F);
-  out_intrinsic_parameters.distortion_coefficients = cv::Mat::zeros(8, 1, CV_64F);
 
   if (flags & cv::CALIB_FIX_ASPECT_RATIO)
     out_intrinsic_parameters.camera_matrix.at<double>(0, 0) = aspectRatio;
@@ -171,7 +181,8 @@ int OpenCvMLE::CalibrateSingleCamera(QList<PatternBatch> & out_batch_calibration
   std::vector<cv::Mat> rvecs;
   std::vector<cv::Mat> tvecs;
 
-  if (distortion_model_ == gui::configuration::DistModel::BARREL5)
+  if (distortion_model_ == gui::configuration::DistModel::BARREL5) {
+    out_intrinsic_parameters.distortion_coefficients = cv::Mat::zeros(8, 1, CV_64F);
     out_intrinsic_parameters.rms = calibrateCameraRO(object_points,
                                                      filtered_image_points,
                                                      out_intrinsic_parameters.image_size,
@@ -182,15 +193,16 @@ int OpenCvMLE::CalibrateSingleCamera(QList<PatternBatch> & out_batch_calibration
                                                      tvecs,
                                                      newObjPoints,
                                                      flags | cv::CALIB_FIX_K3 | cv::CALIB_USE_LU);
-  else if (distortion_model_ == gui::configuration::DistModel::KANNALA_BRANDT) {
-    out_intrinsic_parameters.distortion_coefficients.create(1, 4, CV_32F);
+  } else if (distortion_model_ == gui::configuration::DistModel::KANNALA_BRANDT) {
+    out_intrinsic_parameters.distortion_coefficients.create(1, 4, CV_64F);
     out_intrinsic_parameters.rms = cv::fisheye::calibrate(object_points,
                                                           filtered_image_points,
                                                           out_intrinsic_parameters.image_size,
                                                           out_intrinsic_parameters.camera_matrix,
                                                           out_intrinsic_parameters.distortion_coefficients,
                                                           rvecs,
-                                                          tvecs);
+                                                          tvecs, flags,
+                                                          cv::TermCriteria(cv::TermCriteria::EPS, 50, 0.01));
   }
 
   if (!(cv::checkRange(out_intrinsic_parameters.camera_matrix)
@@ -203,8 +215,8 @@ int OpenCvMLE::CalibrateSingleCamera(QList<PatternBatch> & out_batch_calibration
   // Calculate per image reprojection error
   int valid_id = -1;
   for (int batch_id = 0; batch_id < out_batch_calibration_results.size(); ++batch_id) {
-    PatternBatch & image_batch = out_batch_calibration_results[batch_id];
-    Pattern & pattern = image_batch.pattern_params[cam_idx];
+    PatternBatch &image_batch = out_batch_calibration_results[batch_id];
+    Pattern &pattern = image_batch.pattern_params[cam_idx];
 
     if (image_batch.pattern_params.size() <= cam_idx || PES_Broken == image_batch.pattern_params[cam_idx].state)
       continue;
@@ -235,15 +247,15 @@ int OpenCvMLE::CalibrateSingleCamera(QList<PatternBatch> & out_batch_calibration
   return 0;
 }
 
-int OpenCvMLE::Calibrate2Cameras(QList<PatternBatch> & out_batch_calibration_results,
-                                 const std::vector<std::vector<std::vector<cv::Point2f>>> & image_points,
-                                 const cv::Size & boardSize,
+int OpenCvMLE::Calibrate2Cameras(QList<PatternBatch> &out_batch_calibration_results,
+                                 const std::vector<std::vector<std::vector<cv::Point2f>>> &image_points,
+                                 const cv::Size &boardSize,
                                  bool fix_intrinsic,
-                                 CalibrationEstimates & out_estimates) {
+                                 CalibrationEstimates &out_estimates) {
   std::vector<std::vector<std::vector<cv::Point2f>>> filtered_image_points(2);
   std::vector<std::vector<cv::Point3f>> object_points(2);
   for (int batch_id = 0; batch_id < out_batch_calibration_results.size(); ++batch_id) {
-    PatternBatch & image_batch = out_batch_calibration_results[batch_id];
+    PatternBatch &image_batch = out_batch_calibration_results[batch_id];
     EstimationState image_batch_state = image_batch.CombinedPatternState();
     // Only one image in batch
     if (image_batch.pattern_params.size() != 2) continue;
@@ -287,7 +299,7 @@ int OpenCvMLE::Calibrate2Cameras(QList<PatternBatch> & out_batch_calibration_res
   // We should calculate the reprojection errors
   if (!fix_intrinsic) {
     for (int batch_id = 0; batch_id < out_batch_calibration_results.size(); ++batch_id) {
-      PatternBatch & image_batch = out_batch_calibration_results[batch_id];
+      PatternBatch &image_batch = out_batch_calibration_results[batch_id];
       EstimationState image_batch_state = image_batch.CombinedPatternState();
       if (PES_Broken == image_batch_state)
         continue;
@@ -314,7 +326,7 @@ int OpenCvMLE::Calibrate2Cameras(QList<PatternBatch> & out_batch_calibration_res
 
   // Compute stereo reprojection error
   for (int batch_id = 0; batch_id < out_batch_calibration_results.size(); ++batch_id) {
-    PatternBatch & image_batch = out_batch_calibration_results[batch_id];
+    PatternBatch &image_batch = out_batch_calibration_results[batch_id];
     if (image_batch.pattern_params.size() != 2 || PES_Broken == image_batch.state)
       continue;
 
@@ -330,10 +342,10 @@ int OpenCvMLE::Calibrate2Cameras(QList<PatternBatch> & out_batch_calibration_res
   return 0;
 }
 
-void OpenCvMLE::ComputeStereoRigReprojectionError(const std::vector<cv::Point3f> & object_points,
-                                                  const std::vector<std::vector<cv::Point2f>> & image_points,
-                                                  const CalibrationEstimates & estimates,
-                                                  PatternBatch & out_result) {
+void OpenCvMLE::ComputeStereoRigReprojectionError(const std::vector<cv::Point3f> &object_points,
+                                                  const std::vector<std::vector<cv::Point2f>> &image_points,
+                                                  const CalibrationEstimates &estimates,
+                                                  PatternBatch &out_result) {
   std::vector<cv::Vec3f> lines[2];
   cv::Mat imgpt[2];
   out_result.rms = 0;
