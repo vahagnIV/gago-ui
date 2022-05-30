@@ -24,7 +24,7 @@ void MLECalibratorSettings::ApplyConfiguration(QSettings & settings, IConfigurat
   fix_aspect_ratio_ = cfg->FixAspectRatio();
   sounds_enabled_ = cfg->SoundEnabled();
   loop_capture_ = cfg->LoopCapture();
-  distortion_model_ = cfg->Dis
+  distortion_model_ = cfg->DistortionModel();
   settings.setValue("calibrate_cameras_separately", calibrate_cameras_separately_);
   settings.setValue("capture_wait_time", capture_wait_time_);
   settings.setValue("image_save_folder", image_save_folder_.path());

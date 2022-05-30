@@ -6,15 +6,12 @@
 #define GAGO_UI_MLE_CALIBRATOR_SETTINGS_H
 #include <QDir>
 #include "modules/settings/iconfigurable.h"
+#include "dist_model.h"
 
 namespace gago {
 namespace gui {
 namespace configuration {
 
-enum DistModel {
-  BARREL5,
-  KANNALA_BRANDT
-};
 
 class MLECalibratorSettings : public IConfigurable {
  public:

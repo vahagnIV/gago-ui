@@ -12,6 +12,7 @@
 #include "intrinsic_parameters.h"
 #include "pattern/pattern.h"
 #include "batch_calibration_result.h"
+#include "settings/dist_model.h"
 
 namespace gago {
 namespace calibration {
@@ -21,7 +22,8 @@ enum { DETECTION = 0, CAPTURING = 1, CALIBRATED = 2 };
 class OpenCvMLE {
  public:
   OpenCvMLE(const QSharedPointer<pattern::IPatternExtractor> & pattern,
-            bool calibrate_cameras_separately);
+            bool calibrate_cameras_separately,
+            gui::configuration::DistModel distortion_model);
 
   int Calibrate(QList<PatternBatch> & out_batch_calibration_results, CalibrationEstimates & out_estimates);
 
@@ -74,6 +76,7 @@ class OpenCvMLE {
 
   QSharedPointer<pattern::IPatternExtractor> pattern_;
   bool calibrate_cameras_separately_;
+  gui::configuration::DistModel distortion_model_;
 
 };
 

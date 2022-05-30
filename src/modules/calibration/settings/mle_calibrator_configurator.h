@@ -12,6 +12,7 @@
 #include <QComboBox>
 
 #include "modules/settings/iconfigurator.h"
+#include "dist_model.h"
 
 namespace gago {
 namespace gui {
@@ -33,7 +34,7 @@ class MLECalibratorConfigurator : public QObject, public IConfigurator {
   bool FixAspectRatio() const;
   bool SoundEnabled() const;
   bool LoopCapture() const;
-  DistModel
+  DistModel DistortionModel();
  private slots:
   void ValidateWaitTime(int value = 0);
  private:

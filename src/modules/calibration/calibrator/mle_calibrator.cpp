@@ -203,7 +203,7 @@ void MLECalibrator::OnCaptureButtonClicked() {
 void MLECalibrator::OnCalibrateButtonClicked() {
   emit DisableControlElements();
 
-  gago::calibration::OpenCvMLE mle(pattern_, settings_->CalibrateCamerasSeparately());
+  gago::calibration::OpenCvMLE mle(pattern_, settings_->CalibrateCamerasSeparately(), settings_->DistortionModel());
 
   QList<gago::calibration::PatternBatch> &batches = ui_->listView->GetBatchCalibrationResults();
 

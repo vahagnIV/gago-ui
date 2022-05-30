@@ -10,8 +10,11 @@ namespace gago {
 namespace calibration {
 
 OpenCvMLE::OpenCvMLE(const QSharedPointer<pattern::IPatternExtractor> & pattern,
-                     bool calibrate_cameras_separately)
-    : pattern_(pattern), calibrate_cameras_separately_(calibrate_cameras_separately) {
+                     bool calibrate_cameras_separately,
+                     gui::configuration::DistModel distortion_model)
+    : pattern_(pattern),
+      calibrate_cameras_separately_(calibrate_cameras_separately),
+      distortion_model_(distortion_model) {
 
 }
 
@@ -168,16 +171,27 @@ int OpenCvMLE::CalibrateSingleCamera(QList<PatternBatch> & out_batch_calibration
   std::vector<cv::Mat> rvecs;
   std::vector<cv::Mat> tvecs;
 
-  out_intrinsic_parameters.rms = calibrateCameraRO(object_points,
-                                                   filtered_image_points,
-                                                   out_intrinsic_parameters.image_size,
-                                                   iFixedPoint,
-                                                   out_intrinsic_parameters.camera_matrix,
-                                                   out_intrinsic_parameters.distortion_coefficients,
-                                                   rvecs,
-                                                   tvecs,
-                                                   newObjPoints,
-                                                   flags | cv::CALIB_FIX_K3 | cv::CALIB_USE_LU);
+  if (distortion_model_ == gui::configuration::DistModel::BARREL5)
+    out_intrinsic_parameters.rms = calibrateCameraRO(object_points,
+                                                     filtered_image_points,
+                                                     out_intrinsic_parameters.image_size,
+                                                     iFixedPoint,
+                                                     out_intrinsic_parameters.camera_matrix,
+                                                     out_intrinsic_parameters.distortion_coefficients,
+                                                     rvecs,
+                                                     tvecs,
+                                                     newObjPoints,
+                                                     flags | cv::CALIB_FIX_K3 | cv::CALIB_USE_LU);
+  else if (distortion_model_ == gui::configuration::DistModel::KANNALA_BRANDT) {
+    out_intrinsic_parameters.distortion_coefficients.create(1, 4, CV_32F);
+    out_intrinsic_parameters.rms = cv::fisheye::calibrate(object_points,
+                                                          filtered_image_points,
+                                                          out_intrinsic_parameters.image_size,
+                                                          out_intrinsic_parameters.camera_matrix,
+                                                          out_intrinsic_parameters.distortion_coefficients,
+                                                          rvecs,
+                                                          tvecs);
+  }
 
   if (!(cv::checkRange(out_intrinsic_parameters.camera_matrix)
       && cv::checkRange(out_intrinsic_parameters.distortion_coefficients)))

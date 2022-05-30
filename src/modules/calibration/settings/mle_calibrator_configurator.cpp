@@ -63,23 +63,16 @@ void MLECalibratorConfigurator::DrawConfigurationPage(QWidget * widget) {
   int selected_distortion_model_i = 0;
   for (int i = 0; i < DistortionModels.size(); ++i) {
     distortion_model_combo_->insertItem(i, DistortionModels[i]);
-    if (settings_->DistortionModel() == DistortionModels[i]) {
+    if (settings_->DistortionModel() == DistortionModelStr[DistortionModels[i]]) {
       selected_distortion_model_i = i;
     }
   }
   layout->addWidget(distortion_model_combo_, 4, 0, 1, 4);
   distortion_model_combo_->setCurrentIndex(selected_distortion_model_i);
   distortion_model_combo_->activated(selected_distortion_model_i);
-  QObject::connect(distortion_model_combo_,
-                   QOverload<int>::of(&QComboBox::activated),
-                   this,
-                   &MLECalibratorConfigurator::DistortionModelChanged);
-
 }
 
-void MLECalibratorConfigurator::DistortionModelChanged(int idx) {
-  settings_->Set
-}
+
 
 void MLECalibratorConfigurator::ValidateWaitTime(int value) {
   if (loop_capture_chkbx_->isChecked())
@@ -115,6 +108,10 @@ bool MLECalibratorConfigurator::SoundEnabled() const {
 
 bool MLECalibratorConfigurator::LoopCapture() const {
   return loop_capture_chkbx_->checkState() == Qt::Checked;
+}
+
+DistModel MLECalibratorConfigurator::DistortionModel() {
+  return DistortionModelStr[distortion_model_combo_->currentText()];
 }
 
 }
